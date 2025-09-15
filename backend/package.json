@@ -1,0 +1,30 @@
+{
+  "name": "project-buddy-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Project Buddy - A collaborative project management platform",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "tsx watch src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js"
+  },
+  "keywords": [],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "cloudinary": "^1.41.0",
+    "dotenv": "^17.2.3",
+    "socket.io": "^4.7.4",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.9.0",
+    "@types/uuid": "^9.0.7",
+    "tsx": "^4.1.4",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
