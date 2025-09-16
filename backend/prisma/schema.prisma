@@ -1,0 +1,892 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum PreferredRole {
+  PROJECT_MANAGER
+  TEAM_LEAD
+  FRONTEND_DEVELOPER
+  BACKEND_DEVELOPER
+  FULLSTACK_DEVELOPER
+  MOBILE_DEVELOPER
+  DEVOPS_ENGINEER
+  UI_UX_DESIGNER
+  DATA_SCIENTIST
+  QA_ENGINEER
+  BUSINESS_ANALYST
+  PRODUCT_MANAGER
+  MARKETING_SPECIALIST
+  CONTENT_CREATOR
+  OTHER
+}
+
+enum UserType {
+  UNDERGRADUATE
+  GRADUATE
+  FREELANCER
+  PROFESSIONAL
+  STARTUP_FOUNDER
+  ENTREPRENEUR
+}
+
+model User {
+  id                String          @id @default(uuid())
+  email             String          @unique
+  username          String          @unique
+  firstName         String
+  lastName          String
+  bio               String?
+  avatar            String?
+  banner            String?
+  location          String?
+  website           String?
+  linkedin          String?
+  github            String?
+  portfolio         String?
+  company           String?
+  position          String?
+  userType          UserType        @default(UNDERGRADUATE)
+  preferredRole     PreferredRole   @default(OTHER)
+  experienceLevel   ExperienceLevel @default(BEGINNER)
+  skills            String[]        @default([])
+  interests         String[]        @default([])
+  languages         String[]        @default([])
+  isVerified        Boolean         @default(false)
+  isActive          Boolean         @default(true)
+  isAvailableForProjects Boolean    @default(true)
+  timezone          String?
+  passwordHash      String
+  refreshToken      String?
+  lastLoginAt       DateTime?
+  profileViews      Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relationships
+  sentConnections     Connection[] @relation("ConnectionSender")
+  receivedConnections Connection[] @relation("ConnectionReceiver")
+  projectMemberships  ProjectMember[]
+  ownedProjects       Project[]    @relation("ProjectOwner")
+  teamMemberships     TeamMember[]
+  ownedTeams          Team[]       @relation("TeamOwner")
+  sentTeamInvitations TeamInvitation[] @relation("TeamInviter")
+  receivedTeamInvitations TeamInvitation[] @relation("TeamInvitee")
+  posts               Post[]
+  comments            Comment[]
+  reactions           Reaction[]
+  commentReactions    CommentReaction[]
+  shares              Share[]
+  bookmarks           Bookmark[]
+  sentMessages        Message[]    @relation("MessageSender")
+  receivedMessages    Message[]    @relation("MessageReceiver")
+  messageReactions    MessageReaction[]
+  conversations       ConversationParticipant[]
+  notifications       Notification[]
+  aiRecommendations   AIRecommendation[]
+  mentions            Mention[]
+  following           Follow[]     @relation("Follower")
+  followers           Follow[]     @relation("Following")
+  userAnalytics       UserAnalytics[]
+
+  @@map("users")
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+model Connection {
+  id         String           @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     ConnectionStatus @default(PENDING)
+  message    String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  sender   User @relation("ConnectionSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ConnectionReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@map("connections")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+enum ProjectStatus {
+  PLANNING
+  RECRUITING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectCategory {
+  WEB_DEVELOPMENT
+  MOBILE_DEVELOPMENT
+  GAME_DEVELOPMENT
+  AI_ML
+  DATA_SCIENCE
+  BLOCKCHAIN
+  IOT
+  CYBERSECURITY
+  UI_UX_DESIGN
+  MARKETING
+  BUSINESS
+  RESEARCH
+  OPEN_SOURCE
+  STARTUP
+  EDUCATIONAL
+  OTHER
+}
+
+model Project {
+  id              String          @id @default(uuid())
+  title           String
+  description     String
+  shortDescription String?
+  status          ProjectStatus   @default(PLANNING)
+  category        ProjectCategory @default(OTHER)
+  startDate       DateTime?
+  endDate         DateTime?
+  estimatedDuration String?
+  isPublic        Boolean         @default(true)
+  isRecruiting    Boolean         @default(true)
+  maxMembers      Int?
+  currentMembers  Int             @default(1)
+  requiredSkills  String[]        @default([])
+  tags            String[]        @default([])
+  repositoryUrl   String?
+  liveUrl         String?
+  documentationUrl String?
+  images          String[]        @default([])
+  ownerId         String
+  teamId          String?
+  viewCount       Int             @default(0)
+  likeCount       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  owner           User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  team            Team?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  members         ProjectMember[]
+  goals           ProjectGoal[]
+  milestones      Milestone[]
+  posts           Post[]
+  requiredRoles   ProjectRole[]
+  bookmarks       Bookmark[]
+  projectAnalytics ProjectAnalytics[]
+  chatRooms       ChatRoom[]
+
+  @@map("projects")
+}
+
+model ProjectGoal {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  projectId   String
+  isCompleted Boolean   @default(false)
+  priority    Int       @default(1) // 1 = Low, 2 = Medium, 3 = High
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_goals")
+}
+
+enum ProjectMemberRole {
+  OWNER
+  ADMIN
+  TEAM_LEAD
+  SENIOR_DEVELOPER
+  DEVELOPER
+  DESIGNER
+  TESTER
+  BUSINESS_ANALYST
+  MARKETING
+  CONTRIBUTOR
+  VIEWER
+}
+
+model ProjectMember {
+  id        String            @id @default(uuid())
+  projectId String
+  userId    String
+  role      ProjectMemberRole @default(DEVELOPER)
+  title     String?
+  joinedAt  DateTime          @default(now())
+  isActive  Boolean           @default(true)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model ProjectRole {
+  id              String   @id @default(uuid())
+  projectId       String
+  title           String
+  description     String
+  requiredSkills  String[] @default([])
+  experienceLevel ExperienceLevel @default(BEGINNER)
+  isOpen          Boolean  @default(true)
+  maxPositions    Int      @default(1)
+  filledPositions Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_roles")
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Milestone {
+  id          String          @id @default(uuid())
+  title       String
+  description String?
+  status      MilestoneStatus @default(PENDING)
+  dueDate     DateTime?
+  completedAt DateTime?
+  projectId   String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  achievements Achievement[]
+
+  @@map("milestones")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  milestoneId String
+  isShared    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@map("achievements")
+}
+
+enum PostType {
+  GENERAL
+  PROJECT_UPDATE
+  PROJECT_ANNOUNCEMENT
+  ACHIEVEMENT
+  MILESTONE_COMPLETED
+  GOAL_COMPLETED
+  TEAM_FORMATION
+  FIND_TEAMMATES
+  FIND_TEAM
+  FIND_PROJECT
+  PROJECT_SHOWCASE
+  SKILL_SHARE
+  RESOURCE_SHARE
+  QUESTION
+  POLL
+  EVENT
+  CELEBRATION
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  content     String
+  type        PostType  @default(GENERAL)
+  authorId    String
+  projectId   String?
+  teamId      String?
+  media       String[]  @default([])
+  tags        String[]  @default([])
+  mentions    String[]  @default([]) // Array of user IDs
+  hashtags    String[]  @default([])
+  isEdited    Boolean   @default(false)
+  editedAt    DateTime?
+  visibility  String    @default("public") // public, connections, team, project
+  likesCount  Int       @default(0)
+  commentsCount Int     @default(0)
+  sharesCount Int       @default(0)
+  viewsCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  team        Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  reactions   Reaction[]
+  shares      Share[]
+  bookmarks   Bookmark[]
+  userMentions Mention[]
+  analytics   PostAnalytics[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  authorId  String
+  postId    String
+  parentId  String?
+  isEdited  Boolean  @default(false)
+  editedAt  DateTime?
+  likesCount Int     @default(0)
+  repliesCount Int   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+  reactions CommentReaction[]
+
+  @@map("comments")
+}
+
+model CommentReaction {
+  id        String      @id @default(uuid())
+  type      ReactionType
+  userId    String
+  commentId String
+  createdAt DateTime    @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@map("comment_reactions")
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  CELEBRATE
+  SUPPORT
+  INSIGHTFUL
+  FUNNY
+  AMAZING
+}
+
+model Reaction {
+  id        String      @id @default(uuid())
+  type      ReactionType
+  userId    String
+  postId    String
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("reactions")
+}
+
+model Share {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("shares")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String?
+  projectId String?
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, projectId])
+  @@map("bookmarks")
+}
+
+model Mention {
+  id           String   @id @default(uuid())
+  mentionerId  String
+  mentionedId  String
+  postId       String
+  commentId    String?
+  content      String?  // The context where mention happened
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  mentioner User     @relation(fields: [mentionerId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("mentions")
+}
+
+model Hashtag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  usageCount  Int      @default(1)
+  trending    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hashtags")
+}
+
+enum TeamVisibility {
+  PUBLIC
+  PRIVATE
+  INVITE_ONLY
+}
+
+enum TeamType {
+  PROJECT_BASED
+  SKILL_BASED
+  STARTUP
+  FREELANCE
+  OPEN_SOURCE
+  HACKATHON
+  STUDY_GROUP
+  NETWORKING
+  MENTORSHIP
+}
+
+model Team {
+  id              String         @id @default(uuid())
+  name            String
+  description     String
+  shortDescription String?
+  visibility      TeamVisibility @default(PUBLIC)
+  type            TeamType       @default(PROJECT_BASED)
+  avatar          String?
+  banner          String?
+  skills          String[]       @default([])
+  tags            String[]       @default([])
+  location        String?
+  isRecruiting    Boolean        @default(true)
+  maxMembers      Int?
+  currentMembers  Int            @default(1)
+  requiredSkills  String[]       @default([])
+  website         String?
+  social          Json?          // Store social media links
+  ownerId         String
+  viewCount       Int            @default(0)
+  memberCount     Int            @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  owner           User           @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         TeamMember[]
+  roles           TeamRole[]
+  invitations     TeamInvitation[]
+  posts           Post[]
+  projects        Project[]
+  chatRooms       ChatRoom[]
+  teamAnalytics   TeamAnalytics[]
+
+  @@map("teams")
+}
+
+enum TeamMemberRole {
+  OWNER
+  ADMIN
+  LEAD
+  MEMBER
+  CONTRIBUTOR
+}
+
+model TeamMember {
+  id       String         @id @default(uuid())
+  teamId   String
+  userId   String
+  role     TeamMemberRole @default(MEMBER)
+  title    String?
+  joinedAt DateTime       @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model TeamRole {
+  id          String  @id @default(uuid())
+  teamId      String
+  name        String
+  description String?
+  color       String?
+  permissions String[] @default([])
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, name])
+  @@map("team_roles")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model TeamInvitation {
+  id        String           @id @default(uuid())
+  teamId    String
+  inviterId String
+  inviteeId String?
+  email     String?
+  roleId    String?
+  message   String?
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  team     Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviter  User  @relation("TeamInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee  User? @relation("TeamInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, inviteeId])
+  @@unique([teamId, email])
+  @@map("team_invitations")
+}
+
+enum ConversationType {
+  DIRECT_MESSAGE
+  GROUP_CHAT
+  TEAM_CHAT
+  PROJECT_CHAT
+}
+
+model Conversation {
+  id          String           @id @default(uuid())
+  type        ConversationType @default(DIRECT_MESSAGE)
+  title       String?
+  description String?
+  avatar      String?
+  isGroup     Boolean          @default(false)
+  teamId      String?
+  projectId   String?
+  createdBy   String
+  lastMessageAt DateTime?
+  isArchived  Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String    @id @default(uuid())
+  conversationId String
+  userId         String
+  role           String    @default("member") // admin, member
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+  isActive       Boolean   @default(true)
+  isMuted        Boolean   @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  VIDEO
+  SYSTEM
+  REACTION
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  content        String
+  type           MessageType @default(TEXT)
+  senderId       String
+  receiverId     String?
+  conversationId String
+  replyToId      String?
+  attachments    String[]    @default([])
+  metadata       Json?       // Store additional message data
+  isEdited       Boolean     @default(false)
+  editedAt       DateTime?
+  isDeleted      Boolean     @default(false)
+  deletedAt      DateTime?
+  readBy         String[]    @default([]) // Array of user IDs who read the message
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  sender       User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver     User?         @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  replyTo      Message?      @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      Message[]     @relation("MessageReplies")
+  reactions    MessageReaction[]
+
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model ChatRoom {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  teamId      String?
+  projectId   String?
+  isPrivate   Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team    Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@map("chat_rooms")
+}
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  PROJECT_INVITATION
+  PROJECT_JOIN_REQUEST
+  PROJECT_UPDATE
+  PROJECT_MILESTONE_COMPLETED
+  PROJECT_GOAL_COMPLETED
+  ACHIEVEMENT_SHARED
+  NEW_MESSAGE
+  POST_REACTION
+  POST_COMMENT
+  POST_MENTION
+  POST_SHARED
+  COMMENT_REPLY
+  COMMENT_REACTION
+  TEAM_INVITATION
+  TEAM_JOIN_REQUEST
+  TEAM_JOINED
+  TEAM_LEFT
+  TEAM_ROLE_CHANGED
+  MENTION
+  FOLLOW
+  MILESTONE_DUE
+  PROJECT_DEADLINE
+  SYSTEM_ANNOUNCEMENT
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  type       NotificationType
+  title      String
+  message    String
+  userId     String
+  isRead     Boolean          @default(false)
+  actionUrl  String?
+  data       Json?
+  priority   String           @default("normal") // low, normal, high, urgent
+  category   String           @default("general") // social, project, system, achievement
+  createdAt  DateTime         @default(now())
+  readAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum RecommendationType {
+  USER
+  PROJECT
+  TEAM
+  POST
+  SKILL
+  HASHTAG
+}
+
+model AIRecommendation {
+  id         String             @id @default(uuid())
+  type       RecommendationType
+  userId     String
+  targetId   String
+  score      Float
+  reason     String
+  metadata   Json?
+  isActive   Boolean            @default(true)
+  isClicked  Boolean            @default(false)
+  isDismissed Boolean           @default(false)
+  createdAt  DateTime           @default(now())
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId, type])
+  @@map("ai_recommendations")
+}
+
+// Analytics Models
+model UserAnalytics {
+  id              String   @id @default(uuid())
+  userId          String
+  date            DateTime @db.Date
+  profileViews    Int      @default(0)
+  postViews       Int      @default(0)
+  postLikes       Int      @default(0)
+  postComments    Int      @default(0)
+  postShares      Int      @default(0)
+  connectionsGained Int    @default(0)
+  followersGained Int      @default(0)
+  projectsCreated Int      @default(0)
+  projectsJoined  Int      @default(0)
+  messagesExchanged Int    @default(0)
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("user_analytics")
+}
+
+model PostAnalytics {
+  id            String   @id @default(uuid())
+  postId        String
+  date          DateTime @db.Date
+  views         Int      @default(0)
+  likes         Int      @default(0)
+  comments      Int      @default(0)
+  shares        Int      @default(0)
+  bookmarks     Int      @default(0)
+  clicks        Int      @default(0)
+  engagementRate Float   @default(0)
+  createdAt     DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, date])
+  @@map("post_analytics")
+}
+
+model ProjectAnalytics {
+  id            String   @id @default(uuid())
+  projectId     String
+  date          DateTime @db.Date
+  views         Int      @default(0)
+  likes         Int      @default(0)
+  bookmarks     Int      @default(0)
+  applications  Int      @default(0)
+  membersJoined Int      @default(0)
+  postsCreated  Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, date])
+  @@map("project_analytics")
+}
+
+model TeamAnalytics {
+  id            String   @id @default(uuid())
+  teamId        String
+  date          DateTime @db.Date
+  views         Int      @default(0)
+  membersJoined Int      @default(0)
+  postsCreated  Int      @default(0)
+  projectsCreated Int    @default(0)
+  messagesExchanged Int  @default(0)
+  createdAt     DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, date])
+  @@map("team_analytics")
+}
+
+model TrendingTopic {
+  id          String   @id @default(uuid())
+  hashtag     String
+  postCount   Int      @default(1)
+  engagement  Int      @default(0)
+  trendScore  Float    @default(0)
+  category    String?
+  date        DateTime @db.Date
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([hashtag, date])
+  @@map("trending_topics")
+}
