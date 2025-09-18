@@ -1,9 +1,24 @@
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 
 import config from './config';
+import { errorHandler, notFoundHandler } from './middlewares/error';
 
+// Route imports
+import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
+import projectRoutes from './routes/projects';
+import connectionRoutes from './routes/connections';
+import teamRoutes from './routes/teams';
+import postRoutes from './routes/posts';
 
 const app = express();
 const server = createServer(app);
@@ -14,6 +29,21 @@ const io = new Server(server, {
   },
 });
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
+  message: 'Too many requests from this IP, please try again later.',
+});
+
+// Middleware
+app.use(helmet());
+app.use(cors({ origin: config.cors.origin }));
+app.use(compression());
+app.use(morgan('combined'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(limiter);
 
 // Swagger configuration
 const swaggerOptions = {
@@ -52,6 +82,9 @@ const swaggerOptions = {
   apis: ['./src/routes/*.ts', './src/controllers/*.ts'],
 };
 
+const specs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({
@@ -60,6 +93,14 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/connections', connectionRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/posts', postRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -80,11 +121,17 @@ io.on('connection', (socket) => {
   });
 });
 
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 // Start server
 const startServer = async () => {
   try {
     server.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
+      console.log(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
+      console.log(`🏥 Health Check: http://localhost:${config.port}/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
