@@ -169,7 +169,7 @@ router.post('/logout', authenticate, authController.logout);
 
 /**
  * @swagger
- * /auth/profile:
+ * /auth/me:
  *   get:
  *     summary: Get current user profile
  *     tags: [Auth]
@@ -187,7 +187,7 @@ router.post('/logout', authenticate, authController.logout);
  *       404:
  *         description: User not found
  */
-router.get('/profile', authenticate, authController.getProfile);
+router.get('/me', authenticate, authController.getProfile);
 
 /**
  * @swagger

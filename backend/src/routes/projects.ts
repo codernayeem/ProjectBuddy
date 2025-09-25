@@ -26,24 +26,58 @@ const projectController = new ProjectController();
  *           type: string
  *         description:
  *           type: string
+ *         shortDescription:
+ *           type: string
  *         status:
  *           type: string
- *           enum: [PLANNING, ACTIVE, ON_HOLD, COMPLETED, CANCELLED]
+ *           enum: [PLANNING, RECRUITING, ACTIVE, ON_HOLD, COMPLETED, CANCELLED]
+ *         category:
+ *           type: string
+ *           enum: [WEB_DEVELOPMENT, MOBILE_DEVELOPMENT, GAME_DEVELOPMENT, AI_ML, DATA_SCIENCE, BLOCKCHAIN, IOT, CYBERSECURITY, UI_UX_DESIGN, MARKETING, BUSINESS, RESEARCH, OPEN_SOURCE, STARTUP, EDUCATIONAL, OTHER]
  *         startDate:
  *           type: string
  *           format: date-time
  *         endDate:
  *           type: string
  *           format: date-time
+ *         estimatedDuration:
+ *           type: string
  *         isPublic:
  *           type: boolean
+ *         isRecruiting:
+ *           type: boolean
+ *         maxMembers:
+ *           type: integer
+ *         currentMembers:
+ *           type: integer
+ *         requiredSkills:
+ *           type: array
+ *           items:
+ *             type: string
  *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         repositoryUrl:
+ *           type: string
+ *         liveUrl:
+ *           type: string
+ *         documentationUrl:
+ *           type: string
+ *         images:
  *           type: array
  *           items:
  *             type: string
  *         ownerId:
  *           type: string
  *           format: uuid
+ *         teamId:
+ *           type: string
+ *           format: uuid
+ *         viewCount:
+ *           type: integer
+ *         likeCount:
+ *           type: integer
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -259,7 +293,7 @@ router.delete('/:id', authenticate, projectController.deleteProject);
  *                 format: uuid
  *               role:
  *                 type: string
- *                 enum: [ADMIN, MEMBER, VIEWER]
+ *                 enum: [ADMIN, TEAM_LEAD, SENIOR_DEVELOPER, DEVELOPER, DESIGNER, TESTER, BUSINESS_ANALYST, MARKETING, CONTRIBUTOR, VIEWER]
  *     responses:
  *       201:
  *         description: User invited successfully
@@ -333,7 +367,7 @@ router.delete('/:id/members/:userId', authenticate, projectController.removeFrom
  *             properties:
  *               role:
  *                 type: string
- *                 enum: [ADMIN, MEMBER, VIEWER]
+ *                 enum: [ADMIN, TEAM_LEAD, SENIOR_DEVELOPER, DEVELOPER, DESIGNER, TESTER, BUSINESS_ANALYST, MARKETING, CONTRIBUTOR, VIEWER]
  *     responses:
  *       200:
  *         description: Role updated successfully
