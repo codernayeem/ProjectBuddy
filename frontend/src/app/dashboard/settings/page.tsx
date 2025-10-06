@@ -35,6 +35,7 @@ import { authService } from '@/lib/auth'
 import { userService } from '@/lib/auth'
 import { notificationService } from '@/lib/notifications'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -108,10 +109,10 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const queryClient = useQueryClient()
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
 
   // Fetch notification preferences
@@ -823,13 +824,34 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-medium">Dark Mode</Label>
-                  <p className="text-sm text-gray-500">Switch between light and dark themes</p>
+                  <Label className="text-sm font-medium">Theme</Label>
+                  <p className="text-sm text-gray-500">Choose your preferred theme</p>
                 </div>
-                <Switch
-                  checked={darkMode}
-                  onCheckedChange={setDarkMode}
-                />
+                <Select value={theme} onValueChange={(value: 'light' | 'dark' | 'system') => setTheme(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">
+                      <div className="flex items-center">
+                        <Sun className="h-4 w-4 mr-2" />
+                        Light
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="dark">
+                      <div className="flex items-center">
+                        <Moon className="h-4 w-4 mr-2" />
+                        Dark
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="system">
+                      <div className="flex items-center">
+                        <Monitor className="h-4 w-4 mr-2" />
+                        System
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Separator />

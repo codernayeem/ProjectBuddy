@@ -5,6 +5,7 @@ import { Menu, Search, Bell, MessageSquare, Home, Plus, ChevronDown } from 'luci
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -127,6 +128,9 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
               5
             </Badge>
           </Button>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* User menu */}
           <DropdownMenu>

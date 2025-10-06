@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           {children}
@@ -26,10 +26,8 @@ export default function RootLayout({
             position="top-right"
             toastOptions={{
               duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
+              className: '',
+              style: {},
             }}
           />
         </Providers>
