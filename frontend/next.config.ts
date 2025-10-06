@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
         destination: `${BACKEND_URL}/api/:path*`,
       },
     ];
+  },  
+  turbopack: {
+    root: __dirname, // ensures root = frontend folder
   },
 };
 
