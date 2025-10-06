@@ -9,7 +9,6 @@ import {
   Milestone,
   Achievement,
   ApiResponse,
-  PaginatedResponse,
   SearchFilters,
   ProjectMemberRole,
   ProjectStatus,
@@ -42,7 +41,7 @@ export const projectService = {
   },
 
   // Get user's projects
-  getUserProjects: async (page = 1, limit = 10, status?: ProjectStatus): Promise<ApiResponse<PaginatedResponse<Project>>> => {
+  getUserProjects: async (page = 1, limit = 10, status?: ProjectStatus): Promise<ApiResponse<Project[]>> => {
     let url = `/projects/my?page=${page}&limit=${limit}`
     if (status) {
       url += `&status=${status}`
@@ -52,7 +51,7 @@ export const projectService = {
   },
 
   // Search projects
-  searchProjects: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Project>>> => {
+  searchProjects: async (filters: SearchFilters): Promise<ApiResponse<Project[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -69,13 +68,13 @@ export const projectService = {
   },
 
   // Get featured projects
-  getFeaturedProjects: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Project>>> => {
+  getFeaturedProjects: async (page = 1, limit = 10): Promise<ApiResponse<Project[]>> => {
     const response = await api.get(`/projects/featured?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get trending projects
-  getTrendingProjects: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Project>>> => {
+  getTrendingProjects: async (page = 1, limit = 10): Promise<ApiResponse<Project[]>> => {
     const response = await api.get(`/projects/trending?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -205,7 +204,7 @@ export const projectService = {
   },
 
   // Get project recommendations
-  getRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Project>>> => {
+  getRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<Project[]>> => {
     const response = await api.get(`/projects/recommendations?page=${page}&limit=${limit}`)
     return response.data
   },

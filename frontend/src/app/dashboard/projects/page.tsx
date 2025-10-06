@@ -36,7 +36,7 @@ export default function ProjectsPage() {
         </div>
         <div className="mt-4 sm:mt-0">
           <Link 
-            href="/projects/new"
+            href="/dashboard/projects/new"
             className="btn btn-primary"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -124,7 +124,7 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {formatDateShort(project.startDate)}
+                    {project.startDate ? formatDateShort(project.startDate) : 'No date'}
                   </div>
                   <div className="flex items-center">
                     <Users className="h-4 w-4 mr-1" />

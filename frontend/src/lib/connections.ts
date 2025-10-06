@@ -3,7 +3,6 @@ import {
   Connection,
   ConnectionStats,
   ApiResponse,
-  PaginatedResponse,
   SearchFilters,
   ConnectionStatus,
 } from '@/types'
@@ -22,7 +21,7 @@ export const connectionService = {
   },
 
   // Get connections
-  getConnections: async (page = 1, limit = 10, status?: ConnectionStatus): Promise<ApiResponse<PaginatedResponse<Connection>>> => {
+  getConnections: async (page = 1, limit = 10, status?: ConnectionStatus): Promise<ApiResponse<Connection[]>> => {
     let url = `/connections?page=${page}&limit=${limit}`
     if (status) {
       url += `&status=${status}`
@@ -32,13 +31,13 @@ export const connectionService = {
   },
 
   // Get pending requests (received)
-  getPendingRequests: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Connection>>> => {
+  getPendingRequests: async (page = 1, limit = 10): Promise<ApiResponse<Connection[]>> => {
     const response = await api.get(`/connections/pending?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get sent requests
-  getSentRequests: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Connection>>> => {
+  getSentRequests: async (page = 1, limit = 10): Promise<ApiResponse<Connection[]>> => {
     const response = await api.get(`/connections/sent?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -74,13 +73,13 @@ export const connectionService = {
   },
 
   // Get blocked users
-  getBlockedUsers: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Connection>>> => {
+  getBlockedUsers: async (page = 1, limit = 10): Promise<ApiResponse<Connection[]>> => {
     const response = await api.get(`/connections/blocked?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Search connections
-  searchConnections: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Connection>>> => {
+  searchConnections: async (filters: SearchFilters): Promise<ApiResponse<Connection[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {

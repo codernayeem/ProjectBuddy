@@ -722,16 +722,6 @@ export interface ApiResponse<T = any> {
   }
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
-}
-
 export interface ConnectionStats {
   totalConnections: number
   pendingRequests: number

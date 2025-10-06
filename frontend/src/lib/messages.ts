@@ -5,14 +5,13 @@ import {
   ConversationParticipant,
   MessageReaction,
   ApiResponse,
-  PaginatedResponse,
   ConversationType,
   MessageType,
 } from '@/types'
 
 export const messageService = {
   // Conversations
-  getConversations: async (page = 1, limit = 20): Promise<ApiResponse<PaginatedResponse<Conversation>>> => {
+  getConversations: async (page = 1, limit = 20): Promise<ApiResponse<Conversation[]>> => {
     const response = await api.get(`/conversations?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -78,7 +77,7 @@ export const messageService = {
   },
 
   // Messages
-  getMessages: async (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<PaginatedResponse<Message>>> => {
+  getMessages: async (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<Message[]>> => {
     const response = await api.get(`/conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -153,7 +152,7 @@ export const messageService = {
   },
 
   // Search messages
-  searchMessages: async (query: string, conversationId?: string): Promise<ApiResponse<PaginatedResponse<Message>>> => {
+  searchMessages: async (query: string, conversationId?: string): Promise<ApiResponse<Message[]>> => {
     const params = new URLSearchParams({ query })
     if (conversationId) {
       params.append('conversationId', conversationId)

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postService } from '@/lib/posts';
-import { Post, CreatePostData, UpdatePostData, PaginatedResponse } from '@/types';
+import { Post, CreatePostData, UpdatePostData } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys

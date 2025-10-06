@@ -88,7 +88,7 @@ export default function ConnectionsPage() {
     setIsSearching(true)
     try {
       const results = await userService.searchUsers({query: searchQuery, page: 1, limit: 20})
-      setSearchResults(results.data?.data || [])
+      setSearchResults(results.data || [])
     } catch (error) {
       toast.error('Failed to search users')
     } finally {
@@ -123,7 +123,7 @@ export default function ConnectionsPage() {
       )
     }
 
-    if (!connections?.data?.data?.length) {
+    if (!connections?.data?.length) {
       return (
         <div className="text-center py-12">
           <Users className="mx-auto h-24 w-24 text-gray-400 mb-4" />
@@ -144,7 +144,7 @@ export default function ConnectionsPage() {
 
     return (
       <div className="space-y-4">
-        {connections?.data?.data?.map((connection) => {
+        {connections?.data?.map((connection) => {
           const otherUser = connection.sender.id === user?.id ? connection.receiver : connection.sender
           return (
             <div key={connection.id} className="card p-6 hover:shadow-md transition-shadow">
@@ -218,7 +218,7 @@ export default function ConnectionsPage() {
       )
     }
 
-    if (!pendingRequests?.data?.data?.length) {
+    if (!pendingRequests?.data?.length) {
       return (
         <div className="text-center py-12">
           <Clock className="mx-auto h-24 w-24 text-gray-400 mb-4" />
@@ -232,7 +232,7 @@ export default function ConnectionsPage() {
 
     return (
       <div className="space-y-4">
-        {pendingRequests?.data?.data?.map((request) => (
+        {pendingRequests?.data?.map((request) => (
           <div key={request.id} className="card p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">

@@ -6,8 +6,7 @@ import {
   RegisterCredentials,
   UpdateProfileData,
   ApiResponse,
-  SearchFilters,
-  PaginatedResponse,
+  SearchFilters
 } from '@/types'
 
 export const authService = {
@@ -112,7 +111,7 @@ export const userService = {
   },
 
   // Search users
-  searchUsers: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<User>>> => {
+  searchUsers: async (filters: SearchFilters): Promise<ApiResponse<User[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -129,7 +128,7 @@ export const userService = {
   },
 
   // Get user recommendations
-  getUserRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<User>>> => {
+  getUserRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<User[]>> => {
     const response = await api.get(`/users/recommendations?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -147,13 +146,13 @@ export const userService = {
   },
 
   // Get user followers
-  getFollowers: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<User>>> => {
+  getFollowers: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<User[]>> => {
     const response = await api.get(`/users/${userId}/followers?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get user following
-  getFollowing: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<User>>> => {
+  getFollowing: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<User[]>> => {
     const response = await api.get(`/users/${userId}/following?page=${page}&limit=${limit}`)
     return response.data
   },

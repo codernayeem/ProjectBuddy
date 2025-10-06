@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { teamService } from '@/lib/teams';
-import { Team, CreateTeamData, UpdateTeamData, TeamInvitation, PaginatedResponse, InvitationStatus, TeamMemberRole } from '@/types';
+import { Team, CreateTeamData, UpdateTeamData, TeamInvitation, InvitationStatus, TeamMemberRole } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys

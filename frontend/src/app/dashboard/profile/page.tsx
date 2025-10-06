@@ -269,7 +269,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {userProjects?.data?.pagination?.total || 0}
+              {userProjects?.pagination?.total || 0}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <FolderOpen className="h-4 w-4 mr-1" />
@@ -431,7 +431,7 @@ export default function ProfilePage() {
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
                   <FolderOpen className="h-5 w-5 mr-2" />
-                  My Projects ({userProjects?.data?.pagination?.total || 0})
+                  My Projects ({userProjects?.pagination?.total || 0})
                 </span>
                 <Button asChild>
                   <Link href="/dashboard/projects/new">
@@ -442,9 +442,9 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {userProjects?.data?.data?.length ? (
+              {userProjects?.data?.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userProjects.data.data.map((project: any) => (
+                  {userProjects.data.map((project: any) => (
                     <Card key={project.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">

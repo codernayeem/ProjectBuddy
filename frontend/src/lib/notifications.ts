@@ -2,13 +2,12 @@ import api from './api'
 import {
   Notification,
   ApiResponse,
-  PaginatedResponse,
   NotificationType,
 } from '@/types'
 
 export const notificationService = {
   // Get user notifications
-  getNotifications: async (page = 1, limit = 20, unreadOnly = false): Promise<ApiResponse<PaginatedResponse<Notification>>> => {
+  getNotifications: async (page = 1, limit = 20, unreadOnly = false): Promise<ApiResponse<Notification[]>> => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -47,7 +46,7 @@ export const notificationService = {
   },
 
   // Get notifications by type
-  getNotificationsByType: async (type: NotificationType, page = 1, limit = 20): Promise<ApiResponse<PaginatedResponse<Notification>>> => {
+  getNotificationsByType: async (type: NotificationType, page = 1, limit = 20): Promise<ApiResponse<Notification[]>> => {
     const response = await api.get(`/notifications/type/${type}?page=${page}&limit=${limit}`)
     return response.data
   },

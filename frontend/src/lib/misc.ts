@@ -1,7 +1,6 @@
 import api from './api'
 import {
   ApiResponse,
-  PaginatedResponse,
   SearchFilters,
   DashboardStats,
   ActivityItem,
@@ -20,7 +19,7 @@ export const analyticsService = {
     return response.data
   },
 
-  getRecentActivity: async (page = 1, limit = 20): Promise<ApiResponse<PaginatedResponse<ActivityItem>>> => {
+  getRecentActivity: async (page = 1, limit = 20): Promise<ApiResponse<ActivityItem[]>> => {
     const response = await api.get(`/analytics/activity?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -65,7 +64,7 @@ export const analyticsService = {
 
 export const recommendationService = {
   // AI Recommendations
-  getRecommendations: async (type?: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<AIRecommendation>>> => {
+  getRecommendations: async (type?: string, page = 1, limit = 10): Promise<ApiResponse<AIRecommendation[]>> => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),

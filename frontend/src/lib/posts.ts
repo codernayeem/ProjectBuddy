@@ -9,7 +9,6 @@ import {
   Share,
   Bookmark,
   ApiResponse,
-  PaginatedResponse,
   SearchFilters,
   PostType,
   ReactionType,
@@ -17,7 +16,7 @@ import {
 
 export const postService = {
   // Get posts with filtering
-  getPosts: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getPosts: async (filters: SearchFilters): Promise<ApiResponse<Post[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters || {}).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -34,13 +33,13 @@ export const postService = {
   },
 
   // Get user feed
-  getFeed: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getFeed: async (page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
     const response = await api.get(`/posts/user/feed?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get trending posts
-  getTrendingPosts: async (page = 1, limit = 10, timeframe = '24h'): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getTrendingPosts: async (page = 1, limit = 10, timeframe = '24h'): Promise<ApiResponse<Post[]>> => {
     const response = await api.get(`/posts/trending?page=${page}&limit=${limit}&timeframe=${timeframe}`)
     return response.data
   },
@@ -120,13 +119,13 @@ export const postService = {
   },
 
   // Get user bookmarks
-  getBookmarks: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Bookmark>>> => {
+  getBookmarks: async (page = 1, limit = 10): Promise<ApiResponse<Bookmark[]>> => {
     const response = await api.get(`/posts/bookmarks?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Comments
-  getComments: async (postId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Comment>>> => {
+  getComments: async (postId: string, page = 1, limit = 10): Promise<ApiResponse<Comment[]>> => {
     const response = await api.get(`/posts/${postId}/comments?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -158,7 +157,7 @@ export const postService = {
   },
 
   // Search posts
-  searchPosts: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  searchPosts: async (filters: SearchFilters): Promise<ApiResponse<Post[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -175,19 +174,19 @@ export const postService = {
   },
 
   // Get user posts
-  getUserPosts: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getUserPosts: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
     const response = await api.get(`/users/${userId}/posts?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get project posts
-  getProjectPosts: async (projectId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getProjectPosts: async (projectId: string, page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
     const response = await api.get(`/projects/${projectId}/posts?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get team posts
-  getTeamPosts: async (teamId: string, page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Post>>> => {
+  getTeamPosts: async (teamId: string, page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
     const response = await api.get(`/teams/${teamId}/posts?page=${page}&limit=${limit}`)
     return response.data
   },

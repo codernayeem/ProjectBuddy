@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react'
 import { projectService } from '@/lib/projects'
-import { CreateProjectData } from '@/types'
+import { CreateProjectData, ProjectCategory } from '@/types'
 
 const PROJECT_STATUSES = [
   { value: 'PLANNING', label: 'Planning', description: 'Project is in planning phase' },
@@ -31,7 +31,9 @@ export default function NewProjectPage() {
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     isPublic: true,
-    tags: []
+    tags: [],
+    category: ProjectCategory.WEB_DEVELOPMENT,
+    requiredSkills: []
   })
   const [newTag, setNewTag] = useState('')
 
@@ -39,7 +41,7 @@ export default function NewProjectPage() {
     mutationFn: (data: CreateProjectData) => projectService.createProject(data),
     onSuccess: (project) => {
       toast.success('Project created successfully!')
-      router.push(`/projects/${project.id}`)
+      router.push(`/projects/${project.data?.id}`)
     },
     onError: () => {
       toast.error('Failed to create project')

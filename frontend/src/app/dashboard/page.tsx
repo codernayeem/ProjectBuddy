@@ -17,10 +17,11 @@ import { useFeed, useCreatePost, useReactToPost } from '@/hooks/usePosts';
 import { useUserTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
+import { PostType, ReactionType } from '@/types';
 
 export default function DashboardPage() {
   const [postContent, setPostContent] = useState('');
-  const [selectedPostType, setSelectedPostType] = useState('GENERAL');
+  const [selectedPostType, setSelectedPostType] = useState(PostType.GENERAL);
   
   const { user } = useAuth();
   const { data: feedData, isLoading: feedLoading, error: feedError } = useFeed(1, 10);
@@ -29,12 +30,23 @@ export default function DashboardPage() {
   const reactToPostMutation = useReactToPost();
 
   const postTypes = [
-    { id: 'GENERAL', label: 'General Update', icon: FileText },
-    { id: 'PROJECT_UPDATE', label: 'Project Update', icon: Briefcase },
-    { id: 'ACHIEVEMENT', label: 'Achievement', icon: Award },
-    { id: 'TEAM_FORMATION', label: 'Team Formation', icon: Users },
-    { id: 'FIND_TEAMMATES', label: 'Find Teammates', icon: Users },
-    { id: 'MILESTONE', label: 'Milestone', icon: TrendingUp },
+    { id: PostType.GENERAL, label: 'General Update', icon: FileText },
+    { id: PostType.PROJECT_UPDATE, label: 'Project Update', icon: Briefcase },
+    { id: PostType.PROJECT_ANNOUNCEMENT, label: 'Project Announcement', icon: Briefcase },
+    { id: PostType.ACHIEVEMENT, label: 'Achievement', icon: Award },
+    { id: PostType.MILESTONE_COMPLETED, label: 'Milestone Completed', icon: TrendingUp },
+    { id: PostType.GOAL_COMPLETED, label: 'Goal Completed', icon: Award },
+    { id: PostType.TEAM_FORMATION, label: 'Team Formation', icon: Users },
+    { id: PostType.FIND_TEAMMATES, label: 'Find Teammates', icon: Users },
+    { id: PostType.FIND_TEAM, label: 'Find Team', icon: Users },
+    { id: PostType.FIND_PROJECT, label: 'Find Project', icon: Briefcase },
+    { id: PostType.PROJECT_SHOWCASE, label: 'Project Showcase', icon: TrendingUp },
+    { id: PostType.SKILL_SHARE, label: 'Skill Share', icon: Award },
+    { id: PostType.RESOURCE_SHARE, label: 'Resource Share', icon: FileText },
+    { id: PostType.QUESTION, label: 'Question', icon: MessageCircle },
+    { id: PostType.POLL, label: 'Poll', icon: MessageCircle },
+    { id: PostType.EVENT, label: 'Event', icon: Calendar },
+    { id: PostType.CELEBRATION, label: 'Celebration', icon: Heart },
   ];
 
   // Calculate stats from real data
@@ -42,7 +54,7 @@ export default function DashboardPage() {
     connections: 0, // TODO: Add connections API
     teams: userTeamsData?.pagination?.total || 0,
     projects: 0, // TODO: Add projects API
-    achievements: feedData?.data?.data?.filter(p => p.type === 'ACHIEVEMENT').length || 0
+    achievements: feedData?.data?.filter(p => p.type === PostType.ACHIEVEMENT).length || 0
   };
 
   const handleCreatePost = async () => {
@@ -60,7 +72,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleReaction = async (postId: string, reactionType: string) => {
+  const handleReaction = async (postId: string, reactionType: ReactionType) => {
     try {
       await reactToPostMutation.mutateAsync({ id: postId, type: reactionType });
     } catch (error) {
@@ -238,14 +250,14 @@ export default function DashboardPage() {
 
           {/* Feed */}
           <div className="space-y-6">
-            {feedData?.data?.data?.length === 0 ? (
+            {feedData?.data?.length === 0 ? (
               <Card className="p-6 text-center">
                 <CardContent>
                   <p className="text-gray-600">No posts in your feed yet. Start following teams and users to see their updates!</p>
                 </CardContent>
               </Card>
             ) : (
-              feedData?.data?.data?.map((post) => (
+              feedData?.data?.map((post) => (
                 <Card key={post.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-3">
@@ -315,7 +327,7 @@ export default function DashboardPage() {
                               variant="ghost" 
                               size="sm" 
                               className="flex items-center space-x-1"
-                              onClick={() => handleReaction(post.id, 'like')}
+                              onClick={() => handleReaction(post.id, ReactionType.LIKE)}
                               disabled={reactToPostMutation.isPending}
                             >
                               <Heart className="w-4 h-4" />
@@ -397,14 +409,14 @@ export default function DashboardPage() {
           </Card>
 
           {/* My Teams */}
-          {userTeamsData?.data?.data && userTeamsData?.data?.data.length > 0 && (
+          {userTeamsData?.data && userTeamsData?.data.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>My Teams</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {userTeamsData.data.data.slice(0, 3).map((team) => (
+                  {userTeamsData.data.slice(0, 3).map((team) => (
                     <div key={team.id} className="flex items-center space-x-3">
                         <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
                         <Users className="h-4 w-4 text-primary-600" />
@@ -415,7 +427,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                  {userTeamsData.data.data.length > 3 && (
+                  {userTeamsData.data.length > 3 && (
                     <Button variant="ghost" className="w-full text-sm">
                       View all teams
                     </Button>

@@ -7,7 +7,6 @@ import {
   TeamRole,
   TeamInvitation,
   ApiResponse,
-  PaginatedResponse,
   SearchFilters,
   TeamMemberRole,
   TeamType,
@@ -17,7 +16,7 @@ import {
 
 export const teamService = {
   // Get teams with filtering
-  getTeams: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  getTeams: async (filters: SearchFilters): Promise<ApiResponse<Team[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -34,7 +33,7 @@ export const teamService = {
   },
 
   // Get user's teams
-  getUserTeams: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  getUserTeams: async (page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
     const response = await api.get(`/teams/my-teams?page=${page}&limit=${limit}`)
     return response.data
   },
@@ -167,25 +166,25 @@ export const teamService = {
   },
 
   // Team Recommendations
-  getRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  getRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
     const response = await api.get(`/teams/recommendations?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get trending teams
-  getTrendingTeams: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  getTrendingTeams: async (page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
     const response = await api.get(`/teams/trending?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Get featured teams
-  getFeaturedTeams: async (page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  getFeaturedTeams: async (page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
     const response = await api.get(`/teams/featured?page=${page}&limit=${limit}`)
     return response.data
   },
 
   // Search teams
-  searchTeams: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Team>>> => {
+  searchTeams: async (filters: SearchFilters): Promise<ApiResponse<Team[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
