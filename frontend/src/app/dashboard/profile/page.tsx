@@ -445,52 +445,54 @@ export default function ProfilePage() {
               {userProjects?.data?.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {userProjects.data.map((project: any) => (
-                    <Card key={project.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 truncate">
-                            {project.title}
-                          </h3>
-                          <UIBadge variant={
-                            project.status === 'ACTIVE' ? 'default' :
-                            project.status === 'COMPLETED' ? 'secondary' :
-                            project.status === 'PLANNING' ? 'outline' : 'destructive'
-                          }>
-                            {formatEnumValue(project.status)}
-                          </UIBadge>
-                        </div>
-                        
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                          {project.description}
-                        </p>
+                    <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                              {project.title}
+                            </h3>
+                            <UIBadge variant={
+                              project.status === 'ACTIVE' ? 'default' :
+                              project.status === 'COMPLETED' ? 'secondary' :
+                              project.status === 'PLANNING' ? 'outline' : 'destructive'
+                            }>
+                              {formatEnumValue(project.status)}
+                            </UIBadge>
+                          </div>
+                          
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                            {project.description}
+                          </p>
 
-                        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {project.startDate ? formatDateShort(project.startDate) : 'No date'}
+                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {project.startDate ? formatDateShort(project.startDate) : 'No date'}
+                            </div>
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1" />
+                              {project.currentMembers}
+                            </div>
                           </div>
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            {project.currentMembers}
-                          </div>
-                        </div>
 
-                        {project.tags && project.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {project.tags.slice(0, 3).map((tag: string) => (
-                              <UIBadge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </UIBadge>
-                            ))}
-                            {project.tags.length > 3 && (
-                              <span className="text-xs text-gray-500">
-                                +{project.tags.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                          {project.tags && project.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {project.tags.slice(0, 3).map((tag: string) => (
+                                <UIBadge key={tag} variant="outline" className="text-xs">
+                                  {tag}
+                                </UIBadge>
+                              ))}
+                              {project.tags.length > 3 && (
+                                <span className="text-xs text-gray-500">
+                                  +{project.tags.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               ) : (

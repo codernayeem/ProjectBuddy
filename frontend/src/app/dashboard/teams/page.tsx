@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs-new';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Filter, Plus, Users, Globe, Lock, Eye,
   Star, Calendar, MapPin, ExternalLink,
@@ -321,13 +321,13 @@ export default function TeamsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userTeamsData?.teams?.map((team) => (
+              {userTeamsData?.data?.map((team) => (
                 <TeamCard key={team.id} team={team} showMembershipActions={false} />
               ))}
             </div>
           )}
 
-          {userTeamsData?.teams?.length === 0 && !userTeamsLoading && (
+          {userTeamsData?.data?.length === 0 && !userTeamsLoading && (
             <Card className="p-12 text-center">
               <CardContent>
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -350,13 +350,13 @@ export default function TeamsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendationsData?.teams?.map((team) => (
+              {recommendationsData?.data?.map((team) => (
                 <TeamCard key={team.id} team={team} />
               ))}
             </div>
           )}
 
-          {recommendationsData?.teams?.length === 0 && !recommendationsLoading && (
+          {recommendationsData?.data?.length === 0 && !recommendationsLoading && (
             <Card className="p-12 text-center">
               <CardContent>
                 <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />

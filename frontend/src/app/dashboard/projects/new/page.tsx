@@ -12,10 +12,14 @@ import {
   Globe,
   Lock,
   Plus,
-  X
+  X,
+  Save
 } from 'lucide-react'
 import { projectService } from '@/lib/projects'
 import { CreateProjectData, ProjectCategory } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 const PROJECT_STATUSES = [
   { value: 'PLANNING', label: 'Planning', description: 'Project is in planning phase' },
@@ -96,41 +100,40 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex items-center mb-8">
-        <Link 
-          href="/projects"
-          className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
-          <p className="mt-2 text-gray-600">
-            Start a new project and invite collaborators to join
-          </p>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-6">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Link 
+              href="/dashboard/projects"
+              className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Create New Project</h1>
+              <p className="text-gray-600">
+                Start a new project and invite collaborators to join
+              </p>
+            </div>
+          </CardTitle>
+        </CardHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
               
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Project Title *
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="input w-full"
                     placeholder="Enter project title..."
                     maxLength={100}
                   />
@@ -147,7 +150,7 @@ export default function NewProjectPage() {
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={6}
-                    className="input w-full resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     placeholder="Describe your project, its goals, and what you're looking for in collaborators..."
                     maxLength={1000}
                   />
@@ -159,8 +162,8 @@ export default function NewProjectPage() {
             </div>
 
             {/* Timeline */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Timeline</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Timeline</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -173,7 +176,7 @@ export default function NewProjectPage() {
                       type="date"
                       value={formData.startDate}
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="input pl-10 w-full"
+                      className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -189,7 +192,7 @@ export default function NewProjectPage() {
                       value={formData.endDate}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
                       min={formData.startDate}
-                      className="input pl-10 w-full"
+                      className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -197,8 +200,8 @@ export default function NewProjectPage() {
             </div>
 
             {/* Technologies & Skills */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Technologies & Skills</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Technologies & Skills</h2>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -207,22 +210,23 @@ export default function NewProjectPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <Tag className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
+                    <Input
                       type="text"
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="input pl-10 w-full"
+                      className="pl-10"
                       placeholder="e.g., react, nodejs, design..."
                     />
                   </div>
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAddTag}
-                    className="btn btn-outline ml-2"
+                    variant="outline"
+                    className="ml-2"
                   >
                     <Plus className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
                 
                 {formData.tags.length > 0 && (
@@ -230,13 +234,13 @@ export default function NewProjectPage() {
                     {formData.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm"
+                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                       >
                         {tag}
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag)}
-                          className="ml-2 hover:text-primary-600"
+                          className="ml-2 hover:text-blue-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -246,13 +250,10 @@ export default function NewProjectPage() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
             {/* Visibility */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Visibility</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Visibility</h2>
               
               <div className="space-y-4">
                 <label className="flex items-start cursor-pointer">
@@ -295,38 +296,25 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            {/* Tips */}
-            <div className="card p-6 bg-blue-50 border-blue-200">
-              <h3 className="text-sm font-semibold text-blue-900 mb-3">💡 Tips for Success</h3>
-              <ul className="text-sm text-blue-800 space-y-2">
-                <li>• Write a clear, descriptive title</li>
-                <li>• Include specific goals and requirements</li>
-                <li>• Add relevant technologies and skills</li>
-                <li>• Set realistic timelines</li>
-                <li>• Make it public to attract collaborators</li>
-              </ul>
+            {/* Form Actions */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/projects">
+                  Cancel
+                </Link>
+              </Button>
+              
+              <Button
+                type="submit"
+                disabled={createProjectMutation.isPending}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
+              </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Form Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-          <Link 
-            href="/projects"
-            className="btn btn-outline"
-          >
-            Cancel
-          </Link>
-          
-          <button
-            type="submit"
-            disabled={createProjectMutation.isPending}
-            className="btn btn-primary"
-          >
-            {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
-          </button>
-        </div>
-      </form>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

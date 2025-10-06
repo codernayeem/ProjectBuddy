@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs-new';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Bell, Check, X, Trash2, Users, Heart, MessageCircle, 
   Share, UserPlus, Briefcase, Award, Calendar, Settings,

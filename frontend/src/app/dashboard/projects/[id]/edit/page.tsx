@@ -16,13 +16,16 @@ import {
   Save
 } from 'lucide-react'
 import { projectService } from '@/lib/projects'
-import { UpdateProjectData } from '@/types'
+import { ProjectStatus, UpdateProjectData } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 const PROJECT_STATUSES = [
-  { value: 'PLANNING', label: 'Planning', description: 'Project is in planning phase' },
-  { value: 'ACTIVE', label: 'Active', description: 'Project is actively being worked on' },
-  { value: 'ON_HOLD', label: 'On Hold', description: 'Project is temporarily paused' },
-  { value: 'COMPLETED', label: 'Completed', description: 'Project has been completed' },
+  { value: ProjectStatus.PLANNING, label: 'Planning', description: 'Project is in planning phase' },
+  { value: ProjectStatus.ACTIVE, label: 'Active', description: 'Project is actively being worked on' },
+  { value: ProjectStatus.ON_HOLD, label: 'On Hold', description: 'Project is temporarily paused' },
+  { value: ProjectStatus.COMPLETED, label: 'Completed', description: 'Project has been completed' },
 ]
 
 export default function EditProjectPage() {
@@ -35,7 +38,7 @@ export default function EditProjectPage() {
     description: '',
     startDate: '',
     endDate: '',
-    status: 'PLANNING',
+    status: ProjectStatus.PLANNING,
     isPublic: true,
     tags: []
   })
@@ -53,7 +56,7 @@ export default function EditProjectPage() {
     mutationFn: (data: UpdateProjectData) => projectService.updateProject(projectId, data),
     onSuccess: () => {
       toast.success('Project updated successfully!')
-      router.push(`/projects/${projectId}`)
+      router.push(`/dashboard/projects/${projectId}`)
     },
     onError: () => {
       toast.error('Failed to update project')
@@ -64,13 +67,13 @@ export default function EditProjectPage() {
   useEffect(() => {
     if (project) {
       setFormData({
-        title: project.title,
-        description: project.description,
-        startDate: project.startDate.split('T')[0], // Convert to YYYY-MM-DD format
-        endDate: project.endDate ? project.endDate.split('T')[0] : '',
-        status: project.status,
-        isPublic: project.isPublic,
-        tags: project.tags || []
+        title: project.data?.title,
+        description: project.data?.description,
+        startDate: project.data?.startDate?.split('T')[0], // Convert to YYYY-MM-DD format
+        endDate: project.data?.endDate ? project.data?.endDate.split('T')[0] : '',
+        status: project.data?.status,
+        isPublic: project.data?.isPublic,
+        tags: project.data?.tags || []
       })
     }
   }, [project])
@@ -146,7 +149,7 @@ export default function EditProjectPage() {
           <p className="text-gray-600 mb-6">
             The project you're trying to edit doesn't exist or you don't have permission to edit it.
           </p>
-          <Link href="/projects" className="btn btn-primary">
+          <Link href="/dashboard/projects" className="btn btn-primary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Projects
           </Link>
@@ -156,41 +159,40 @@ export default function EditProjectPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex items-center mb-8">
-        <Link 
-          href={`/projects/${projectId}`}
-          className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Project</h1>
-          <p className="mt-2 text-gray-600">
-            Update your project details and settings
-          </p>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-6">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Link 
+              href={`/dashboard/projects/${projectId}`}
+              className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 text-gray-600" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Edit Project</h1>
+              <p className="text-gray-600">
+                Update your project details and settings
+              </p>
+            </div>
+          </CardTitle>
+        </CardHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
               
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Project Title *
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={formData.title || ''}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="input w-full"
                     placeholder="Enter project title..."
                     maxLength={100}
                   />
@@ -220,7 +222,7 @@ export default function EditProjectPage() {
 
             {/* Timeline */}
             <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Timeline</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Timeline</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -249,7 +251,7 @@ export default function EditProjectPage() {
                       value={formData.endDate || ''}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
                       min={formData.startDate}
-                      className="input pl-10 w-full"
+                      className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -257,8 +259,8 @@ export default function EditProjectPage() {
             </div>
 
             {/* Technologies & Skills */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Technologies & Skills</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Technologies & Skills</h2>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -267,22 +269,23 @@ export default function EditProjectPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <Tag className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
+                    <Input
                       type="text"
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="input pl-10 w-full"
+                      className="pl-10"
                       placeholder="e.g., react, nodejs, design..."
                     />
                   </div>
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAddTag}
-                    className="btn btn-outline ml-2"
+                    variant="outline"
+                    className="ml-2"
                   >
                     <Plus className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
                 
                 {formData.tags && formData.tags.length > 0 && (
@@ -290,13 +293,13 @@ export default function EditProjectPage() {
                     {formData.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm"
+                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                       >
                         {tag}
                         <button
                           type="button"
                           onClick={() => handleRemoveTag(tag)}
-                          className="ml-2 hover:text-primary-600"
+                          className="ml-2 hover:text-blue-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -306,13 +309,10 @@ export default function EditProjectPage() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Project Status</h2>
+            {/* Project Status */}
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Project Status</h2>
               
               <div className="space-y-4">
                 {PROJECT_STATUSES.map((status) => (
@@ -335,8 +335,8 @@ export default function EditProjectPage() {
             </div>
 
             {/* Visibility */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Visibility</h2>
+            <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Visibility</h2>
               
               <div className="space-y-4">
                 <label className="flex items-start cursor-pointer">
@@ -378,28 +378,26 @@ export default function EditProjectPage() {
                 </label>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Form Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-          <Link 
-            href={`/projects/${projectId}`}
-            className="btn btn-outline"
-          >
-            Cancel
-          </Link>
-          
-          <button
-            type="submit"
-            disabled={updateProjectMutation.isPending}
-            className="btn btn-primary"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {updateProjectMutation.isPending ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </form>
+            {/* Form Actions */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+              <Button variant="outline" asChild>
+                <Link href={`/dashboard/projects/${projectId}`}>
+                  Cancel
+                </Link>
+              </Button>
+              
+              <Button
+                type="submit"
+                disabled={updateProjectMutation.isPending}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {updateProjectMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
