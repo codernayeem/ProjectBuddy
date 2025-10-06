@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { postService, Post, CreatePostData, PostsResponse } from '@/lib/posts';
+import { postService } from '@/lib/posts';
+import { Post, CreatePostData, UpdatePostData, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -23,7 +24,7 @@ export function usePosts(page = 1, limit = 10, filters?: {
 }) {
   return useQuery({
     queryKey: postKeys.list({ page, limit, ...filters }),
-    queryFn: () => postService.getPosts(page, limit, filters),
+    queryFn: () => postService.getPosts({ page, limit, ...filters }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -61,13 +62,15 @@ export function useCreatePost() {
 
   return useMutation({
     mutationFn: (data: CreatePostData) => postService.createPost(data),
-    onSuccess: (newPost) => {
+    onSuccess: (response) => {
       // Invalidate and refetch posts
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
       
       // Add the new post to the cache
-      queryClient.setQueryData(postKeys.detail(newPost.id), newPost);
+      if (response.data) {
+        queryClient.setQueryData(postKeys.detail(response.data.id), response.data);
+      }
       
       toast.success('Post created successfully!');
     },
@@ -83,11 +86,13 @@ export function useUpdatePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreatePostData> }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdatePostData }) =>
       postService.updatePost(id, data),
-    onSuccess: (updatedPost, { id }) => {
+    onSuccess: (response, { id }) => {
       // Update the post in cache
-      queryClient.setQueryData(postKeys.detail(id), updatedPost);
+      if (response.data) {
+        queryClient.setQueryData(postKeys.detail(id), response.data);
+      }
       
       // Invalidate lists to refresh
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
@@ -130,7 +135,7 @@ export function useReactToPost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, type }: { id: string; type: string }) =>
+    mutationFn: ({ id, type }: { id: string; type: import('@/types').ReactionType }) =>
       postService.reactToPost(id, type),
     onSuccess: (_, { id }) => {
       // Invalidate the specific post and lists

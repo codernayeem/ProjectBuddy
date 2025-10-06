@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { teamService, Team, CreateTeamData, UpdateTeamData, TeamInvitation, TeamsResponse } from '@/lib/teams';
+import { teamService } from '@/lib/teams';
+import { Team, CreateTeamData, UpdateTeamData, TeamInvitation, PaginatedResponse, InvitationStatus, TeamMemberRole } from '@/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -25,7 +26,7 @@ export function useTeams(page = 1, limit = 10, filters?: {
 }) {
   return useQuery({
     queryKey: teamKeys.list({ page, limit, ...filters }),
-    queryFn: () => teamService.getTeams(page, limit, filters),
+    queryFn: () => teamService.getTeams({ page, limit, ...filters }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -58,7 +59,7 @@ export function useTeamRecommendations(page = 1, limit = 10) {
 }
 
 // Get user invitations
-export function useUserInvitations(status?: string) {
+export function useUserInvitations(status?: InvitationStatus) {
   return useQuery({
     queryKey: [...teamKeys.invitations(), status],
     queryFn: () => teamService.getUserInvitations(status),
@@ -72,13 +73,15 @@ export function useCreateTeam() {
 
   return useMutation({
     mutationFn: (data: CreateTeamData) => teamService.createTeam(data),
-    onSuccess: (newTeam) => {
+    onSuccess: (response) => {
       // Invalidate and refetch teams
       queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
       queryClient.invalidateQueries({ queryKey: teamKeys.userTeams() });
       
       // Add the new team to the cache
-      queryClient.setQueryData(teamKeys.detail(newTeam.id), newTeam);
+      if (response.data) {
+        queryClient.setQueryData(teamKeys.detail(response.data.id), response.data);
+      }
       
       toast.success('Team created successfully!');
     },
@@ -96,9 +99,11 @@ export function useUpdateTeam() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTeamData }) =>
       teamService.updateTeam(id, data),
-    onSuccess: (updatedTeam, { id }) => {
+    onSuccess: (response, { id }) => {
       // Update the team in cache
-      queryClient.setQueryData(teamKeys.detail(id), updatedTeam);
+      if (response.data) {
+        queryClient.setQueryData(teamKeys.detail(id), response.data);
+      }
       
       // Invalidate lists to refresh
       queryClient.invalidateQueries({ queryKey: teamKeys.lists() });
@@ -185,7 +190,7 @@ export function useInviteToTeam() {
   return useMutation({
     mutationFn: ({ teamId, data }: { 
       teamId: string; 
-      data: { inviteeId: string; role?: 'ADMIN' | 'MEMBER'; message?: string; }
+      data: { inviteeId?: string; email?: string; roleId?: string; message?: string; }
     }) => teamService.inviteToTeam(teamId, data),
     onSuccess: (_, { teamId }) => {
       // Invalidate invitations
@@ -228,7 +233,7 @@ export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ teamId, userId, role }: { teamId: string; userId: string; role: 'ADMIN' | 'MEMBER' }) =>
+    mutationFn: ({ teamId, userId, role }: { teamId: string; userId: string; role: TeamMemberRole }) =>
       teamService.updateMemberRole(teamId, userId, role),
     onSuccess: (_, { teamId }) => {
       // Invalidate the specific team

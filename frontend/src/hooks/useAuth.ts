@@ -25,7 +25,7 @@ export function useAuth() {
       return
     }
 
-    if (profileData?.success) {
+    if (profileData?.success && profileData.data) {
       // User is authenticated and we have their profile
       login(profileData.data, {
         accessToken: token,

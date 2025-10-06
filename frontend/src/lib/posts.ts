@@ -19,7 +19,7 @@ export const postService = {
   // Get posts with filtering
   getPosts: async (filters: SearchFilters): Promise<ApiResponse<PaginatedResponse<Post>>> => {
     const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(filters || {}).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
           value.forEach(v => params.append(key, v))
