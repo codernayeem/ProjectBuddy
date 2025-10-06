@@ -33,7 +33,7 @@ import { Button } from '@/components/ui/button'
 import { Badge as UIBadge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs-new'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { formatRelativeTime, formatDateShort, getInitials, formatEnumValue } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -218,7 +218,7 @@ export default function ProfilePage() {
               {/* Actions */}
               <div className="flex space-x-3 mt-4 sm:mt-0">
                 <Button asChild>
-                  <Link href="/dashboard/settings">
+                  <Link href="/settings">
                     <Settings className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Link>

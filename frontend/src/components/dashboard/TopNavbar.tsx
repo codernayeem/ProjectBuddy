@@ -160,7 +160,7 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
                 <Link href="/dashboard/profile">View Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Settings</Link>
+                <Link href="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/help">Help & Support</Link>

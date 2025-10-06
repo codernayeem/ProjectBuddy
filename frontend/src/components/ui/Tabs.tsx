@@ -1,73 +1,55 @@
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
+"use client"
 
-interface Tab {
-  id: string
-  label: string
-  icon?: React.ComponentType<{ className?: string }>
-}
+import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
 
-interface TabsProps {
-  tabs: Tab[]
-  activeTab: string
-  onTabChange: (tabId: string) => void
-  children: React.ReactNode
-  className?: string
-}
+import { cn } from "@/lib/utils"
 
-export function Tabs({ tabs, activeTab, onTabChange, children, className }: TabsProps) {
-  return (
-    <div className={cn('w-full', className)}>
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8" aria-label="Tabs">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={cn(
-                  'flex items-center whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors',
-                  isActive
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                )}
-              >
-                {tab.icon && (
-                  <tab.icon className={cn(
-                    'h-4 w-4 mr-2',
-                    isActive ? 'text-primary-500' : 'text-gray-400'
-                  )} />
-                )}
-                {tab.label}
-              </button>
-            )
-          })}
-        </nav>
-      </div>
-      
-      {/* Tab Content */}
-      <div className="mt-6">
-        {children}
-      </div>
-    </div>
-  )
-}
+const TabsRoot = TabsPrimitive.Root
 
-interface TabPanelProps {
-  tabId: string
-  activeTab: string
-  children: React.ReactNode
-  className?: string
-}
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+TabsList.displayName = TabsPrimitive.List.displayName
 
-export function TabPanel({ tabId, activeTab, children, className }: TabPanelProps) {
-  if (tabId !== activeTab) return null
-  
-  return (
-    <div className={cn('w-full', className)}>
-      {children}
-    </div>
-  )
-}
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      className
+    )}
+    {...props}
+  />
+))
+TabsContent.displayName = TabsPrimitive.Content.displayName
+
+export { TabsRoot as Tabs, TabsList, TabsTrigger, TabsContent }

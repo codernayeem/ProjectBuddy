@@ -34,14 +34,17 @@ import {
 import { authService } from '@/lib/auth'
 import { userService } from '@/lib/auth'
 import { notificationService } from '@/lib/notifications'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, useRequireAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
+import { LoadingPage } from '@/components/ui/LoadingSpinner'
+import Link from 'next/link'
+import { ArrowLeft, Home } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs-new'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/Badge'
 import { 
   Select,
@@ -109,11 +112,22 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { isAuthenticated, isLoading } = useRequireAuth()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const queryClient = useQueryClient()
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return <LoadingPage />
+  }
+
+  // Don't render settings if not authenticated
+  if (!isAuthenticated) {
+    return <LoadingPage />
+  }
 
   // Fetch notification preferences
   const { data: notificationPrefs } = useQuery({
@@ -239,14 +253,35 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-          <SettingsIcon className="h-8 w-8 mr-3" />
-          Settings
-        </h1>
-        <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Navigation Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard" className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Back to Dashboard
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard" className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Home className="h-5 w-5 mr-2" />
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+            <SettingsIcon className="h-8 w-8 mr-3" />
+            Settings
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your account settings and preferences</p>
+        </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -624,19 +659,19 @@ export default function SettingsPage() {
               <div>
                 <h3 className="text-lg font-medium mb-4">Account Statistics</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-4 bg-muted dark:bg-muted/50 rounded-lg border border-border">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {user.profileViews || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Profile Views</div>
+                    <div className="text-sm text-muted-foreground">Profile Views</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">0</div>
-                    <div className="text-sm text-gray-600">Projects Created</div>
+                  <div className="text-center p-4 bg-muted dark:bg-muted/50 rounded-lg border border-border">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">0</div>
+                    <div className="text-sm text-muted-foreground">Projects Created</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">0</div>
-                    <div className="text-sm text-gray-600">Connections</div>
+                  <div className="text-center p-4 bg-muted dark:bg-muted/50 rounded-lg border border-border">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</div>
+                    <div className="text-sm text-muted-foreground">Connections</div>
                   </div>
                 </div>
               </div>
@@ -901,6 +936,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   )
 }

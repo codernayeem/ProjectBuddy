@@ -100,7 +100,7 @@ export default function Navigation() {
 
                 {/* Settings */}
                 <Link 
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   <Settings className="h-6 w-6" />
@@ -198,7 +198,7 @@ export default function Navigation() {
             </div>
             <div className="mt-3 space-y-1">
               <Link
-                href="/dashboard/settings"
+                href="/settings"
                 className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
