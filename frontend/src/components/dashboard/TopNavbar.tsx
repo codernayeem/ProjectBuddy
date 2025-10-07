@@ -155,13 +155,13 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/profile">View Profile</Link>
+                <Link to="/dashboard/profile">View Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/help">Help & Support</Link>
+                <Link to="/dashboard/help">Help & Support</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X, Home, Users, Briefcase, MessageSquare, Bell, Hash, BookOpen, Calendar } from 'lucide-react';
+import { X, Home, Users, Briefcase, MessageSquare, Bell, Hash} from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -8,13 +8,11 @@ import { useAuth } from '@/hooks/useAuth';
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
-  { name: 'Connections', href: '/connections', icon: Users },
-  { name: 'Projects', href: '/projects', icon: Briefcase },
-  { name: 'Teams', href: '/teams', icon: Hash },
-  { name: 'Notifications', href: '/notifications', icon: Bell },
-  { name: 'Messages', href: '/messages', icon: MessageSquare },
-  { name: 'Events', href: '/events', icon: Calendar },
-  { name: 'Jobs', href: '/jobs', icon: BookOpen },
+  { name: 'Connections', href: '/dashboard/connections', icon: Users },
+  { name: 'Projects', href: '/dashboard/projects', icon: Briefcase },
+  { name: 'Teams', href: '/dashboard/teams', icon: Hash },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+  { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
 ];
 
 interface MobileNavigationProps {
