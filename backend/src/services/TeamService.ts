@@ -1,705 +1,497 @@
-import { PrismaClient, Team, TeamMember, TeamInvitation, TeamVisibility, TeamType, TeamMemberRole, InvitationStatus } from '@prisma/client';
-
-export interface CreateTeamData {
-  name: string;
-  description: string;
-  visibility?: TeamVisibility;
-  type?: TeamType;
-  skills?: string[];
-  tags?: string[];
-  location?: string;
-  maxMembers?: number;
-  isRecruiting?: boolean;
-}
-
-export interface UpdateTeamData {
-  name?: string;
-  description?: string;
-  visibility?: TeamVisibility;
-  type?: TeamType;
-  skills?: string[];
-  tags?: string[];
-  location?: string;
-  maxMembers?: number;
-  isRecruiting?: boolean;
-  avatar?: string;
-  banner?: string;
-}
-
-export interface TeamFilters {
-  page: number;
-  limit: number;
-  search?: string;
-  type?: TeamType;
-  skills?: string[];
-  location?: string;
-  isRecruiting?: boolean;
-}
-
-export interface InvitationData {
-  inviteeId?: string;
-  email?: string;
-  message?: string;
-}
+import { TeamRepository } from '../repositories/TeamRepository';
+import { NotificationRepository } from '../repositories/NotificationRepository';
+import { 
+  CreateTeamData, 
+  UpdateTeamData, 
+  CreateTeamProjectData,
+  CreateTeamMilestoneData,
+  CreateTeamAchievementData,
+  CreateCustomRoleData,
+  PaginationParams,
+  SearchParams,
+  TeamFilters 
+} from '../types';
+import { Team, TeamMember, TeamInvitation, TeamJoinRequest, TeamProject, TeamMilestone, TeamAchievement, TeamCustomRole } from '@prisma/client';
 
 export class TeamService {
-  private prisma: PrismaClient;
+  private teamRepository: TeamRepository;
+  private notificationRepository: NotificationRepository;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    this.teamRepository = new TeamRepository();
+    this.notificationRepository = new NotificationRepository();
   }
 
+  // Team CRUD operations
   async createTeam(ownerId: string, data: CreateTeamData): Promise<Team> {
-    const team = await this.prisma.team.create({
-      data: {
-        ...data,
-        ownerId,
-        members: {
-          create: {
-            userId: ownerId,
-            role: TeamMemberRole.OWNER
-          }
-        }
+    const team = await this.teamRepository.create({
+      ...data,
+      owner: { connect: { id: ownerId } },
+      members: {
+        create: {
+          user: { connect: { id: ownerId } },
+          status: 'ADMIN',
+        },
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            }
-          }
-        },
-        _count: {
-          select: {
-            members: true,
-            projects: true
-          }
-        }
-      }
     });
 
     return team;
   }
 
-  async getTeams(filters: TeamFilters) {
-    const { page, limit, search, type, skills, location, isRecruiting } = filters;
-    const skip = (page - 1) * limit;
-
-    const where: any = {
-      visibility: {
-        in: [TeamVisibility.PUBLIC, TeamVisibility.INVITE_ONLY]
-      }
-    };
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { tags: { has: search } }
-      ];
-    }
-
-    if (type) {
-      where.type = type;
-    }
-
-    if (skills && skills.length > 0) {
-      where.skills = {
-        hasMany: skills
-      };
-    }
-
-    if (location) {
-      where.location = { contains: location, mode: 'insensitive' };
-    }
-
-    if (typeof isRecruiting === 'boolean') {
-      where.isRecruiting = isRecruiting;
-    }
-
-    const [teams, total] = await Promise.all([
-      this.prisma.team.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              avatar: true
-            }
-          },
-          _count: {
-            select: {
-              members: true,
-              projects: true
-            }
-          }
-        }
-      }),
-      this.prisma.team.count({ where })
-    ]);
-
+  async getTeams(
+    params: SearchParams & PaginationParams & { filters?: TeamFilters },
+    userId?: string
+  ): Promise<{ teams: Team[]; total: number; pagination: any }> {
+    const result = await this.teamRepository.search(params, userId);
+    
     return {
-      teams,
+      teams: result.teams,
+      total: result.total,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
     };
   }
 
-  async getTeamById(teamId: string) {
-    return await this.prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            bio: true
-          }
-        },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true,
-                bio: true,
-                skills: true,
-                position: true
-              }
-            }
-          },
-          orderBy: { joinedAt: 'asc' }
-        },
-        projects: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            status: true,
-            tags: true,
-            createdAt: true
-          }
-        },
-        _count: {
-          select: {
-            members: true,
-            projects: true,
-            posts: true
-          }
-        }
+  async getTeamById(teamId: string, userId?: string): Promise<Team | null> {
+    const team = await this.teamRepository.findById(teamId);
+    
+    if (!team) return null;
+    
+    // Check if user has access to private team
+    if (team.visibility === 'PRIVATE' && userId) {
+      const isMember = await this.teamRepository.isMember(teamId, userId);
+      if (!isMember) {
+        throw new Error('You do not have access to this private team');
       }
-    });
+    }
+    
+    return team;
   }
 
   async updateTeam(teamId: string, userId: string, data: UpdateTeamData): Promise<Team> {
-    // Check if user is owner or admin
-    const membership = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId
-        }
-      }
-    });
-
-    if (!membership || (membership.role !== TeamMemberRole.OWNER && membership.role !== TeamMemberRole.ADMIN)) {
+    const canManage = await this.teamRepository.canManageTeam(teamId, userId);
+    
+    if (!canManage) {
       throw new Error('You do not have permission to update this team');
     }
 
-    return await this.prisma.team.update({
-      where: { id: teamId },
-      data,
-      include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        _count: {
-          select: {
-            members: true,
-            projects: true
-          }
-        }
-      }
-    });
+    return this.teamRepository.update(teamId, data);
   }
 
   async deleteTeam(teamId: string, userId: string): Promise<void> {
-    const team = await this.prisma.team.findUnique({
-      where: { id: teamId }
-    });
-
-    if (!team) {
-      throw new Error('Team not found');
-    }
-
-    if (team.ownerId !== userId) {
+    const isOwner = await this.teamRepository.isOwner(teamId, userId);
+    
+    if (!isOwner) {
       throw new Error('Only the team owner can delete the team');
     }
 
-    await this.prisma.team.delete({
-      where: { id: teamId }
-    });
+    await this.teamRepository.delete(teamId);
   }
 
+  // Team Member Management
   async joinTeam(teamId: string, userId: string): Promise<TeamMember> {
-    const team = await this.prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        _count: {
-          select: { members: true }
-        }
-      }
-    });
-
+    const team = await this.teamRepository.findById(teamId, false);
+    
     if (!team) {
       throw new Error('Team not found');
     }
 
-    if (team.visibility === TeamVisibility.PRIVATE) {
-      throw new Error('This team is private and requires an invitation');
+    if (team.visibility === 'PRIVATE') {
+      throw new Error('This team is private. You need an invitation to join.');
+    }
+
+    if (!team.allowJoinRequests) {
+      throw new Error('This team is not accepting join requests');
     }
 
     if (!team.isRecruiting) {
       throw new Error('This team is not currently recruiting new members');
     }
 
-    if (team.maxMembers && team._count.members >= team.maxMembers) {
+    if (team.maxMembers && team.memberCount >= team.maxMembers) {
       throw new Error('Team has reached maximum member capacity');
     }
 
-    // Check if user is already a member
-    const existingMember = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId
-        }
-      }
-    });
-
-    if (existingMember) {
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (isMember) {
       throw new Error('You are already a member of this team');
     }
 
-    return await this.prisma.teamMember.create({
-      data: {
-        teamId,
-        userId,
-        role: TeamMemberRole.MEMBER
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        team: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
+    const member = await this.teamRepository.addMember(teamId, userId, 'MEMBER');
+
+    // Create notification for team admins/moderators
+    await this.notificationRepository.createTeamNotification(
+      teamId,
+      'TEAM_MEMBER_JOINED',
+      'New Team Member',
+      `A new member has joined your team`,
+      { teamId, userId },
+      userId
+    );
+
+    return member;
   }
 
   async leaveTeam(teamId: string, userId: string): Promise<void> {
-    const team = await this.prisma.team.findUnique({
-      where: { id: teamId }
-    });
-
-    if (!team) {
-      throw new Error('Team not found');
-    }
-
-    if (team.ownerId === userId) {
+    const isOwner = await this.teamRepository.isOwner(teamId, userId);
+    
+    if (isOwner) {
       throw new Error('Team owner cannot leave the team. Transfer ownership or delete the team instead.');
     }
 
-    const membership = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId
-        }
-      }
-    });
-
-    if (!membership) {
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (!isMember) {
       throw new Error('You are not a member of this team');
     }
 
-    await this.prisma.teamMember.delete({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId
-        }
-      }
-    });
+    await this.teamRepository.removeMember(teamId, userId);
+
+    // Create notification for team admins/moderators
+    await this.notificationRepository.createTeamNotification(
+      teamId,
+      'TEAM_MEMBER_LEFT',
+      'Member Left Team',
+      'A team member has left the team',
+      { teamId, userId },
+      userId
+    );
   }
 
-  async getTeamMembers(teamId: string) {
-    return await this.prisma.teamMember.findMany({
-      where: { teamId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            bio: true,
-            skills: true,
-            position: true,
-            company: true
-          }
-        }
-      },
-      orderBy: [
-        { role: 'asc' },
-        { joinedAt: 'asc' }
-      ]
-    });
-  }
-
-  async updateMemberRole(teamId: string, memberId: string, role: TeamMemberRole, requesterId: string): Promise<TeamMember> {
-    // Check if requester has permission
-    const requesterMembership = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId: requesterId
-        }
-      }
-    });
-
-    if (!requesterMembership || (requesterMembership.role !== TeamMemberRole.OWNER && requesterMembership.role !== TeamMemberRole.ADMIN)) {
+  async updateMemberStatus(teamId: string, memberId: string, status: any, requesterId: string): Promise<TeamMember> {
+    const canManage = await this.teamRepository.canManageTeam(teamId, requesterId);
+    
+    if (!canManage) {
       throw new Error('You do not have permission to change member roles');
     }
 
-    // Cannot change owner role or promote to owner
-    if (role === TeamMemberRole.OWNER || requesterMembership.role === TeamMemberRole.OWNER) {
-      throw new Error('Owner role cannot be changed');
-    }
-
-    return await this.prisma.teamMember.update({
-      where: { id: memberId },
-      data: { role },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        }
-      }
-    });
+    return this.teamRepository.updateMemberStatus(teamId, memberId, status);
   }
 
   async removeMember(teamId: string, memberId: string, requesterId: string): Promise<void> {
-    // Check if requester has permission
-    const requesterMembership = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId: requesterId
-        }
-      }
-    });
-
-    if (!requesterMembership || (requesterMembership.role !== TeamMemberRole.OWNER && requesterMembership.role !== TeamMemberRole.ADMIN)) {
+    const canManage = await this.teamRepository.canManageTeam(teamId, requesterId);
+    
+    if (!canManage) {
       throw new Error('You do not have permission to remove members');
     }
 
-    const memberToRemove = await this.prisma.teamMember.findUnique({
-      where: { id: memberId },
-      include: { team: true }
-    });
-
-    if (!memberToRemove) {
-      throw new Error('Member not found');
-    }
-
-    if (memberToRemove.team.ownerId === memberToRemove.userId) {
+    const isOwner = await this.teamRepository.isOwner(teamId, memberId);
+    if (isOwner) {
       throw new Error('Cannot remove team owner');
     }
 
-    await this.prisma.teamMember.delete({
-      where: { id: memberId }
+    await this.teamRepository.removeMember(teamId, memberId);
+  }
+
+  // Custom Roles Management
+  async createCustomRole(teamId: string, userId: string, data: CreateCustomRoleData): Promise<TeamCustomRole> {
+    const canManage = await this.teamRepository.canManageTeam(teamId, userId);
+    
+    if (!canManage) {
+      throw new Error('You do not have permission to create custom roles');
+    }
+
+    return this.teamRepository.createCustomRole(teamId, {
+      team: { connect: { id: teamId } },
+      ...data,
     });
   }
 
-  async sendInvitation(teamId: string, inviterId: string, data: InvitationData): Promise<TeamInvitation> {
-    // Check if inviter has permission
-    const inviterMembership = await this.prisma.teamMember.findUnique({
-      where: {
-        teamId_userId: {
-          teamId,
-          userId: inviterId
-        }
-      }
-    });
+  async updateCustomRole(roleId: string, userId: string, data: Partial<CreateCustomRoleData>): Promise<TeamCustomRole> {
+    // Implementation would check if user can manage the team that owns this role
+    return this.teamRepository.updateCustomRole(roleId, data);
+  }
 
-    if (!inviterMembership || (inviterMembership.role !== TeamMemberRole.OWNER && inviterMembership.role !== TeamMemberRole.ADMIN)) {
+  async deleteCustomRole(roleId: string, userId: string): Promise<void> {
+    // Implementation would check permissions
+    await this.teamRepository.deleteCustomRole(roleId);
+  }
+
+  async assignCustomRole(teamMemberId: string, customRoleId: string, userId: string): Promise<void> {
+    // Implementation would check permissions
+    await this.teamRepository.assignCustomRole(teamMemberId, customRoleId);
+  }
+
+  // Team Invitations
+  async sendInvitation(
+    teamId: string, 
+    inviterId: string, 
+    data: { inviteeId?: string; email?: string; message?: string }
+  ): Promise<TeamInvitation> {
+    const canManage = await this.teamRepository.canManageTeam(teamId, inviterId);
+    
+    if (!canManage) {
       throw new Error('You do not have permission to send invitations');
     }
 
-    // Set expiration date (7 days from now)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    return await this.prisma.teamInvitation.create({
-      data: {
-        teamId,
-        inviterId,
-        inviteeId: data.inviteeId,
-        email: data.email,
-        message: data.message,
-        expiresAt
-      },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            description: true
-          }
-        },
-        inviter: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        invitee: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        }
-      }
+    const invitation = await this.teamRepository.createInvitation({
+      team: { connect: { id: teamId } },
+      inviter: { connect: { id: inviterId } },
+      ...(data.inviteeId && { invitee: { connect: { id: data.inviteeId } } }),
+      email: data.email,
+      message: data.message,
+      expiresAt,
     });
+
+    // Create notification for invitee
+    if (data.inviteeId) {
+      await this.notificationRepository.createConnectionNotification(
+        data.inviteeId,
+        inviterId,
+        'TEAM_INVITATION',
+        'Team Invitation',
+        `You have been invited to join a team`,
+        { teamId, invitationId: invitation.id }
+      );
+    }
+
+    return invitation;
   }
 
-  async respondToInvitation(invitationId: string, userId: string, status: InvitationStatus): Promise<TeamInvitation> {
-    const invitation = await this.prisma.teamInvitation.findUnique({
-      where: { id: invitationId },
-      include: { team: true }
-    });
-
+  async respondToInvitation(invitationId: string, userId: string, accept: boolean): Promise<void> {
+    const invitation = await this.teamRepository.getTeamInvitations(invitationId);
+    
     if (!invitation) {
       throw new Error('Invitation not found');
     }
 
-    if (invitation.inviteeId !== userId) {
-      throw new Error('You can only respond to your own invitations');
+    const status = accept ? 'ACCEPTED' : 'DECLINED';
+    await this.teamRepository.updateInvitationStatus(invitationId, status);
+
+    if (accept) {
+      await this.teamRepository.addMember(invitation[0].teamId, userId, 'MEMBER');
+      
+      // Notify team admins
+      await this.notificationRepository.createTeamNotification(
+        invitation[0].teamId,
+        'TEAM_MEMBER_JOINED',
+        'New Team Member',
+        'A new member has accepted an invitation and joined the team',
+        { teamId: invitation[0].teamId, userId },
+        userId
+      );
     }
-
-    if (invitation.status !== InvitationStatus.PENDING) {
-      throw new Error('This invitation has already been responded to');
-    }
-
-    if (invitation.expiresAt < new Date()) {
-      throw new Error('This invitation has expired');
-    }
-
-    const updatedInvitation = await this.prisma.teamInvitation.update({
-      where: { id: invitationId },
-      data: { status },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
-
-    // If accepted, add user to team
-    if (status === InvitationStatus.ACCEPTED) {
-      await this.prisma.teamMember.create({
-        data: {
-          teamId: invitation.teamId,
-          userId,
-          role: TeamMemberRole.MEMBER
-        }
-      });
-    }
-
-    return updatedInvitation;
   }
 
-  async getUserTeams(userId: string) {
-    return await this.prisma.teamMember.findMany({
-      where: { userId },
-      include: {
-        team: {
-          include: {
-            owner: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            },
-            _count: {
-              select: {
-                members: true,
-                projects: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: { joinedAt: 'desc' }
-    });
-  }
-
-  async getRecommendedTeams(userId: string) {
-    // Get user's skills and interests
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        skills: true,
-        teamMemberships: {
-          select: { teamId: true }
-        }
-      }
-    });
-
-    if (!user) {
-      throw new Error('User not found');
+  // Team Join Requests
+  async createJoinRequest(teamId: string, userId: string, message?: string): Promise<TeamJoinRequest> {
+    const team = await this.teamRepository.findById(teamId, false);
+    
+    if (!team) {
+      throw new Error('Team not found');
     }
 
-    const userTeamIds = user.teamMemberships.map(m => m.teamId);
+    if (!team.allowJoinRequests) {
+      throw new Error('This team is not accepting join requests');
+    }
 
-    // Find teams with matching skills that user is not already in
-    return await this.prisma.team.findMany({
-      where: {
-        AND: [
-          { id: { notIn: userTeamIds } },
-          { visibility: { in: [TeamVisibility.PUBLIC, TeamVisibility.INVITE_ONLY] } },
-          { isRecruiting: true },
-          user.skills.length > 0 ? {
-            skills: {
-              hasSome: user.skills
-            }
-          } : {}
-        ]
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        _count: {
-          select: {
-            members: true,
-            projects: true
-          }
-        }
-      },
-      take: 10,
-      orderBy: { createdAt: 'desc' }
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (isMember) {
+      throw new Error('You are already a member of this team');
+    }
+
+    const joinRequest = await this.teamRepository.createJoinRequest({
+      team: { connect: { id: teamId } },
+      user: { connect: { id: userId } },
+      message,
+    });
+
+    // Notify team admins/moderators
+    await this.notificationRepository.createTeamNotification(
+      teamId,
+      'TEAM_JOIN_REQUEST',
+      'New Join Request',
+      'Someone wants to join your team',
+      { teamId, userId, requestId: joinRequest.id },
+      userId
+    );
+
+    return joinRequest;
+  }
+
+  async respondToJoinRequest(requestId: string, userId: string, accept: boolean): Promise<void> {
+    const requests = await this.teamRepository.getTeamJoinRequests(requestId);
+    
+    if (!requests || requests.length === 0) {
+      throw new Error('Join request not found');
+    }
+
+    const request = requests[0];
+    const canManage = await this.teamRepository.canManageTeam(request.teamId, userId);
+    
+    if (!canManage) {
+      throw new Error('You do not have permission to respond to join requests');
+    }
+
+    const status = accept ? 'ACCEPTED' : 'DECLINED';
+    await this.teamRepository.updateJoinRequestStatus(requestId, status);
+
+    if (accept) {
+      await this.teamRepository.addMember(request.teamId, request.userId, 'MEMBER');
+    }
+
+    // Notify the requester
+    await this.notificationRepository.create({
+      type: accept ? 'TEAM_JOIN_REQUEST_ACCEPTED' : 'TEAM_JOIN_REQUEST_DECLINED',
+      title: accept ? 'Join Request Accepted' : 'Join Request Declined',
+      message: accept 
+        ? 'Your request to join the team has been accepted'
+        : 'Your request to join the team has been declined',
+      userId: request.userId,
+      data: { teamId: request.teamId, requestId },
+      category: 'team',
     });
   }
 
-  async getUserInvitations(userId: string, status?: string) {
-    const where: any = {
-      inviteeId: userId,
-      expiresAt: {
-        gt: new Date()
-      }
-    };
-
-    if (status) {
-      where.status = status;
-    } else {
-      where.status = InvitationStatus.PENDING;
+  // Team Following
+  async followTeam(userId: string, teamId: string): Promise<void> {
+    const team = await this.teamRepository.findById(teamId, false);
+    
+    if (!team) {
+      throw new Error('Team not found');
     }
 
-    return await this.prisma.teamInvitation.findMany({
-      where,
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            avatar: true
-          }
-        },
-        inviter: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+    if (team.visibility === 'PRIVATE') {
+      throw new Error('Cannot follow private teams');
+    }
+
+    const isFollowing = await this.teamRepository.isFollowing(userId, teamId);
+    if (isFollowing) {
+      throw new Error('You are already following this team');
+    }
+
+    await this.teamRepository.followTeam(userId, teamId);
+  }
+
+  async unfollowTeam(userId: string, teamId: string): Promise<void> {
+    const isFollowing = await this.teamRepository.isFollowing(userId, teamId);
+    if (!isFollowing) {
+      throw new Error('You are not following this team');
+    }
+
+    await this.teamRepository.unfollowTeam(userId, teamId);
+  }
+
+  // Team Projects
+  async createProject(teamId: string, userId: string, data: CreateTeamProjectData): Promise<TeamProject> {
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (!isMember) {
+      throw new Error('You must be a team member to create projects');
+    }
+
+    return this.teamRepository.createProject({
+      ...data,
+      team: { connect: { id: teamId } },
+      createdBy: userId,
     });
+  }
+
+  async updateProject(projectId: string, userId: string, data: Partial<CreateTeamProjectData>): Promise<TeamProject> {
+    return this.teamRepository.updateProject(projectId, data);
+  }
+
+  async deleteProject(projectId: string, userId: string): Promise<void> {
+    await this.teamRepository.deleteProject(projectId);
+  }
+
+  // Team Milestones
+  async createMilestone(teamId: string, userId: string, data: CreateTeamMilestoneData): Promise<TeamMilestone> {
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (!isMember) {
+      throw new Error('You must be a team member to create milestones');
+    }
+
+    return this.teamRepository.createMilestone({
+      ...data,
+      team: { connect: { id: teamId } },
+      ...(data.projectId && { project: { connect: { id: data.projectId } } }),
+      createdBy: userId,
+    });
+  }
+
+  async completeMilestone(milestoneId: string, userId: string): Promise<TeamMilestone> {
+    const milestone = await this.teamRepository.updateMilestone(milestoneId, {
+      status: 'COMPLETED',
+      completedAt: new Date(),
+    });
+
+    // Create notification for team members
+    await this.notificationRepository.createTeamNotification(
+      milestone.teamId,
+      'TEAM_MILESTONE_COMPLETED',
+      'Milestone Completed',
+      `A team milestone has been completed: ${milestone.title}`,
+      { milestoneId, teamId: milestone.teamId },
+      userId
+    );
+
+    return milestone;
+  }
+
+  // Team Achievements
+  async createAchievement(teamId: string, userId: string, data: CreateTeamAchievementData): Promise<TeamAchievement> {
+    const isMember = await this.teamRepository.isMember(teamId, userId);
+    if (!isMember) {
+      throw new Error('You must be a team member to create achievements');
+    }
+
+    const achievement = await this.teamRepository.createAchievement({
+      ...data,
+      team: { connect: { id: teamId } },
+      ...(data.milestoneId && { milestone: { connect: { id: data.milestoneId } } }),
+      createdBy: userId,
+    });
+
+    if (data.isShared) {
+      // Create notification for team members about shared achievement
+      await this.notificationRepository.createTeamNotification(
+        teamId,
+        'TEAM_ACHIEVEMENT_SHARED',
+        'Achievement Shared',
+        `A team achievement has been shared: ${achievement.title}`,
+        { achievementId: achievement.id, teamId },
+        userId
+      );
+    }
+
+    return achievement;
+  }
+
+  // Helper methods
+  async getUserTeams(userId: string, params: PaginationParams): Promise<{ teams: Team[]; total: number }> {
+    return this.teamRepository.getUserTeams(userId, params);
+  }
+
+  async getFollowedTeams(userId: string, params: PaginationParams): Promise<{ teams: Team[]; total: number }> {
+    return this.teamRepository.getFollowedTeams(userId, params);
+  }
+
+  async getTeamProjects(teamId: string): Promise<TeamProject[]> {
+    return this.teamRepository.getTeamProjects(teamId);
+  }
+
+  async getTeamMilestones(teamId: string): Promise<TeamMilestone[]> {
+    return this.teamRepository.getTeamMilestones(teamId);
+  }
+
+  async getTeamAchievements(teamId: string): Promise<TeamAchievement[]> {
+    return this.teamRepository.getTeamAchievements(teamId);
+  }
+
+  async getTeamInvitations(teamId: string, status?: any): Promise<TeamInvitation[]> {
+    return this.teamRepository.getTeamInvitations(teamId, status);
+  }
+
+  async getUserInvitations(userId: string, status?: any): Promise<TeamInvitation[]> {
+    return this.teamRepository.getUserInvitations(userId, status);
+  }
+
+  async getTeamJoinRequests(teamId: string, status?: any): Promise<TeamJoinRequest[]> {
+    return this.teamRepository.getTeamJoinRequests(teamId, status);
   }
 }

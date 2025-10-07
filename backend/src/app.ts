@@ -15,7 +15,6 @@ import { errorHandler, notFoundHandler } from './middlewares/error';
 // Route imports
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
-import projectRoutes from './routes/projects';
 import connectionRoutes from './routes/connections';
 import teamRoutes from './routes/teams';
 import postRoutes from './routes/posts';
@@ -97,7 +96,6 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/projects', projectRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/posts', postRoutes);

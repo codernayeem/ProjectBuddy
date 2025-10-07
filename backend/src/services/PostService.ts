@@ -1,647 +1,354 @@
-import { PrismaClient, Post, Comment, Reaction, Share, PostType, ReactionType } from '@prisma/client';
-
-export interface CreatePostData {
-  content: string;
-  type?: PostType;
-  projectId?: string;
-  teamId?: string;
-  media?: string[];
-  tags?: string[];
-}
-
-export interface UpdatePostData {
-  content?: string;
-  media?: string[];
-  tags?: string[];
-}
-
-export interface PostFilters {
-  page: number;
-  limit: number;
-  type?: PostType;
-  authorId?: string;
-  projectId?: string;
-  teamId?: string;
-  search?: string;
-}
-
-export interface FeedOptions {
-  page: number;
-  limit: number;
-}
-
-export interface TrendingOptions {
-  page: number;
-  limit: number;
-  timeframe: string;
-}
+import { PostRepository } from '../repositories/PostRepository';
+import { NotificationRepository } from '../repositories/NotificationRepository';
+import { 
+  CreatePostData, 
+  UpdatePostData, 
+  PaginationParams,
+  SearchParams,
+  PostFilters 
+} from '../types';
+import { Post, Comment, Reaction, Share, Bookmark } from '@prisma/client';
 
 export class PostService {
-  private prisma: PrismaClient;
+  private postRepository: PostRepository;
+  private notificationRepository: NotificationRepository;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    this.postRepository = new PostRepository();
+    this.notificationRepository = new NotificationRepository();
   }
 
-  async createPost(authorId: string, data: CreatePostData): Promise<Post> {
-    return await this.prisma.post.create({
-      data: {
-        ...data,
-        authorId
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        project: {
-          select: {
-            id: true,
-            title: true
-          }
-        },
-        team: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        _count: {
-          select: {
-            comments: true,
-            reactions: true,
-            shares: true
-          }
-        }
-      }
+  // Post CRUD operations
+  async createPost(authorId: string | null, data: CreatePostData): Promise<Post> {
+    // Validate that either authorId or teamId is provided
+    if (!authorId && !data.teamId) {
+      throw new Error('Post must have either an author or be posted by a team');
+    }
+
+    if (authorId && data.teamId) {
+      throw new Error('Post cannot have both an author and be posted by a team');
+    }
+
+    const post = await this.postRepository.create({
+      content: data.content,
+      type: data.type || 'GENERAL',
+      ...(authorId && { author: { connect: { id: authorId } } }),
+      ...(data.teamId && { team: { connect: { id: data.teamId } } }),
+      media: data.media || [],
+      tags: data.tags || [],
+      mentions: data.mentions || [],
+      hashtags: data.hashtags || [],
+      visibility: data.visibility || 'public',
     });
+
+    // Handle mentions - create notifications for mentioned users
+    if (data.mentions && data.mentions.length > 0) {
+      await this.notificationRepository.createPostNotification(
+        post.id,
+        authorId || 'system',
+        'POST_MENTION',
+        'You were mentioned in a post',
+        'Someone mentioned you in their post',
+        data.mentions,
+        { postId: post.id }
+      );
+    }
+
+    return post;
   }
 
-  async getPosts(filters: PostFilters) {
-    const { page, limit, type, authorId, projectId, teamId, search } = filters;
-    const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (type) {
-      where.type = type;
+  async getPostById(postId: string, userId?: string): Promise<Post | null> {
+    const post = await this.postRepository.findById(postId, userId);
+    
+    if (post && userId) {
+      // Increment view count
+      await this.postRepository.incrementViewCount(postId);
     }
-
-    if (authorId) {
-      where.authorId = authorId;
-    }
-
-    if (projectId) {
-      where.projectId = projectId;
-    }
-
-    if (teamId) {
-      where.teamId = teamId;
-    }
-
-    if (search) {
-      where.OR = [
-        { content: { contains: search, mode: 'insensitive' } },
-        { tags: { has: search } }
-      ];
-    }
-
-    const [posts, total] = await Promise.all([
-      this.prisma.post.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              avatar: true
-            }
-          },
-          project: {
-            select: {
-              id: true,
-              title: true
-            }
-          },
-          team: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reactions: {
-            select: {
-              id: true,
-              type: true,
-              userId: true
-            }
-          },
-          _count: {
-            select: {
-              comments: true,
-              reactions: true,
-              shares: true
-            }
-          }
-        }
-      }),
-      this.prisma.post.count({ where })
-    ]);
-
-    return {
-      posts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
-  }
-
-  async getPostById(postId: string) {
-    return await this.prisma.post.findUnique({
-      where: { id: postId },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            bio: true
-          }
-        },
-        project: {
-          select: {
-            id: true,
-            title: true,
-            description: true
-          }
-        },
-        team: {
-          select: {
-            id: true,
-            name: true,
-            description: true
-          }
-        },
-        comments: {
-          where: { parentId: null },
-          include: {
-            author: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            },
-            replies: {
-              include: {
-                author: {
-                  select: {
-                    id: true,
-                    username: true,
-                    firstName: true,
-                    lastName: true,
-                    avatar: true
-                  }
-                }
-              },
-              orderBy: { createdAt: 'asc' }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true
-              }
-            }
-          }
-        },
-        shares: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        _count: {
-          select: {
-            comments: true,
-            reactions: true,
-            shares: true
-          }
-        }
-      }
-    });
+    
+    return post;
   }
 
   async updatePost(postId: string, userId: string, data: UpdatePostData): Promise<Post> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId }
-    });
-
+    const post = await this.postRepository.findById(postId);
+    
     if (!post) {
       throw new Error('Post not found');
     }
 
+    // Check if user can edit this post
     if (post.authorId !== userId) {
-      throw new Error('You can only update your own posts');
+      // If it's a team post, check if user can manage the team
+      if (post.teamId) {
+        // TODO: Add team management check
+        throw new Error('You do not have permission to edit this team post');
+      } else {
+        throw new Error('You can only edit your own posts');
+      }
     }
 
-    return await this.prisma.post.update({
-      where: { id: postId },
-      data,
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        _count: {
-          select: {
-            comments: true,
-            reactions: true,
-            shares: true
-          }
-        }
-      }
-    });
+    return this.postRepository.update(postId, data);
   }
 
   async deletePost(postId: string, userId: string): Promise<void> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId }
-    });
-
+    const post = await this.postRepository.findById(postId);
+    
     if (!post) {
       throw new Error('Post not found');
     }
 
+    // Check if user can delete this post
     if (post.authorId !== userId) {
-      throw new Error('You can only delete your own posts');
+      // If it's a team post, check if user can manage the team
+      if (post.teamId) {
+        // TODO: Add team management check
+        throw new Error('You do not have permission to delete this team post');
+      } else {
+        throw new Error('You can only delete your own posts');
+      }
     }
 
-    await this.prisma.post.delete({
-      where: { id: postId }
-    });
+    await this.postRepository.delete(postId);
   }
 
-  async reactToPost(postId: string, userId: string, type: ReactionType): Promise<Reaction> {
-    // Check if post exists
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId }
-    });
+  // Feed and Discovery
+  async getUserFeed(
+    userId: string, 
+    params: PaginationParams & { filters?: PostFilters }
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+    const result = await this.postRepository.getFeed(userId, params);
+    
+    return {
+      posts: result.posts,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
 
+  async searchPosts(
+    params: SearchParams & PaginationParams & { filters?: PostFilters },
+    userId?: string
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+    const result = await this.postRepository.search(params, userId);
+    
+    return {
+      posts: result.posts,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
+
+  async getUserPosts(
+    targetUserId: string,
+    currentUserId?: string,
+    params: PaginationParams = { page: 1, limit: 20, skip: 0 }
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+    const result = await this.postRepository.getUserPosts(targetUserId, currentUserId, params);
+    
+    return {
+      posts: result.posts,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
+
+  async getTeamPosts(
+    teamId: string,
+    userId?: string,
+    params: PaginationParams = { page: 1, limit: 20, skip: 0 }
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+    const result = await this.postRepository.getTeamPosts(teamId, userId, params);
+    
+    return {
+      posts: result.posts,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
+
+  // Reactions
+  async reactToPost(postId: string, userId: string, type: any): Promise<Reaction> {
+    const post = await this.postRepository.findById(postId);
+    
     if (!post) {
       throw new Error('Post not found');
     }
 
-    // Check if user already reacted
-    const existingReaction = await this.prisma.reaction.findUnique({
-      where: {
-        userId_postId: {
-          userId,
-          postId
-        }
-      }
-    });
+    const reaction = await this.postRepository.addReaction(postId, userId, type);
 
-    if (existingReaction) {
-      // Update existing reaction
-      return await this.prisma.reaction.update({
-        where: { id: existingReaction.id },
-        data: { type },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true
-            }
-          }
-        }
-      });
-    } else {
-      // Create new reaction
-      return await this.prisma.reaction.create({
-        data: {
-          type,
-          userId,
-          postId
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true
-            }
-          }
-        }
+    // Create notification for post author (if not reacting to own post)
+    if (post.authorId && post.authorId !== userId) {
+      await this.notificationRepository.create({
+        type: 'POST_REACTION',
+        title: 'Someone reacted to your post',
+        message: `Someone ${type.toLowerCase()}d your post`,
+        userId: post.authorId,
+        data: { postId, reactionType: type },
+        category: 'social',
       });
     }
+
+    // Update post reaction count
+    await this.postRepository.updateCounts(postId);
+
+    return reaction;
   }
 
   async removeReaction(postId: string, userId: string): Promise<void> {
-    const reaction = await this.prisma.reaction.findUnique({
-      where: {
-        userId_postId: {
-          userId,
-          postId
-        }
-      }
-    });
-
-    if (!reaction) {
-      throw new Error('Reaction not found');
-    }
-
-    await this.prisma.reaction.delete({
-      where: { id: reaction.id }
-    });
+    await this.postRepository.removeReaction(postId, userId);
+    
+    // Update post reaction count
+    await this.postRepository.updateCounts(postId);
   }
 
-  async addComment(postId: string, userId: string, content: string, parentId?: string): Promise<Comment> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId }
-    });
+  async getPostReactions(postId: string): Promise<Reaction[]> {
+    return this.postRepository.getPostReactions(postId);
+  }
 
+  // Comments
+  async addComment(
+    postId: string, 
+    userId: string, 
+    content: string, 
+    parentId?: string
+  ): Promise<Comment> {
+    const post = await this.postRepository.findById(postId);
+    
     if (!post) {
       throw new Error('Post not found');
     }
 
-    return await this.prisma.comment.create({
-      data: {
-        content,
-        authorId: userId,
-        postId,
-        parentId
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        replies: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            }
-          }
-        }
-      }
+    const comment = await this.postRepository.addComment({
+      content,
+      author: { connect: { id: userId } },
+      post: { connect: { id: postId } },
+      ...(parentId && { parent: { connect: { id: parentId } } }),
     });
+
+    // Create notification for post author (if not commenting on own post)
+    if (post.authorId && post.authorId !== userId) {
+      await this.notificationRepository.create({
+        type: 'POST_COMMENT',
+        title: 'New comment on your post',
+        message: 'Someone commented on your post',
+        userId: post.authorId,
+        data: { postId, commentId: comment.id },
+        category: 'social',
+      });
+    }
+
+    // If it's a reply, notify the parent comment author
+    if (parentId) {
+      // TODO: Get parent comment author and notify
+    }
+
+    // Update post comment count
+    await this.postRepository.updateCounts(postId);
+
+    return comment;
   }
 
-  async updateComment(commentId: string, userId: string, content: string): Promise<Comment> {
-    const comment = await this.prisma.comment.findUnique({
-      where: { id: commentId }
-    });
-
-    if (!comment) {
-      throw new Error('Comment not found');
-    }
-
-    if (comment.authorId !== userId) {
-      throw new Error('You can only update your own comments');
-    }
-
-    return await this.prisma.comment.update({
-      where: { id: commentId },
-      data: { content },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        }
-      }
-    });
+  async getPostComments(
+    postId: string, 
+    params: PaginationParams
+  ): Promise<{ comments: Comment[]; total: number }> {
+    return this.postRepository.getPostComments(postId, params);
   }
 
-  async deleteComment(commentId: string, userId: string): Promise<void> {
-    const comment = await this.prisma.comment.findUnique({
-      where: { id: commentId }
-    });
-
-    if (!comment) {
-      throw new Error('Comment not found');
-    }
-
-    if (comment.authorId !== userId) {
-      throw new Error('You can only delete your own comments');
-    }
-
-    await this.prisma.comment.delete({
-      where: { id: commentId }
-    });
-  }
-
+  // Shares
   async sharePost(postId: string, userId: string, comment?: string): Promise<Share> {
-    const post = await this.prisma.post.findUnique({
-      where: { id: postId }
-    });
-
+    const post = await this.postRepository.findById(postId);
+    
     if (!post) {
       throw new Error('Post not found');
     }
 
-    // Check if user already shared this post
-    const existingShare = await this.prisma.share.findUnique({
-      where: {
-        userId_postId: {
-          userId,
-          postId
-        }
-      }
-    });
+    const share = await this.postRepository.sharePost(postId, userId, comment);
 
-    if (existingShare) {
-      throw new Error('You have already shared this post');
+    // Create notification for post author (if not sharing own post)
+    if (post.authorId && post.authorId !== userId) {
+      await this.notificationRepository.create({
+        type: 'POST_SHARED',
+        title: 'Your post was shared',
+        message: 'Someone shared your post',
+        userId: post.authorId,
+        data: { postId, shareId: share.id },
+        category: 'social',
+      });
     }
 
-    return await this.prisma.share.create({
-      data: {
-        userId,
-        postId,
-        comment
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
-        post: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                avatar: true
-              }
-            }
-          }
-        }
-      }
-    });
+    // Update post share count
+    await this.postRepository.updateCounts(postId);
+
+    return share;
   }
 
-  async getUserFeed(userId: string, options: FeedOptions) {
-    const { page, limit } = options;
-    const skip = (page - 1) * limit;
+  async unsharePost(postId: string, userId: string): Promise<void> {
+    await this.postRepository.unsharePost(postId, userId);
+    
+    // Update post share count
+    await this.postRepository.updateCounts(postId);
+  }
 
-    // Get user's connections and teams
-    const [connections, teams] = await Promise.all([
-      this.prisma.connection.findMany({
-        where: {
-          OR: [
-            { senderId: userId, status: 'ACCEPTED' },
-            { receiverId: userId, status: 'ACCEPTED' }
-          ]
-        }
-      }),
-      this.prisma.teamMember.findMany({
-        where: { userId },
-        select: { teamId: true }
-      })
-    ]);
+  // Bookmarks
+  async bookmarkPost(postId: string, userId: string): Promise<Bookmark> {
+    const post = await this.postRepository.findById(postId);
+    
+    if (!post) {
+      throw new Error('Post not found');
+    }
 
-    const connectedUserIds = connections.map(conn => 
-      conn.senderId === userId ? conn.receiverId : conn.senderId
-    );
-    const teamIds = teams.map(t => t.teamId);
+    return this.postRepository.bookmarkPost(postId, userId);
+  }
 
-    // Include user's own posts and posts from connections and teams
-    const authorIds = [userId, ...connectedUserIds];
+  async unbookmarkPost(postId: string, userId: string): Promise<void> {
+    await this.postRepository.unbookmarkPost(postId, userId);
+  }
 
-    const where = {
-      OR: [
-        { authorId: { in: authorIds } },
-        { teamId: { in: teamIds } }
-      ]
-    };
-
-    const [posts, total] = await Promise.all([
-      this.prisma.post.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              avatar: true
-            }
-          },
-          project: {
-            select: {
-              id: true,
-              title: true
-            }
-          },
-          team: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reactions: {
-            select: {
-              id: true,
-              type: true,
-              userId: true
-            }
-          },
-          _count: {
-            select: {
-              comments: true,
-              reactions: true,
-              shares: true
-            }
-          }
-        }
-      }),
-      this.prisma.post.count({ where })
-    ]);
-
+  async getUserBookmarks(
+    userId: string, 
+    params: PaginationParams
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+    const result = await this.postRepository.getUserBookmarks(userId, params);
+    
     return {
-      posts,
+      posts: result.posts,
+      total: result.total,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
     };
   }
 
-  async getTrendingPosts(options: TrendingOptions) {
-    const { page, limit, timeframe } = options;
-    const skip = (page - 1) * limit;
-
+  // Trending and Discovery
+  async getTrendingPosts(
+    params: PaginationParams & { timeframe?: string }
+  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
     // Calculate time range based on timeframe
     let timeRange = new Date();
-    switch (timeframe) {
+    switch (params.timeframe) {
       case '1h':
         timeRange.setHours(timeRange.getHours() - 1);
         break;
@@ -658,76 +365,58 @@ export class PostService {
         timeRange.setDate(timeRange.getDate() - 1);
     }
 
-    const [posts, total] = await Promise.all([
-      this.prisma.post.findMany({
-        where: {
-          createdAt: {
-            gte: timeRange
-          }
-        },
-        skip,
-        take: limit,
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              avatar: true
-            }
-          },
-          project: {
-            select: {
-              id: true,
-              title: true
-            }
-          },
-          team: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          reactions: {
-            select: {
-              id: true,
-              type: true,
-              userId: true
-            }
-          },
-          _count: {
-            select: {
-              comments: true,
-              reactions: true,
-              shares: true
-            }
-          }
-        },
-        orderBy: [
-          { reactions: { _count: 'desc' } },
-          { comments: { _count: 'desc' } },
-          { shares: { _count: 'desc' } },
-          { createdAt: 'desc' }
-        ]
-      }),
-      this.prisma.post.count({
-        where: {
-          createdAt: {
-            gte: timeRange
-          }
-        }
-      })
+    // Use search with filters for trending posts
+    const result = await this.postRepository.search({
+      query: '',
+      page: params.page,
+      limit: params.limit,
+      skip: params.skip,
+      sortBy: 'likesCount',
+      sortOrder: 'desc',
+      filters: {
+        // Add time filter here if needed
+      },
+    });
+    
+    return {
+      posts: result.posts,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
+
+  // Analytics
+  async getPostAnalytics(postId: string, userId: string): Promise<any> {
+    const post = await this.postRepository.findById(postId);
+    
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Check if user owns the post
+    if (post.authorId !== userId) {
+      throw new Error('You can only view analytics for your own posts');
+    }
+
+    const [reactions, comments] = await Promise.all([
+      this.postRepository.getPostReactions(postId),
+      this.postRepository.getPostComments(postId, { page: 1, limit: 1000, skip: 0 }),
     ]);
 
     return {
-      posts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+      views: post.viewsCount,
+      reactions: reactions.length,
+      comments: comments.total,
+      shares: post.sharesCount,
+      reactionsByType: reactions.reduce((acc, reaction) => {
+        acc[reaction.type] = (acc[reaction.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
     };
   }
 }
