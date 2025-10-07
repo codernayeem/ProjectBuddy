@@ -15,6 +15,7 @@ import ConnectionsPage from "@/pages/dashboard/connections";
 import NotificationsPage from "@/pages/dashboard/notifications";
 import ProfilePage from "@/pages/dashboard/profile";
 import SettingsPage from "@/pages/settings";
+import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./providers/ProtectedRoute";
 
 function App() {
@@ -43,6 +44,9 @@ function App() {
             </Route>
             
             <Route path="/settings" element={<SettingsPage />} />
+
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<NotFound />} />
 
           </Routes>
         </div>
