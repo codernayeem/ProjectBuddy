@@ -56,6 +56,16 @@ export default function ProfilePage() {
     enabled: !!user?.id,
   })
 
+  // Fetch user teams count (TODO: Add to team service)
+  const { data: userTeams } = useQuery({
+    queryKey: ['user-teams'],
+    queryFn: () => {
+      // TODO: Implement getUserTeams in team service
+      return Promise.resolve({ data: [], pagination: { total: 0 } })
+    },
+    enabled: !!user?.id,
+  })
+
   // Upload avatar mutation
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => userService.uploadAvatar(file),
@@ -193,10 +203,10 @@ export default function ProfilePage() {
                     <Calendar className="h-4 w-4 mr-1" />
                     Joined {formatDateShort(profileData.createdAt)}
                   </span>
-                  {profileData.city && (
+                  {(profileData.city || profileData.country) && (
                     <span className="flex items-center">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {profileData.city}
+                      {[profileData.city, profileData.country].filter(Boolean).join(', ')}
                     </span>
                   )}
                 </div>
@@ -283,6 +293,17 @@ export default function ProfilePage() {
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <Clock className="h-4 w-4 mr-1" />
               Last Active
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {userTeams?.pagination?.total || 0}
+            </div>
+            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+              <Users className="h-4 w-4 mr-1" />
+              Teams
             </div>
           </CardContent>
         </Card>
@@ -536,6 +557,26 @@ export default function ProfilePage() {
                       <div>
                         <label className="text-sm font-medium text-gray-700">City</label>
                         <p className="text-gray-900">{profileData.city}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.country && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Country</label>
+                        <p className="text-gray-900">{profileData.country}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.address && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Address</label>
+                        <p className="text-gray-900">{profileData.address}</p>
                       </div>
                     </div>
                   )}

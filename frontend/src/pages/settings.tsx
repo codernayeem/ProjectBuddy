@@ -70,7 +70,9 @@ const profileSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
+  country: z.string().optional(),
   city: z.string().optional(),
+  address: z.string().optional(),
   website: z.string().url('Invalid URL').optional().or(z.literal('')),
   github: z.string().url('Invalid URL').optional().or(z.literal('')),
   linkedin: z.string().url('Invalid URL').optional().or(z.literal('')),
@@ -127,7 +129,9 @@ export default function SettingsPage() {
       lastName: user?.lastName || '',
       username: user?.username || '',
       bio: user?.bio || '',
+      country: user?.country || '',
       city: user?.city || '',
+      address: user?.address || '',
       website: user?.website || '',
       github: user?.github || '',
       linkedin: user?.linkedin || '',
@@ -209,6 +213,9 @@ export default function SettingsPage() {
       portfolio: data.portfolio || undefined,
       company: data.company || undefined,
       position: data.position || undefined,
+      country: data.country || undefined,
+      city: data.city || undefined,
+      address: data.address || undefined,
       timezone: data.timezone || undefined,
     }
     updateProfileMutation.mutate(updateData)
@@ -360,6 +367,27 @@ export default function SettingsPage() {
                       className="mt-1"
                     />
                   </div>
+
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      {...profileForm.register('country')}
+                      placeholder="Country"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    {...profileForm.register('address')}
+                    placeholder="Full address (optional)"
+                    className="mt-1"
+                  />
                 </div>
 
                 {/* Bio */}
@@ -771,7 +799,7 @@ export default function SettingsPage() {
                   <Label className="text-sm font-medium">Theme</Label>
                   <p className="text-sm text-gray-500">Choose your preferred theme</p>
                 </div>
-                <Select value={'light'} onValueChange={(value: 'light' | 'dark' | 'system') => null}>
+                <Select value={'light'} onValueChange={(_value: 'light' | 'dark' | 'system') => null}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
