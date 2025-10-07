@@ -1,201 +1,198 @@
 // Enums from backend
-export enum ExperienceLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED',
-  EXPERT = 'EXPERT'
-}
+export const UserType = {
+  UNDERGRADUATE: 'UNDERGRADUATE',
+  GRADUATE: 'GRADUATE',
+  FREELANCER: 'FREELANCER',
+  PROFESSIONAL: 'PROFESSIONAL',
+  STARTUP_FOUNDER: 'STARTUP_FOUNDER',
+  ENTREPRENEUR: 'ENTREPRENEUR'
+} as const
 
-export enum PreferredRole {
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  TEAM_LEAD = 'TEAM_LEAD',
-  FRONTEND_DEVELOPER = 'FRONTEND_DEVELOPER',
-  BACKEND_DEVELOPER = 'BACKEND_DEVELOPER',
-  FULLSTACK_DEVELOPER = 'FULLSTACK_DEVELOPER',
-  MOBILE_DEVELOPER = 'MOBILE_DEVELOPER',
-  DEVOPS_ENGINEER = 'DEVOPS_ENGINEER',
-  UI_UX_DESIGNER = 'UI_UX_DESIGNER',
-  DATA_SCIENTIST = 'DATA_SCIENTIST',
-  QA_ENGINEER = 'QA_ENGINEER',
-  BUSINESS_ANALYST = 'BUSINESS_ANALYST',
-  PRODUCT_MANAGER = 'PRODUCT_MANAGER',
-  MARKETING_SPECIALIST = 'MARKETING_SPECIALIST',
-  CONTENT_CREATOR = 'CONTENT_CREATOR',
-  OTHER = 'OTHER'
-}
+export type UserType = typeof UserType[keyof typeof UserType]
 
-export enum UserType {
-  UNDERGRADUATE = 'UNDERGRADUATE',
-  GRADUATE = 'GRADUATE',
-  FREELANCER = 'FREELANCER',
-  PROFESSIONAL = 'PROFESSIONAL',
-  STARTUP_FOUNDER = 'STARTUP_FOUNDER',
-  ENTREPRENEUR = 'ENTREPRENEUR'
-}
+export const ConnectionStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED',
+  BLOCKED: 'BLOCKED'
+} as const
 
-export enum ConnectionStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED',
-  BLOCKED = 'BLOCKED'
-}
+export type ConnectionStatus = typeof ConnectionStatus[keyof typeof ConnectionStatus]
 
-export enum ProjectStatus {
-  PLANNING = 'PLANNING',
-  RECRUITING = 'RECRUITING',
-  ACTIVE = 'ACTIVE',
-  ON_HOLD = 'ON_HOLD',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
-}
+export const ProjectStatus = {
+  PLANNING: 'PLANNING',
+  ACTIVE: 'ACTIVE',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+} as const
 
-export enum ProjectCategory {
-  WEB_DEVELOPMENT = 'WEB_DEVELOPMENT',
-  MOBILE_DEVELOPMENT = 'MOBILE_DEVELOPMENT',
-  GAME_DEVELOPMENT = 'GAME_DEVELOPMENT',
-  AI_ML = 'AI_ML',
-  DATA_SCIENCE = 'DATA_SCIENCE',
-  BLOCKCHAIN = 'BLOCKCHAIN',
-  IOT = 'IOT',
-  CYBERSECURITY = 'CYBERSECURITY',
-  UI_UX_DESIGN = 'UI_UX_DESIGN',
-  MARKETING = 'MARKETING',
-  BUSINESS = 'BUSINESS',
-  RESEARCH = 'RESEARCH',
-  OPEN_SOURCE = 'OPEN_SOURCE',
-  STARTUP = 'STARTUP',
-  EDUCATIONAL = 'EDUCATIONAL',
-  OTHER = 'OTHER'
-}
+export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus]
 
-export enum ProjectMemberRole {
-  OWNER = 'OWNER',
-  ADMIN = 'ADMIN',
-  TEAM_LEAD = 'TEAM_LEAD',
-  SENIOR_DEVELOPER = 'SENIOR_DEVELOPER',
-  DEVELOPER = 'DEVELOPER',
-  DESIGNER = 'DESIGNER',
-  TESTER = 'TESTER',
-  BUSINESS_ANALYST = 'BUSINESS_ANALYST',
-  MARKETING = 'MARKETING',
-  CONTRIBUTOR = 'CONTRIBUTOR',
-  VIEWER = 'VIEWER'
-}
+export const ProjectCategory = {
+  WEB_DEVELOPMENT: 'WEB_DEVELOPMENT',
+  MOBILE_DEVELOPMENT: 'MOBILE_DEVELOPMENT',
+  GAME_DEVELOPMENT: 'GAME_DEVELOPMENT',
+  AI_ML: 'AI_ML',
+  DATA_SCIENCE: 'DATA_SCIENCE',
+  BLOCKCHAIN: 'BLOCKCHAIN',
+  IOT: 'IOT',
+  CYBERSECURITY: 'CYBERSECURITY',
+  UI_UX_DESIGN: 'UI_UX_DESIGN',
+  MARKETING: 'MARKETING',
+  BUSINESS: 'BUSINESS',
+  RESEARCH: 'RESEARCH',
+  OPEN_SOURCE: 'OPEN_SOURCE',
+  EDUCATIONAL: 'EDUCATIONAL',
+  OTHER: 'OTHER'
+} as const
 
-export enum TeamVisibility {
-  PUBLIC = 'PUBLIC',
-  PRIVATE = 'PRIVATE',
-  INVITE_ONLY = 'INVITE_ONLY'
-}
+export type ProjectCategory = typeof ProjectCategory[keyof typeof ProjectCategory]
 
-export enum TeamType {
-  PROJECT_BASED = 'PROJECT_BASED',
-  SKILL_BASED = 'SKILL_BASED',
-  STARTUP = 'STARTUP',
-  FREELANCE = 'FREELANCE',
-  OPEN_SOURCE = 'OPEN_SOURCE',
-  HACKATHON = 'HACKATHON',
-  STUDY_GROUP = 'STUDY_GROUP',
-  NETWORKING = 'NETWORKING',
-  MENTORSHIP = 'MENTORSHIP'
-}
+export const TeamMemberStatus = {
+  ADMIN: 'ADMIN',
+  MODERATOR: 'MODERATOR',
+  MEMBER: 'MEMBER'
+} as const
 
-export enum TeamMemberRole {
-  OWNER = 'OWNER',
-  ADMIN = 'ADMIN',
-  LEAD = 'LEAD',
-  MEMBER = 'MEMBER',
-  CONTRIBUTOR = 'CONTRIBUTOR'
-}
+export type TeamMemberStatus = typeof TeamMemberStatus[keyof typeof TeamMemberStatus]
 
-export enum PostType {
-  GENERAL = 'GENERAL',
-  PROJECT_UPDATE = 'PROJECT_UPDATE',
-  PROJECT_ANNOUNCEMENT = 'PROJECT_ANNOUNCEMENT',
-  ACHIEVEMENT = 'ACHIEVEMENT',
-  MILESTONE_COMPLETED = 'MILESTONE_COMPLETED',
-  GOAL_COMPLETED = 'GOAL_COMPLETED',
-  TEAM_FORMATION = 'TEAM_FORMATION',
-  FIND_TEAMMATES = 'FIND_TEAMMATES',
-  FIND_TEAM = 'FIND_TEAM',
-  FIND_PROJECT = 'FIND_PROJECT',
-  PROJECT_SHOWCASE = 'PROJECT_SHOWCASE',
-  SKILL_SHARE = 'SKILL_SHARE',
-  RESOURCE_SHARE = 'RESOURCE_SHARE',
-  QUESTION = 'QUESTION',
-  POLL = 'POLL',
-  EVENT = 'EVENT',
-  CELEBRATION = 'CELEBRATION'
-}
+export const TeamVisibility = {
+  PUBLIC: 'PUBLIC',
+  PRIVATE: 'PRIVATE'
+} as const
 
-export enum ReactionType {
-  LIKE = 'LIKE',
-  LOVE = 'LOVE',
-  CELEBRATE = 'CELEBRATE',
-  SUPPORT = 'SUPPORT',
-  INSIGHTFUL = 'INSIGHTFUL',
-  FUNNY = 'FUNNY',
-  AMAZING = 'AMAZING'
-}
+export type TeamVisibility = typeof TeamVisibility[keyof typeof TeamVisibility]
 
-export enum NotificationType {
-  CONNECTION_REQUEST = 'CONNECTION_REQUEST',
-  CONNECTION_ACCEPTED = 'CONNECTION_ACCEPTED',
-  PROJECT_INVITATION = 'PROJECT_INVITATION',
-  PROJECT_JOIN_REQUEST = 'PROJECT_JOIN_REQUEST',
-  PROJECT_UPDATE = 'PROJECT_UPDATE',
-  PROJECT_MILESTONE_COMPLETED = 'PROJECT_MILESTONE_COMPLETED',
-  PROJECT_GOAL_COMPLETED = 'PROJECT_GOAL_COMPLETED',
-  ACHIEVEMENT_SHARED = 'ACHIEVEMENT_SHARED',
-  NEW_MESSAGE = 'NEW_MESSAGE',
-  POST_REACTION = 'POST_REACTION',
-  POST_COMMENT = 'POST_COMMENT',
-  POST_MENTION = 'POST_MENTION',
-  POST_SHARED = 'POST_SHARED',
-  COMMENT_REPLY = 'COMMENT_REPLY',
-  COMMENT_REACTION = 'COMMENT_REACTION',
-  TEAM_INVITATION = 'TEAM_INVITATION',
-  TEAM_JOIN_REQUEST = 'TEAM_JOIN_REQUEST',
-  TEAM_JOINED = 'TEAM_JOINED',
-  TEAM_LEFT = 'TEAM_LEFT',
-  TEAM_ROLE_CHANGED = 'TEAM_ROLE_CHANGED',
-  MENTION = 'MENTION',
-  FOLLOW = 'FOLLOW',
-  MILESTONE_DUE = 'MILESTONE_DUE',
-  PROJECT_DEADLINE = 'PROJECT_DEADLINE',
-  SYSTEM_ANNOUNCEMENT = 'SYSTEM_ANNOUNCEMENT'
-}
+export const TeamType = {
+  SKILL_BASED: 'SKILL_BASED',
+  STARTUP: 'STARTUP',
+  FREELANCE: 'FREELANCE',
+  OPEN_SOURCE: 'OPEN_SOURCE',
+  HACKATHON: 'HACKATHON',
+  STUDY_GROUP: 'STUDY_GROUP',
+  NETWORKING: 'NETWORKING',
+  MENTORSHIP: 'MENTORSHIP',
+  BUSINESS: 'BUSINESS',
+  OTHER: 'OTHER'
+} as const
 
-export enum MilestoneStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
-}
+export type TeamType = typeof TeamType[keyof typeof TeamType]
 
-export enum InvitationStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED',
-  EXPIRED = 'EXPIRED'
-}
+export const JoinRequestStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED'
+} as const
 
-export enum MessageType {
-  TEXT = 'TEXT',
-  IMAGE = 'IMAGE',
-  FILE = 'FILE',
-  VOICE = 'VOICE',
-  VIDEO = 'VIDEO',
-  SYSTEM = 'SYSTEM',
-  REACTION = 'REACTION'
-}
+export type JoinRequestStatus = typeof JoinRequestStatus[keyof typeof JoinRequestStatus]
 
-export enum ConversationType {
-  DIRECT_MESSAGE = 'DIRECT_MESSAGE',
-  GROUP_CHAT = 'GROUP_CHAT',
-  TEAM_CHAT = 'TEAM_CHAT',
-  PROJECT_CHAT = 'PROJECT_CHAT'
-}
+export const PostType = {
+  GENERAL: 'GENERAL',
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  ACHIEVEMENT: 'ACHIEVEMENT',
+  MILESTONE_COMPLETED: 'MILESTONE_COMPLETED',
+  NEW_MEMBER: 'NEW_MEMBER',
+  RECRUITMENT: 'RECRUITMENT',
+  PROJECT_SHOWCASE: 'PROJECT_SHOWCASE',
+  PROJECT_UPDATE: 'PROJECT_UPDATE',
+  SKILL_SHARE: 'SKILL_SHARE',
+  RESOURCE_SHARE: 'RESOURCE_SHARE',
+  QUESTION: 'QUESTION',
+  POLL: 'POLL',
+  EVENT: 'EVENT',
+  CELEBRATION: 'CELEBRATION'
+} as const
+
+export type PostType = typeof PostType[keyof typeof PostType]
+
+export const ReactionType = {
+  LIKE: 'LIKE',
+  LOVE: 'LOVE',
+  CELEBRATE: 'CELEBRATE',
+  SUPPORT: 'SUPPORT',
+  INSIGHTFUL: 'INSIGHTFUL',
+  FUNNY: 'FUNNY',
+  AMAZING: 'AMAZING'
+} as const
+
+export type ReactionType = typeof ReactionType[keyof typeof ReactionType]
+
+export const NotificationType = {
+  CONNECTION_REQUEST: 'CONNECTION_REQUEST',
+  CONNECTION_ACCEPTED: 'CONNECTION_ACCEPTED',
+  TEAM_INVITATION: 'TEAM_INVITATION',
+  TEAM_JOIN_REQUEST: 'TEAM_JOIN_REQUEST',
+  TEAM_JOIN_REQUEST_ACCEPTED: 'TEAM_JOIN_REQUEST_ACCEPTED',
+  TEAM_JOIN_REQUEST_DECLINED: 'TEAM_JOIN_REQUEST_DECLINED',
+  TEAM_MEMBER_JOINED: 'TEAM_MEMBER_JOINED',
+  TEAM_MEMBER_LEFT: 'TEAM_MEMBER_LEFT',
+  TEAM_ROLE_ASSIGNED: 'TEAM_ROLE_ASSIGNED',
+  TEAM_MILESTONE_COMPLETED: 'TEAM_MILESTONE_COMPLETED',
+  TEAM_ACHIEVEMENT_SHARED: 'TEAM_ACHIEVEMENT_SHARED',
+  POST_REACTION: 'POST_REACTION',
+  POST_COMMENT: 'POST_COMMENT',
+  POST_MENTION: 'POST_MENTION',
+  POST_SHARED: 'POST_SHARED',
+  COMMENT_REPLY: 'COMMENT_REPLY',
+  COMMENT_REACTION: 'COMMENT_REACTION',
+  MENTION: 'MENTION',
+  FOLLOW: 'FOLLOW',
+  TEAM_FOLLOW: 'TEAM_FOLLOW',
+  TEAM_POST: 'TEAM_POST',
+  MILESTONE_DUE: 'MILESTONE_DUE',
+  SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT'
+} as const
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType]
+
+export const MilestoneStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type MilestoneStatus = typeof MilestoneStatus[keyof typeof MilestoneStatus]
+
+export const InvitationStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type InvitationStatus = typeof InvitationStatus[keyof typeof InvitationStatus]
+
+export const MessageType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  FILE: 'FILE',
+  VOICE: 'VOICE',
+  VIDEO: 'VIDEO',
+  SYSTEM: 'SYSTEM',
+  REACTION: 'REACTION'
+} as const
+
+export type MessageType = typeof MessageType[keyof typeof MessageType]
+
+export const ConversationType = {
+  DIRECT_MESSAGE: 'DIRECT_MESSAGE',
+  GROUP_CHAT: 'GROUP_CHAT',
+  TEAM_CHAT: 'TEAM_CHAT'
+} as const
+
+export type ConversationType = typeof ConversationType[keyof typeof ConversationType]
+
+export const RecommendationType = {
+  USER: 'USER',
+  TEAM: 'TEAM',
+  POST: 'POST',
+  SKILL: 'SKILL',
+  HASHTAG: 'HASHTAG'
+} as const
+
+export type RecommendationType = typeof RecommendationType[keyof typeof RecommendationType]
 
 // Core Interfaces
 export interface User {
@@ -207,7 +204,9 @@ export interface User {
   bio?: string
   avatar?: string
   banner?: string
-  location?: string
+  country?: string
+  city?: string
+  address?: string
   website?: string
   linkedin?: string
   github?: string
@@ -215,17 +214,11 @@ export interface User {
   company?: string
   position?: string
   userType: UserType
-  preferredRole: PreferredRole
-  experienceLevel: ExperienceLevel
   skills: string[]
   interests: string[]
-  languages: string[]
-  isVerified: boolean
   isActive: boolean
-  isAvailableForProjects: boolean
   timezone?: string
   lastLoginAt?: string
-  profileViews: number
   createdAt: string
   updatedAt: string
 }
@@ -253,14 +246,11 @@ export interface RegisterCredentials {
   password: string
   bio?: string
   userType?: UserType
-  preferredRole?: PreferredRole
-  experienceLevel?: ExperienceLevel
   skills?: string[]
   interests?: string[]
-  languages?: string[]
 }
 
-export interface Project {
+export interface TeamProject {
   id: string
   title: string
   description: string
@@ -270,89 +260,49 @@ export interface Project {
   startDate?: string
   endDate?: string
   estimatedDuration?: string
-  isPublic: boolean
-  isRecruiting: boolean
-  maxMembers?: number
-  currentMembers: number
   requiredSkills: string[]
   tags: string[]
   repositoryUrl?: string
   liveUrl?: string
   documentationUrl?: string
   images: string[]
-  ownerId: string
-  teamId?: string
-  viewCount: number
-  likeCount: number
+  teamId: string
+  createdBy: string
   createdAt: string
   updatedAt: string
-  owner: User
-  team?: Team
-  members: ProjectMember[]
-  goals?: ProjectGoal[]
-  milestones?: Milestone[]
-  requiredRoles?: ProjectRole[]
+  team: Team
+  milestones?: TeamMilestone[]
 }
 
-export interface ProjectMember {
-  id: string
-  projectId: string
-  userId: string
-  role: ProjectMemberRole
-  title?: string
-  joinedAt: string
-  isActive: boolean
-  user: User
-  project: Project
-}
-
-export interface ProjectGoal {
-  id: string
-  title: string
-  description?: string
-  projectId: string
-  isCompleted: boolean
-  priority: number
-  completedAt?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ProjectRole {
-  id: string
-  projectId: string
-  title: string
-  description: string
-  requiredSkills: string[]
-  experienceLevel: ExperienceLevel
-  isOpen: boolean
-  maxPositions: number
-  filledPositions: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Milestone {
+export interface TeamMilestone {
   id: string
   title: string
   description?: string
   status: MilestoneStatus
   dueDate?: string
   completedAt?: string
-  projectId: string
+  teamId: string
+  projectId?: string
+  createdBy: string
   createdAt: string
   updatedAt: string
-  achievements?: Achievement[]
+  team: Team
+  project?: TeamProject
+  achievements?: TeamAchievement[]
 }
 
-export interface Achievement {
+export interface TeamAchievement {
   id: string
   title: string
   description: string
-  milestoneId: string
+  teamId: string
+  milestoneId?: string
   isShared: boolean
+  createdBy: string
   createdAt: string
   updatedAt: string
+  team: Team
+  milestone?: TeamMilestone
 }
 
 export interface Connection {
@@ -387,46 +337,60 @@ export interface Team {
   banner?: string
   skills: string[]
   tags: string[]
-  location?: string
+  country?: string
+  city?: string
   isRecruiting: boolean
+  allowJoinRequests: boolean
   maxMembers?: number
-  currentMembers: number
-  requiredSkills: string[]
   website?: string
-  social?: Record<string, any>
+  social?: Record<string, unknown>
   ownerId: string
-  viewCount: number
   memberCount: number
+  followerCount: number
   createdAt: string
   updatedAt: string
   owner: User
   members: TeamMember[]
-  roles?: TeamRole[]
+  customRoles?: TeamCustomRole[]
   invitations?: TeamInvitation[]
-  projects?: Project[]
+  joinRequests?: TeamJoinRequest[]
+  projects?: TeamProject[]
+  milestones?: TeamMilestone[]
+  achievements?: TeamAchievement[]
+  followers?: TeamFollow[]
 }
 
 export interface TeamMember {
   id: string
   teamId: string
   userId: string
-  role: TeamMemberRole
+  status: TeamMemberStatus
   title?: string
+  isActive: boolean
   joinedAt: string
   team: Team
   user: User
+  customRoles?: TeamMemberCustomRole[]
 }
 
-export interface TeamRole {
+export interface TeamCustomRole {
   id: string
   teamId: string
   name: string
   description?: string
   color?: string
-  permissions: string[]
-  isDefault: boolean
   createdAt: string
   updatedAt: string
+  team: Team
+  members: TeamMemberCustomRole[]
+}
+
+export interface TeamMemberCustomRole {
+  id: string
+  teamMemberId: string
+  customRoleId: string
+  teamMember: TeamMember
+  customRole: TeamCustomRole
 }
 
 export interface TeamInvitation {
@@ -435,7 +399,6 @@ export interface TeamInvitation {
   inviterId: string
   inviteeId?: string
   email?: string
-  roleId?: string
   message?: string
   status: InvitationStatus
   expiresAt: string
@@ -446,12 +409,32 @@ export interface TeamInvitation {
   invitee?: User
 }
 
+export interface TeamJoinRequest {
+  id: string
+  teamId: string
+  userId: string
+  message?: string
+  status: JoinRequestStatus
+  createdAt: string
+  updatedAt: string
+  team: Team
+  user: User
+}
+
+export interface TeamFollow {
+  id: string
+  userId: string
+  teamId: string
+  createdAt: string
+  user: User
+  team: Team
+}
+
 export interface Post {
   id: string
   content: string
   type: PostType
-  authorId: string
-  projectId?: string
+  authorId?: string
   teamId?: string
   media: string[]
   tags: string[]
@@ -466,8 +449,7 @@ export interface Post {
   viewsCount: number
   createdAt: string
   updatedAt: string
-  author: User
-  project?: Project
+  author?: User
   team?: Team
   comments?: Comment[]
   reactions?: Reaction[]
@@ -520,7 +502,7 @@ export interface Notification {
   userId: string
   isRead: boolean
   actionUrl?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   priority: string
   category: string
   createdAt: string
@@ -537,7 +519,7 @@ export interface Message {
   conversationId: string
   replyToId?: string
   attachments: string[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   isEdited: boolean
   editedAt?: string
   isDeleted: boolean
@@ -561,7 +543,6 @@ export interface Conversation {
   avatar?: string
   isGroup: boolean
   teamId?: string
-  projectId?: string
   createdBy: string
   lastMessageAt?: string
   isArchived: boolean
@@ -595,7 +576,7 @@ export interface MessageReaction {
 }
 
 // Request/Response Types
-export interface CreateProjectData {
+export interface CreateTeamProjectData {
   title: string
   description: string
   shortDescription?: string
@@ -603,9 +584,6 @@ export interface CreateProjectData {
   startDate?: string
   endDate?: string
   estimatedDuration?: string
-  isPublic: boolean
-  isRecruiting?: boolean
-  maxMembers?: number
   requiredSkills: string[]
   tags: string[]
   repositoryUrl?: string
@@ -613,7 +591,7 @@ export interface CreateProjectData {
   documentationUrl?: string
 }
 
-export interface UpdateProjectData {
+export interface UpdateTeamProjectData {
   title?: string
   description?: string
   shortDescription?: string
@@ -622,9 +600,6 @@ export interface UpdateProjectData {
   startDate?: string
   endDate?: string
   estimatedDuration?: string
-  isPublic?: boolean
-  isRecruiting?: boolean
-  maxMembers?: number
   requiredSkills?: string[]
   tags?: string[]
   repositoryUrl?: string
@@ -637,7 +612,9 @@ export interface UpdateProfileData {
   lastName?: string
   bio?: string
   username?: string
-  location?: string
+  country?: string
+  city?: string
+  address?: string
   website?: string
   linkedin?: string
   github?: string
@@ -645,12 +622,8 @@ export interface UpdateProfileData {
   company?: string
   position?: string
   userType?: UserType
-  preferredRole?: PreferredRole
-  experienceLevel?: ExperienceLevel
   skills?: string[]
   interests?: string[]
-  languages?: string[]
-  isAvailableForProjects?: boolean
   timezone?: string
 }
 
@@ -662,12 +635,13 @@ export interface CreateTeamData {
   type: TeamType
   skills?: string[]
   tags?: string[]
-  location?: string
+  country?: string
+  city?: string
   isRecruiting?: boolean
+  allowJoinRequests?: boolean
   maxMembers?: number
-  requiredSkills?: string[]
   website?: string
-  social?: Record<string, any>
+  social?: Record<string, unknown>
 }
 
 export interface UpdateTeamData {
@@ -678,18 +652,18 @@ export interface UpdateTeamData {
   type?: TeamType
   skills?: string[]
   tags?: string[]
-  location?: string
+  country?: string
+  city?: string
   isRecruiting?: boolean
+  allowJoinRequests?: boolean
   maxMembers?: number
-  requiredSkills?: string[]
   website?: string
-  social?: Record<string, any>
+  social?: Record<string, unknown>
 }
 
 export interface CreatePostData {
   content: string
   type?: PostType
-  projectId?: string
   teamId?: string
   media?: string[]
   tags?: string[]
@@ -709,7 +683,7 @@ export interface UpdatePostData {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data?: T
@@ -736,9 +710,9 @@ export interface SearchFilters {
   tags?: string[]
   category?: string
   userType?: UserType
-  experienceLevel?: ExperienceLevel
   skills?: string[]
-  location?: string
+  country?: string
+  city?: string
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
 }
@@ -760,29 +734,29 @@ export interface UserAnalytics {
   id: string
   userId: string
   date: string
-  profileViews: number
   postViews: number
   postLikes: number
   postComments: number
   postShares: number
   connectionsGained: number
   followersGained: number
-  projectsCreated: number
-  projectsJoined: number
+  teamsJoined: number
+  teamsFollowed: number
   messagesExchanged: number
   createdAt: string
 }
 
-export interface ProjectAnalytics {
+export interface PostAnalytics {
   id: string
-  projectId: string
+  postId: string
   date: string
   views: number
   likes: number
+  comments: number
+  shares: number
   bookmarks: number
-  applications: number
-  membersJoined: number
-  postsCreated: number
+  clicks: number
+  engagementRate: number
   createdAt: string
 }
 
@@ -792,8 +766,11 @@ export interface TeamAnalytics {
   date: string
   views: number
   membersJoined: number
+  followersGained: number
   postsCreated: number
   projectsCreated: number
+  milestonesCompleted: number
+  achievementsShared: number
   messagesExchanged: number
   createdAt: string
 }
@@ -808,13 +785,12 @@ export interface FileUpload {
   destination?: string
   filename?: string
   path?: string
-  buffer?: Buffer
 }
 
 // Dashboard Types
 export interface DashboardStats {
-  totalProjects: number
-  activeProjects: number
+  totalTeamProjects: number
+  activeTeamProjects: number
   totalConnections: number
   totalTeams: number
   recentActivity: ActivityItem[]
@@ -826,19 +802,19 @@ export interface ActivityItem {
   message: string
   createdAt: string
   user?: User
-  project?: Project
+  teamProject?: TeamProject
   team?: Team
 }
 
 // Recommendation Types
 export interface AIRecommendation {
   id: string
-  type: 'USER' | 'PROJECT' | 'TEAM' | 'POST' | 'SKILL' | 'HASHTAG'
+  type: RecommendationType
   userId: string
   targetId: string
   score: number
   reason: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   isActive: boolean
   isClicked: boolean
   isDismissed: boolean
@@ -851,14 +827,12 @@ export interface ChatRoom {
   id: string
   name: string
   description?: string
-  teamId?: string
-  projectId?: string
+  teamId: string
   isPrivate: boolean
   createdBy: string
   createdAt: string
   updatedAt: string
-  team?: Team
-  project?: Project
+  team: Team
 }
 
 // Additional utility types
@@ -875,12 +849,10 @@ export interface Share {
 export interface Bookmark {
   id: string
   userId: string
-  postId?: string
-  projectId?: string
+  postId: string
   createdAt: string
   user: User
-  post?: Post
-  project?: Project
+  post: Post
 }
 
 export interface Mention {
@@ -894,16 +866,6 @@ export interface Mention {
   createdAt: string
   mentioner: User
   post: Post
-}
-
-export interface Hashtag {
-  id: string
-  name: string
-  description?: string
-  usageCount: number
-  trending: boolean
-  createdAt: string
-  updatedAt: string
 }
 
 export interface TrendingTopic {

@@ -16,3 +16,10 @@ coverage/
 
 # Docker
 .docker/
+
+#extra
+frontend_old/
+frontend_old1/
+frontend_old2/
+frontend_old3/
+con.py
