@@ -1,6 +1,5 @@
 'use client'
 
-import { useTheme } from '@/contexts/ThemeContext'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const setTheme = (theme: 'light' | 'dark' | 'system') => {}
 
   return (
     <DropdownMenu>
@@ -46,7 +45,7 @@ interface ThemeSwitchProps {
 }
 
 export function ThemeSwitch({ checked, onCheckedChange }: ThemeSwitchProps) {
-  const { resolvedTheme } = useTheme()
+  const { resolvedTheme } = { resolvedTheme: 'light' }
   
   return (
     <Button
