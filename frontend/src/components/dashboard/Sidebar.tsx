@@ -5,13 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { 
   Home, 
   Users, 
-  Briefcase, 
   MessageSquare, 
   Bell, 
   Search,
   Plus,
   Hash,
-  Calendar,
   Settings,
   User
 } from 'lucide-react';
@@ -19,19 +17,16 @@ import { useAuth } from '@/hooks/useAuth';
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
-  { name: 'Teams', href: '/teams', icon: Users },
-  { name: 'Projects', href: '/projects', icon: Briefcase },
-  { name: 'Connections', href: '/connections', icon: Hash },
-  { name: 'Notifications', href: '/notifications', icon: Bell },
-  { name: 'Messages', href: '/messages', icon: MessageSquare },
-  { name: 'Search', href: '/search', icon: Search },
-  { name: 'Events', href: '/events', icon: Calendar },
+  { name: 'Teams', href: '/dashboard/teams', icon: Users },
+  { name: 'Connections', href: '/dashboard/connections', icon: Hash },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+  { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+  { name: 'Search', href: '/dashboard/search', icon: Search },
 ];
 
 const quickActions = [
   { name: 'Start a post', action: 'post' },
   { name: 'Create team', action: 'team' },
-  { name: 'New project', action: 'project' },
 ];
 
 export default function Sidebar() {
@@ -114,7 +109,7 @@ export default function Sidebar() {
       {/* Settings and Profile */}
       <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700 space-y-1">
         <Link
-          to="/profile"
+          to="/dashboard/profile"
           className="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           <User className="mr-3 h-5 w-5 text-gray-500 dark:text-gray-400" />
