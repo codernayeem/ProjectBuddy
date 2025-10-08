@@ -16,11 +16,14 @@ import {
   Award,
   Clock,
   BookOpen,
-  Target
+  Target,
+  FileText,
+  Plus
 } from 'lucide-react'
 import { userService } from '@/lib/auth'
 import { projectService } from '@/lib/projects'
 import { connectionService } from '@/lib/connections'
+import { postService } from '@/lib/posts'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Badge as UIBadge } from '@/components/ui/Badge'
@@ -28,6 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { formatRelativeTime, formatDateShort, getInitials, formatEnumValue } from '@/lib/utils'
+import { PostCard } from '@/components/posts/PostCard'
+import { useDeletePost } from '@/hooks/usePosts'
 import { Link } from 'react-router'
 
 export default function ProfilePage() {
@@ -104,6 +109,16 @@ export default function ProfilePage() {
   }
 
   const profileData = fullProfile?.data || user
+
+  // Fetch user posts
+  const { data: userPosts } = useQuery({
+    queryKey: ['user-posts', profileData?.id],
+    queryFn: () => postService.getUserPosts(profileData!.id),
+    enabled: !!profileData?.id,
+  })
+
+  // Delete post mutation
+  const deletePostMutation = useDeletePost()
 
   if (isLoading || !profileData) {
     return (
@@ -311,8 +326,9 @@ export default function ProfilePage() {
 
       {/* Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
@@ -406,6 +422,52 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="posts">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  My Posts ({userPosts?.pagination?.total || 0})
+                </span>
+                <Button asChild>
+                  <Link to="/dashboard">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Post
+                  </Link>
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userPosts?.data?.length ? (
+                <div className="space-y-6">
+                  {userPosts.data.map((post: any) => (
+                    <PostCard 
+                      key={post.id} 
+                      post={post}
+                      showActions={true}
+                      isOwner={post.authorId === user?.id}
+                      onDelete={(postId) => deletePostMutation.mutate(postId)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="mx-auto h-24 w-24 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
+                  <p className="text-gray-600 mb-6">Share your first post to get started.</p>
+                  <Button asChild>
+                    <Link to="/dashboard">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Post
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="projects">

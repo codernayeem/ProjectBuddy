@@ -1,120 +1,121 @@
-import { useAuth } from '@/hooks/useAuth'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Plus, Users, Briefcase, Bell } from 'lucide-react'
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { 
+  TrendingUp, Users, Briefcase, Award,
+  Plus, Calendar
+} from 'lucide-react';
+import { useFeed, useReactToPost } from '@/hooks/usePosts';
+import { useTeams } from '@/hooks/useTeams';
+import { useAuth } from '@/hooks/useAuth';
+import { ReactionType } from '@/types/types';
+import { PostCard } from '@/components/posts/PostCard';
+import { PostCreator } from '@/components/posts/PostCreator';
 
 export default function DashboardHomePage() {
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const { data: feedData, isLoading: feedLoading, error: feedError } = useFeed(1, 10);
+  const { data: userTeamsData } = useTeams(1, 10);
+  const reactToPostMutation = useReactToPost();
+
+  // Calculate stats from real data
+  const stats = {
+    connections: 0, // TODO: Add connections API
+    teams: userTeamsData?.pagination?.total || 0,
+    projects: 0, // TODO: Add projects API
+  };
+
+  const handleReaction = async (postId: string, reactionType: ReactionType) => {
+    try {
+      await reactToPostMutation.mutateAsync({ id: postId, type: reactionType });
+    } catch (error) {
+      console.error('Failed to react to post:', error);
+    }
+  };
+
+  if (feedLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (feedError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="p-6 max-w-md">
+          <CardContent>
+            <p className="text-red-600 text-center">Failed to load feed. Please try again.</p>
+            <Button 
+              className="w-full mt-4" 
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.username}!
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Here's what's happening with your projects and teams today.
-        </p>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Plus className="h-5 w-5 text-blue-600" />
-              New Project
-            </CardTitle>
-            <CardDescription>
-              Create a new project and start collaborating
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">Create Project</Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5 text-green-600" />
-              Join Team
-            </CardTitle>
-            <CardDescription>
-              Join an existing team or create your own
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">Find Teams</Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Briefcase className="h-5 w-5 text-purple-600" />
-              My Projects
-            </CardTitle>
-            <CardDescription>
-              View and manage your active projects
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">View Projects</Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Bell className="h-5 w-5 text-orange-600" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Check your latest updates and messages
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">View All</Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Projects</CardTitle>
-            <CardDescription>Your recently accessed projects</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent projects</p>
-                <p className="text-sm">Create your first project to get started</p>
-              </div>
+    <div className="space-y-6">
+      {/* Welcome Banner */}
+      <Card className="bg-gradient-to-r from-primary-600 to-primary-700 border-0">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-2 text-white ">
+                Welcome back, {user?.firstName}! 👋
+              </h1>
+              <p className="text-primary-100">
+                You have 3 new connection requests and 5 team invitations waiting.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Team Activity</CardTitle>
-            <CardDescription>Latest updates from your teams</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No team activity</p>
-                <p className="text-sm">Join a team to see updates here</p>
-              </div>
+            <div className="hidden md:flex space-x-2">
+              <Button variant="secondary" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                View Requests
+              </Button>
+              <Button variant="outline" size="sm" className="border-gray-300 hover:bg-white hover:text-primary-600">
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Meeting
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Feed */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Create Post */}
+          <PostCreator />
+
+          {/* Feed */}
+          <div className="space-y-6">
+            {!feedData?.data || feedData.data.length === 0 ? (
+              <Card className="p-6 text-center">
+                <CardContent>
+                  <p className="text-gray-600">No posts in your feed yet. Start following teams and users to see their updates!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              Array.isArray(feedData.data) && feedData.data.map((post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post} 
+                  onReact={handleReaction}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
-  )
+  );
 }

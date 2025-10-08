@@ -34,7 +34,7 @@ export const postService = {
 
   // Get user feed
   getFeed: async (page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
-    const response = await api.get(`/posts/user/feed?page=${page}&limit=${limit}`)
+    const response = await api.get(`/posts/feed?page=${page}&limit=${limit}`)
     return response.data
   },
 
@@ -175,7 +175,7 @@ export const postService = {
 
   // Get user posts
   getUserPosts: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<Post[]>> => {
-    const response = await api.get(`/users/${userId}/posts?page=${page}&limit=${limit}`)
+    const response = await api.get(`/posts/user/${userId}/?page=${page}&limit=${limit}`)
     return response.data
   },
 
