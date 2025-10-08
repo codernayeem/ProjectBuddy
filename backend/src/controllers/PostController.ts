@@ -106,7 +106,8 @@ export class PostController {
       res.json(createResponse(
         true, 
         'Posts retrieved successfully', 
-        result
+        result.data,
+        result.pagination,
       ));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to search posts';
@@ -386,7 +387,7 @@ export class PostController {
 
       const result = await this.postService.getUserBookmarks(req.user.id, params);
 
-      res.json(createResponse(true, 'Bookmarks retrieved successfully', result));
+      res.json(createResponse(true, 'Bookmarks retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get bookmarks';
       res.status(500).json(createErrorResponse(errorMessage));
@@ -417,7 +418,7 @@ export class PostController {
 
       const result = await this.postService.getUserFeed(req.user.id, params);
 
-      res.json(createResponse(true, 'Feed retrieved successfully', result));
+      res.json(createResponse(true, 'Feed retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get user feed';
       res.status(500).json(createErrorResponse(errorMessage));
@@ -443,7 +444,7 @@ export class PostController {
 
       const result = await this.postService.getTrendingPosts(params);
 
-      res.json(createResponse(true, 'Trending posts retrieved successfully', result));
+      res.json(createResponse(true, 'Trending posts retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get trending posts';
       res.status(500).json(createErrorResponse(errorMessage));
@@ -468,7 +469,7 @@ export class PostController {
 
       const result = await this.postService.getUserPosts(userId, currentUserId, params);
 
-      res.json(createResponse(true, 'User posts retrieved successfully', result));
+      res.json(createResponse(true, 'User posts retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get user posts';
       res.status(500).json(createErrorResponse(errorMessage));
@@ -493,7 +494,7 @@ export class PostController {
 
       const result = await this.postService.getTeamPosts(teamId, userId, params);
 
-      res.json(createResponse(true, 'Team posts retrieved successfully', result));
+      res.json(createResponse(true, 'Team posts retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get team posts';
       res.status(500).json(createErrorResponse(errorMessage));

@@ -292,12 +292,14 @@ export class PostRepository {
     const where: Prisma.PostWhereInput = {
       authorId: targetUserId,
       // Show posts based on visibility and relationship
-      OR: currentUserId === targetUserId
-        ? [{}] // Show all posts if viewing own profile
-        : [
-            { visibility: 'public' },
-            // Add connection check if needed
-          ],
+      ...(currentUserId === targetUserId
+        ? {} // Show all posts if viewing own profile
+        : {
+            OR: [
+              { visibility: 'public' },
+              // Add connection check if needed
+            ],
+          }),
     };
 
     const [posts, total] = await Promise.all([

@@ -114,12 +114,11 @@ export class PostService {
   async getUserFeed(
     userId: string, 
     params: PaginationParams & { filters?: PostFilters }
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     const result = await this.postRepository.getFeed(userId, params);
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
@@ -132,12 +131,11 @@ export class PostService {
   async searchPosts(
     params: SearchParams & PaginationParams & { filters?: PostFilters },
     userId?: string
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     const result = await this.postRepository.search(params, userId);
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
@@ -151,12 +149,11 @@ export class PostService {
     targetUserId: string,
     currentUserId?: string,
     params: PaginationParams = { page: 1, limit: 20, skip: 0 }
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     const result = await this.postRepository.getUserPosts(targetUserId, currentUserId, params);
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
@@ -170,12 +167,11 @@ export class PostService {
     teamId: string,
     userId?: string,
     params: PaginationParams = { page: 1, limit: 20, skip: 0 }
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     const result = await this.postRepository.getTeamPosts(teamId, userId, params);
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
@@ -327,12 +323,11 @@ export class PostService {
   async getUserBookmarks(
     userId: string, 
     params: PaginationParams
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     const result = await this.postRepository.getUserBookmarks(userId, params);
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
@@ -345,7 +340,7 @@ export class PostService {
   // Trending and Discovery
   async getTrendingPosts(
     params: PaginationParams & { timeframe?: string }
-  ): Promise<{ posts: Post[]; total: number; pagination: any }> {
+  ): Promise<{ data: Post[]; pagination: any }> {
     // Calculate time range based on timeframe
     let timeRange = new Date();
     switch (params.timeframe) {
@@ -379,8 +374,7 @@ export class PostService {
     });
     
     return {
-      posts: result.posts,
-      total: result.total,
+      data: result.posts,
       pagination: {
         page: params.page,
         limit: params.limit,
