@@ -1,0 +1,950 @@
+{
+  "info": {
+    "name": "ProjectBuddy API",
+    "description": "Complete API collection for ProjectBuddy application with authentication, posts, users, connections, and teams",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "post_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "team_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "connection_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication related endpoints",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"username\": \"johndoe\",\n  \"userType\": \"DEVELOPER\",\n  \"bio\": \"Full-stack developer passionate about creating amazing web applications\",\n  \"skills\": [\"JavaScript\", \"TypeScript\", \"React\", \"Node.js\", \"PostgreSQL\"],\n  \"interests\": [\"Web Development\", \"AI/ML\", \"Open Source\"],\n  \"city\": \"San Francisco\",\n  \"country\": \"USA\",\n  \"timezone\": \"America/Los_Angeles\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create a new user account with detailed profile information"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.success && response.data && response.data.token) {",
+                  "    pm.collectionVariables.set('auth_token', response.data.token);",
+                  "    pm.collectionVariables.set('user_id', response.data.user.id);",
+                  "    console.log('Token set:', response.data.token.substring(0, 20) + '...');",
+                  "    console.log('User ID set:', response.data.user.id);",
+                  "} else {",
+                  "    console.log('Login failed or missing token');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login to get access token. Token and user ID will be automatically saved to collection variables."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Get current authenticated user's profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "description": "Post management endpoints",
+      "item": [
+        {
+          "name": "Create Post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.success && response.data && response.data.id) {",
+                  "    pm.collectionVariables.set('post_id', response.data.id);",
+                  "    console.log('Post ID set:', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Just launched my new React project! 🚀 It's a task management app built with TypeScript, Prisma, and PostgreSQL. The user experience is smooth and the performance is incredible. Looking for feedback from the community! #react #typescript #webdev\",\n  \"type\": \"TEXT\",\n  \"visibility\": \"public\",\n  \"tags\": [\"react\", \"typescript\", \"project\", \"webdev\"],\n  \"hashtags\": [\"react\", \"typescript\", \"webdev\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/posts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts"]
+            },
+            "description": "Create a new post. Post ID will be automatically saved to collection variables."
+          }
+        },
+        {
+          "name": "Get Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/feed?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get user's personalized feed with posts from connections and followed teams"
+          }
+        },
+        {
+          "name": "Get User Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/user/{{user_id}}?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "user", "{{user_id}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get posts by specific user (using automatically set user_id)"
+          }
+        },
+        {
+          "name": "Search Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts?search=react&page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "react"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Search posts with filters and sorting options"
+          }
+        },
+        {
+          "name": "Get Post by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "{{post_id}}"]
+            },
+            "description": "Get a specific post by ID"
+          }
+        },
+        {
+          "name": "React to Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"LIKE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/posts/{{post_id}}/react",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "{{post_id}}", "react"]
+            },
+            "description": "Add a reaction (LIKE, LOVE, LAUGH, WOW, SAD, ANGRY) to a post"
+          }
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Great work! I love the clean UI design. How did you handle state management in this project?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/posts/{{post_id}}/comments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "{{post_id}}", "comments"]
+            },
+            "description": "Add a comment to a specific post"
+          }
+        },
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/{{post_id}}/comments?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "{{post_id}}", "comments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get comments for a specific post"
+          }
+        },
+        {
+          "name": "Bookmark Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/{{post_id}}/bookmark",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "{{post_id}}", "bookmark"]
+            },
+            "description": "Bookmark a post for later viewing"
+          }
+        },
+        {
+          "name": "Get User Bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/bookmarks?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "bookmarks"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get current user's bookmarked posts"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints",
+      "item": [
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            },
+            "description": "Get user information by ID (using automatically set user_id)"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Senior Full-stack Developer with 5+ years of experience. Passionate about building scalable web applications and mentoring junior developers.\",\n  \"skills\": [\"JavaScript\", \"TypeScript\", \"React\", \"Next.js\", \"Node.js\", \"PostgreSQL\", \"Docker\", \"AWS\"],\n  \"interests\": [\"Web Development\", \"AI/ML\", \"Open Source\", \"Tech Leadership\"],\n  \"company\": \"Tech Innovations Inc.\",\n  \"position\": \"Senior Software Engineer\",\n  \"website\": \"https://johndoe.dev\",\n  \"github\": \"https://github.com/johndoe\",\n  \"linkedin\": \"https://linkedin.com/in/johndoe\",\n  \"portfolio\": \"https://portfolio.johndoe.dev\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
+            },
+            "description": "Update current user's profile information"
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/search?query=john&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "john"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search for users by name, username, or other criteria"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Connections",
+      "description": "Connection management endpoints",
+      "item": [
+        {
+          "name": "Send Connection Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"USER_ID_HERE\",\n  \"message\": \"Hi! I'd love to connect and collaborate on some exciting projects. Your work in React development is impressive!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/connections/send",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections", "send"]
+            },
+            "description": "Send a connection request to another user. Replace USER_ID_HERE with actual user ID."
+          }
+        },
+        {
+          "name": "Get Received Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/connections/received?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections", "received"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get connection requests received by the current user"
+          }
+        },
+        {
+          "name": "Get Sent Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/connections/sent?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections", "sent"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get connection requests sent by the current user"
+          }
+        },
+        {
+          "name": "Accept Connection",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/connections/{{connection_id}}/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections", "{{connection_id}}", "accept"]
+            },
+            "description": "Accept a connection request. Set connection_id variable first."
+          }
+        },
+        {
+          "name": "Reject Connection",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/connections/{{connection_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections", "{{connection_id}}", "reject"]
+            },
+            "description": "Reject a connection request. Set connection_id variable first."
+          }
+        },
+        {
+          "name": "Get Connections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/connections?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "connections"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get current user's established connections"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "description": "Team management endpoints",
+      "item": [
+        {
+          "name": "Create Team",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.success && response.data && response.data.id) {",
+                  "    pm.collectionVariables.set('team_id', response.data.id);",
+                  "    console.log('Team ID set:', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"React Masters\",\n  \"description\": \"A community of React developers sharing knowledge, best practices, and collaborating on exciting projects. We welcome developers of all skill levels!\",\n  \"type\": \"DEVELOPMENT\",\n  \"privacy\": \"PUBLIC\",\n  \"tags\": [\"react\", \"javascript\", \"frontend\", \"development\"],\n  \"maxMembers\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teams",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams"]
+            },
+            "description": "Create a new team. Team ID will be automatically saved to collection variables."
+          }
+        },
+        {
+          "name": "Get All Teams",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teams?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get all teams with pagination and filtering options"
+          }
+        },
+        {
+          "name": "Get Team by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teams/{{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams", "{{team_id}}"]
+            },
+            "description": "Get detailed information about a specific team"
+          }
+        },
+        {
+          "name": "Join Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teams/{{team_id}}/join",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams", "{{team_id}}", "join"]
+            },
+            "description": "Join a team (for public teams) or request to join (for private teams)"
+          }
+        },
+        {
+          "name": "Leave Team",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teams/{{team_id}}/leave",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams", "{{team_id}}", "leave"]
+            },
+            "description": "Leave a team that you're currently a member of"
+          }
+        },
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teams/{{team_id}}/members?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teams", "{{team_id}}", "members"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get members of a specific team"
+          }
+        },
+        {
+          "name": "Get Team Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/posts/team/{{team_id}}?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts", "team", "{{team_id}}"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get posts from a specific team"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Demo Data Creation",
+      "description": "Endpoints to create demo data for testing",
+      "item": [
+        {
+          "name": "Create Demo User 2 (Jane)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"username\": \"janesmith\",\n  \"userType\": \"DESIGNER\",\n  \"bio\": \"UI/UX Designer with a passion for creating beautiful and intuitive user experiences\",\n  \"skills\": [\"Figma\", \"Adobe XD\", \"Sketch\", \"Prototyping\", \"User Research\"],\n  \"interests\": [\"Design\", \"User Experience\", \"Psychology\"],\n  \"city\": \"New York\",\n  \"country\": \"USA\",\n  \"timezone\": \"America/New_York\",\n  \"company\": \"Design Studio Co.\",\n  \"position\": \"Senior UX Designer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create second demo user (Jane Smith - Designer) for testing connections and social features"
+          }
+        },
+        {
+          "name": "Create Demo User 3 (Mike)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mike.johnson@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Mike\",\n  \"lastName\": \"Johnson\",\n  \"username\": \"mikejohnson\",\n  \"userType\": \"PROJECT_MANAGER\",\n  \"bio\": \"Experienced project manager specializing in agile methodologies and team leadership\",\n  \"skills\": [\"Project Management\", \"Agile\", \"Scrum\", \"Leadership\", \"Communication\"],\n  \"interests\": [\"Management\", \"Team Building\", \"Process Improvement\"],\n  \"city\": \"Seattle\",\n  \"country\": \"USA\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"company\": \"Tech Solutions Inc.\",\n  \"position\": \"Senior Project Manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create third demo user (Mike Johnson - Project Manager) for testing teams and management features"
+          }
+        },
+        {
+          "name": "Create Demo Post 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Working on an exciting new e-commerce platform! The challenge of optimizing the checkout flow has been interesting. We've reduced cart abandonment by 25% through better UX design and performance improvements. 💪 #ecommerce #ux #performance\",\n  \"type\": \"TEXT\",\n  \"visibility\": \"public\",\n  \"tags\": [\"ecommerce\", \"ux\", \"performance\", \"optimization\"],\n  \"hashtags\": [\"ecommerce\", \"ux\", \"performance\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/posts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts"]
+            },
+            "description": "Create additional demo post about e-commerce platform development"
+          }
+        },
+        {
+          "name": "Create Demo Post 3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Just completed a major refactoring of our microservices architecture! 🏗️ Moved from monolith to containerized services with Docker and Kubernetes. The deployment process is now 10x faster and more reliable. Learning experience: always plan for scalability from day one! #microservices #docker #kubernetes #devops\",\n  \"type\": \"TEXT\",\n  \"visibility\": \"public\",\n  \"tags\": [\"microservices\", \"docker\", \"kubernetes\", \"devops\", \"architecture\"],\n  \"hashtags\": [\"microservices\", \"docker\", \"kubernetes\", \"devops\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/posts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "posts"]
+            },
+            "description": "Create demo post about microservices and DevOps"
+          }
+        }
+      ]
+    }
+  ]
+}
