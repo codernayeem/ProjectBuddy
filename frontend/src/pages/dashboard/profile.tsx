@@ -280,18 +280,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {userProjects?.pagination?.total || 0}
-            </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
-              <FolderOpen className="h-4 w-4 mr-1" />
-              Projects
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl font-bold text-gray-700">
               {connectionStats?.data?.totalConnections || 0}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
@@ -302,23 +291,34 @@ export default function ProfilePage() {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-orange-600">
-              {profileData.lastLoginAt ? formatRelativeTime(profileData.lastLoginAt) : 'Never'}
-            </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
-              <Clock className="h-4 w-4 mr-1" />
-              Last Active
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-xl font-bold text-gray-700">
               {userTeams?.pagination?.total || 0}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
               Teams
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="text-xl font-bold text-gray-700">
+              {userProjects?.pagination?.total || 0}
+            </div>
+            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+              <FolderOpen className="h-4 w-4 mr-1" />
+              Projects
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="text-xl font-bold text-gray-700">
+              {profileData.lastLoginAt ? formatRelativeTime(profileData.lastLoginAt) : 'Never'}
+            </div>
+            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+              <Clock className="h-4 w-4 mr-1" />
+              Last Active
             </div>
           </CardContent>
         </Card>
