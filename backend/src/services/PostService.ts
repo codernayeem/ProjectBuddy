@@ -7,7 +7,7 @@ import {
   SearchParams,
   PostFilters 
 } from '../types';
-import { Post, Comment, Reaction, Share, Bookmark } from '@prisma/client';
+import { Post, Comment, Reaction, Share, Bookmark, CommentReaction } from '@prisma/client';
 
 export class PostService {
   private postRepository: PostRepository;
@@ -265,9 +265,19 @@ export class PostService {
 
   async getPostComments(
     postId: string, 
-    params: PaginationParams
-  ): Promise<{ comments: Comment[]; total: number }> {
-    return this.postRepository.getPostComments(postId, params);
+    params: PaginationParams,
+    userId?: string
+  ): Promise<{ data: Comment[]; pagination: any }> {
+    const result = await this.postRepository.getPostComments(postId, params, userId);
+    return {
+      data: result.comments,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
   }
 
   // Shares
@@ -412,5 +422,109 @@ export class PostService {
         return acc;
       }, {} as Record<string, number>),
     };
+  }
+
+  // Comment management methods
+  async getCommentById(commentId: string): Promise<Comment> {
+    const comment = await this.postRepository.getCommentById(commentId);
+    
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    return comment;
+  }
+
+  async updateComment(commentId: string, userId: string, content: string): Promise<Comment> {
+    const comment = await this.postRepository.getCommentById(commentId);
+    
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    if (comment.authorId !== userId) {
+      throw new Error('You are not authorized to update this comment');
+    }
+
+    const updatedComment = await this.postRepository.updateComment(commentId, content);
+
+    return updatedComment;
+  }
+
+  async deleteComment(commentId: string, userId: string): Promise<void> {
+    const comment = await this.postRepository.getCommentById(commentId);
+    
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    if (comment.authorId !== userId) {
+      throw new Error('You are not authorized to delete this comment');
+    }
+
+    await this.postRepository.deleteComment(commentId);
+
+    // Update post comment count
+    await this.postRepository.updateCounts(comment.postId);
+
+    // Update parent comment reply count if it's a reply
+    if (comment.parentId) {
+      await this.postRepository.updateCommentCounts(comment.parentId);
+    }
+  }
+
+  async getCommentReplies(
+    commentId: string, 
+    params: PaginationParams
+  ): Promise<{ data: Comment[]; pagination: any }> {
+    const result = await this.postRepository.getCommentReplies(commentId, params);
+    return {
+      data: result.comments,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / params.limit),
+      },
+    };
+  }
+
+  // Comment reactions
+  async reactToComment(commentId: string, userId: string, type: any): Promise<CommentReaction> {
+    const comment = await this.postRepository.getCommentById(commentId);
+    
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    const reaction = await this.postRepository.addCommentReaction(commentId, userId, type);
+
+    // Create notification for comment author (if not reacting to own comment)
+    if (comment.authorId !== userId) {
+      await this.notificationRepository.create({
+        type: 'COMMENT_REACTION',
+        title: 'Someone reacted to your comment',
+        message: `Someone ${type.toLowerCase()}d your comment`,
+        userId: comment.authorId,
+        data: { commentId, reactionId: reaction.id },
+        category: 'social',
+      });
+    }
+
+    // Update comment reaction count
+    await this.postRepository.updateCommentCounts(commentId);
+
+    return reaction;
+  }
+
+  async removeCommentReaction(commentId: string, userId: string): Promise<void> {
+    await this.postRepository.removeCommentReaction(commentId, userId);
+
+    // Update comment reaction count
+    await this.postRepository.updateCommentCounts(commentId);
+  }
+
+  async getCommentReactions(commentId: string): Promise<CommentReaction[]> {
+    return this.postRepository.getCommentReactions(commentId);
   }
 }

@@ -1,4 +1,4 @@
-import { Post, Comment, Reaction, Share, Bookmark, Mention, Prisma } from '@prisma/client';
+import { Post, Comment, Reaction, Share, Bookmark, Mention, CommentReaction, Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { PaginationParams, SearchParams, PostFilters } from '../types';
 
@@ -466,6 +466,7 @@ export class PostRepository {
             avatar: true,
           },
         },
+        reactions: true,
         _count: {
           select: {
             replies: true,
@@ -476,7 +477,7 @@ export class PostRepository {
     });
   }
 
-  async getPostComments(postId: string, params: PaginationParams): Promise<{ comments: Comment[]; total: number }> {
+  async getPostComments(postId: string, params: PaginationParams, userId?: string): Promise<{ comments: Comment[]; total: number }> {
     const where = {
       postId,
       parentId: null, // Only top-level comments
@@ -495,6 +496,10 @@ export class PostRepository {
               avatar: true,
             },
           },
+          reactions: userId ? {
+            where: { userId },
+            take: 1,
+          } : true,
           replies: {
             take: 3, // Show first few replies
             include: {
@@ -507,6 +512,10 @@ export class PostRepository {
                   avatar: true,
                 },
               },
+              reactions: userId ? {
+                where: { userId },
+                take: 1,
+              } : true,
             },
             orderBy: { createdAt: 'asc' },
           },
@@ -525,6 +534,238 @@ export class PostRepository {
     ]);
 
     return { comments, total };
+  }
+
+  // Get comment by ID
+  async getCommentById(commentId: string): Promise<Comment | null> {
+    return prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        post: {
+          select: {
+            id: true,
+            content: true,
+            authorId: true,
+          },
+        },
+        parent: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        replies: {
+          take: 3,
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        reactions: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+            reactions: true,
+          },
+        },
+      },
+    });
+  }
+
+  // Update comment
+  async updateComment(commentId: string, content: string): Promise<Comment> {
+    return prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        content,
+        isEdited: true,
+        editedAt: new Date(),
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        reactions: true,
+        _count: {
+          select: {
+            replies: true,
+            reactions: true,
+          },
+        },
+      },
+    });
+  }
+
+  // Delete comment
+  async deleteComment(commentId: string): Promise<Comment> {
+    return prisma.comment.delete({
+      where: { id: commentId },
+    });
+  }
+
+  // Get comment replies
+  async getCommentReplies(commentId: string, params: PaginationParams): Promise<{ comments: Comment[]; total: number }> {
+    const where = {
+      parentId: commentId,
+    };
+
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              avatar: true,
+            },
+          },
+          reactions: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  firstName: true,
+                  lastName: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              replies: true,
+              reactions: true,
+            },
+          },
+        },
+        skip: params.skip,
+        take: params.limit,
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.comment.count({ where }),
+    ]);
+
+    return { comments, total };
+  }
+
+  // Comment reactions
+  async addCommentReaction(commentId: string, userId: string, type: any): Promise<CommentReaction> {
+    return prisma.commentReaction.upsert({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+      update: { type },
+      create: {
+        commentId,
+        userId,
+        type,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
+  async removeCommentReaction(commentId: string, userId: string): Promise<CommentReaction> {
+    return prisma.commentReaction.delete({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+    });
+  }
+
+  async getCommentReactions(commentId: string): Promise<CommentReaction[]> {
+    return prisma.commentReaction.findMany({
+      where: { commentId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Update comment counts
+  async updateCommentCounts(commentId: string): Promise<void> {
+    const [likesCount, repliesCount] = await Promise.all([
+      prisma.commentReaction.count({ where: { commentId } }),
+      prisma.comment.count({ where: { parentId: commentId } }),
+    ]);
+
+    await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        likesCount,
+        repliesCount,
+      },
+    });
   }
 
   // Shares

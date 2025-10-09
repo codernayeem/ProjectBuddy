@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
+import { useState } from 'react';
 import { 
   Heart, 
   MessageCircle, 
@@ -15,6 +16,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Post, ReactionType } from '@/types/types';
 import { getInitials } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
+import { useReactToPost, useRemoveReaction } from '@/hooks/usePosts';
+import { 
+  useComments, 
+  useAddComment,
+  useUpdateComment,
+  useDeleteComment,
+  useReactToComment,
+  useRemoveCommentReaction 
+} from '@/hooks/useComments';
+import { CommentsList } from './CommentsList';
 
 interface PostCardProps {
   post: Post;
@@ -22,6 +34,7 @@ interface PostCardProps {
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   showActions?: boolean;
+  showComments?: boolean;
   isOwner?: boolean;
 }
 
@@ -31,8 +44,94 @@ export function PostCard({
   onEdit, 
   onDelete, 
   showActions = false, 
+  showComments = true,
   isOwner = false 
 }: PostCardProps) {
+  const { user: currentUser } = useAuthStore();
+  const [showCommentsSection, setShowCommentsSection] = useState(false);
+  const [commentsPage, setCommentsPage] = useState(1);
+
+  // Comments hooks
+  const { data: commentsData, isLoading: commentsLoading } = useComments(
+    post.id, 
+    commentsPage, 
+    10
+  );
+  
+  const addCommentMutation = useAddComment();
+  const updateCommentMutation = useUpdateComment();
+  const deleteCommentMutation = useDeleteComment();
+  const reactToCommentMutation = useReactToComment();
+  const removeCommentReactionMutation = useRemoveCommentReaction();
+
+  // Post reaction hooks
+  const reactToPostMutation = useReactToPost();
+  const removePostReactionMutation = useRemoveReaction();
+
+  const handlePostReact = () => {
+    // Check if user has already reacted to this post
+    const userReaction = post.reactions?.find(r => r.userId === currentUser?.id);
+    
+    if (userReaction) {
+      // User has reacted, so remove the reaction
+      if (onReact) {
+        // Custom handler provided
+        onReact(post.id, ReactionType.LIKE);
+      } else {
+        removePostReactionMutation.mutate(post.id);
+      }
+    } else {
+      // User hasn't reacted, so add reaction
+      if (onReact) {
+        onReact(post.id, ReactionType.LIKE);
+      } else {
+        reactToPostMutation.mutate({ id: post.id, type: ReactionType.LIKE });
+      }
+    }
+  };
+
+  const handleToggleComments = () => {
+    setShowCommentsSection(!showCommentsSection);
+  };
+
+  const handleAddComment = async (content: string) => {
+    await addCommentMutation.mutateAsync({ 
+      postId: post.id, 
+      content 
+    });
+  };
+
+  const handleReplyToComment = async (commentId: string, content: string) => {
+    await addCommentMutation.mutateAsync({ 
+      postId: post.id, 
+      content, 
+      parentId: commentId 
+    });
+  };
+
+  const handleEditComment = async (commentId: string, content: string) => {
+    await updateCommentMutation.mutateAsync({ commentId, content });
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    await deleteCommentMutation.mutateAsync(commentId);
+  };
+
+  const handleReactToComment = async (commentId: string, type: ReactionType) => {
+    await reactToCommentMutation.mutateAsync({ commentId, type });
+  };
+
+  const handleRemoveCommentReaction = async (commentId: string) => {
+    await removeCommentReactionMutation.mutateAsync(commentId);
+  };
+
+  const comments = commentsData?.data || [];
+  const commentsTotal = commentsData?.pagination?.total || 0;
+  const hasMoreComments = comments.length < commentsTotal;
+  
+  // Check if current user has reacted to this post
+  const userReaction = post.reactions?.find(r => r.userId === currentUser?.id);
+  const hasUserReacted = !!userReaction;
   const PostTypeIcon = ({ type: _type }: { type: string }) => {
     return <FileText className="w-3 h-3" />;
   };
@@ -97,17 +196,17 @@ export function PostCard({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex items-center space-x-1"
-                  onClick={() => onReact?.(post.id, ReactionType.LIKE)}
+                  className={`flex items-center space-x-1 ${hasUserReacted ? 'text-red-500' : ''}`}
+                  onClick={handlePostReact}
                 >
-                  <Heart className="w-4 h-4" />
+                  <Heart className={`w-4 h-4 ${hasUserReacted ? 'fill-current' : ''}`} />
                   <span>{post.likesCount || 0}</span>
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="flex items-center space-x-1"
-                  disabled
+                  onClick={handleToggleComments}
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>{post.commentsCount || 0}</span>
@@ -146,6 +245,26 @@ export function PostCard({
           </div>
         </div>
       </CardContent>
+      
+      {/* Comments Section */}
+      {showCommentsSection && (
+        <div className="border-t px-6 pb-6">
+          <CommentsList
+            postId={post.id}
+            comments={comments}
+            total={commentsTotal}
+            loading={commentsLoading}
+            onAddComment={handleAddComment}
+            onReactToComment={handleReactToComment}
+            onRemoveCommentReaction={handleRemoveCommentReaction}
+            onReplyToComment={handleReplyToComment}
+            onEditComment={handleEditComment}
+            onDeleteComment={handleDeleteComment}
+            hasMore={hasMoreComments}
+            onLoadMore={() => setCommentsPage(prev => prev + 1)}
+          />
+        </div>
+      )}
     </Card>
   );
 }

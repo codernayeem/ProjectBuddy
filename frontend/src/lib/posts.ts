@@ -156,6 +156,24 @@ export const postService = {
     return response.data
   },
 
+  // Get comment by ID
+  getCommentById: async (commentId: string): Promise<ApiResponse<Comment>> => {
+    const response = await api.get(`/comments/${commentId}`)
+    return response.data
+  },
+
+  // Get comment replies
+  getCommentReplies: async (commentId: string, page = 1, limit = 10): Promise<ApiResponse<Comment[]>> => {
+    const response = await api.get(`/comments/${commentId}/replies?page=${page}&limit=${limit}`)
+    return response.data
+  },
+
+  // Get comment reactions
+  getCommentReactions: async (commentId: string): Promise<ApiResponse<CommentReaction[]>> => {
+    const response = await api.get(`/comments/${commentId}/reactions`)
+    return response.data
+  },
+
   // Search posts
   searchPosts: async (filters: SearchFilters): Promise<ApiResponse<Post[]>> => {
     const params = new URLSearchParams()

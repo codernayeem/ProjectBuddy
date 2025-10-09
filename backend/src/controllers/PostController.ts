@@ -264,9 +264,10 @@ export class PostController {
   };
 
   // Get post comments
-  getPostComments = async (req: Request, res: Response): Promise<void> => {
+  getPostComments = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
+      const userId = req.user?.id;
       const { page, limit } = getPaginationParams(
         req.query.page as string,
         req.query.limit as string
@@ -278,9 +279,9 @@ export class PostController {
         skip: (page - 1) * limit,
       };
 
-      const result = await this.postService.getPostComments(id, params);
+      const result = await this.postService.getPostComments(id, params, userId);
 
-      res.json(createResponse(true, 'Comments retrieved successfully', result));
+      res.json(createResponse(true, 'Comments retrieved successfully', result.data, result.pagination));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get comments';
       res.status(500).json(createErrorResponse(errorMessage));
@@ -519,6 +520,143 @@ export class PostController {
       const statusCode = errorMessage.includes('not found') ? 404 : 
                         errorMessage.includes('only view analytics') ? 403 : 400;
       res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Get comment by ID
+  getCommentById = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      const comment = await this.postService.getCommentById(id);
+
+      res.json(createResponse(true, 'Comment retrieved successfully', comment));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get comment';
+      const statusCode = errorMessage.includes('not found') ? 404 : 500;
+      res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Update comment
+  updateComment = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { id } = req.params;
+      const { content } = req.body;
+
+      const comment = await this.postService.updateComment(id, req.user.id, content);
+
+      res.json(createResponse(true, 'Comment updated successfully', comment));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update comment';
+      const statusCode = errorMessage.includes('not found') ? 404 : 
+                        errorMessage.includes('not authorized') ? 403 : 400;
+      res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Delete comment
+  deleteComment = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { id } = req.params;
+
+      await this.postService.deleteComment(id, req.user.id);
+
+      res.json(createResponse(true, 'Comment deleted successfully'));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete comment';
+      const statusCode = errorMessage.includes('not found') ? 404 : 
+                        errorMessage.includes('not authorized') ? 403 : 400;
+      res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Get comment replies
+  getCommentReplies = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { page, limit } = getPaginationParams(
+        req.query.page as string,
+        req.query.limit as string
+      );
+
+      const params = {
+        page,
+        limit,
+        skip: (page - 1) * limit,
+      };
+
+      const result = await this.postService.getCommentReplies(id, params);
+
+      res.json(createResponse(true, 'Comment replies retrieved successfully', result.data, result.pagination));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get comment replies';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // React to comment
+  reactToComment = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { id } = req.params;
+      const { type } = req.body;
+
+      const reaction = await this.postService.reactToComment(id, req.user.id, type);
+
+      res.status(201).json(createResponse(true, 'Comment reaction added successfully', reaction));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to react to comment';
+      const statusCode = errorMessage.includes('not found') ? 404 : 400;
+      res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Remove comment reaction
+  removeCommentReaction = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { id } = req.params;
+
+      await this.postService.removeCommentReaction(id, req.user.id);
+
+      res.json(createResponse(true, 'Comment reaction removed successfully'));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to remove comment reaction';
+      const statusCode = errorMessage.includes('not found') ? 404 : 400;
+      res.status(statusCode).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Get comment reactions
+  getCommentReactions = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      const reactions = await this.postService.getCommentReactions(id);
+
+      res.json(createResponse(true, 'Comment reactions retrieved successfully', reactions));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get comment reactions';
+      res.status(500).json(createErrorResponse(errorMessage));
     }
   };
 }
