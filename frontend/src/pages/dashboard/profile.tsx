@@ -33,45 +33,50 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { formatRelativeTime, formatDateShort, getInitials, formatEnumValue } from '@/lib/utils'
 import { PostCard } from '@/components/posts/PostCard'
 import { useDeletePost } from '@/hooks/usePosts'
-import { Link } from 'react-router'
+import { useParams, Link } from 'react-router'
 
 export default function ProfilePage() {
+  const { userId } = useParams()
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
 
+  // Determine which user's profile to show
+  const profileUserId = userId || user?.id
+  const isOwnProfile = !userId || userId === user?.id
+
   // Fetch current user's complete profile
   const { data: fullProfile, isLoading } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: () => userService.getUserById(user!.id),
-    enabled: !!user?.id,
+    queryKey: ['profile', profileUserId],
+    queryFn: () => userService.getUserById(profileUserId!),
+    enabled: !!profileUserId,
   })
 
   // Fetch user's projects
   const { data: userProjects } = useQuery({
-    queryKey: ['user-projects'],
+    queryKey: ['user-projects', profileUserId],
     queryFn: () => projectService.getUserProjects(),
-    enabled: !!user?.id,
+    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
   })
 
   // Fetch connection stats
   const { data: connectionStats } = useQuery({
-    queryKey: ['connection-stats'],
+    queryKey: ['connection-stats', profileUserId],
     queryFn: () => connectionService.getConnectionStats(),
-    enabled: !!user?.id,
+    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
   })
 
   // Fetch user teams count (TODO: Add to team service)
   const { data: userTeams } = useQuery({
-    queryKey: ['user-teams'],
+    queryKey: ['user-teams', profileUserId],
     queryFn: () => {
       // TODO: Implement getUserTeams in team service
       return Promise.resolve({ data: [], pagination: { total: 0 } })
     },
-    enabled: !!user?.id,
+    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
   })
 
-  // Upload avatar mutation
+  // Upload avatar mutation (only for own profile)
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => userService.uploadAvatar(file),
     onSuccess: () => {
@@ -87,7 +92,7 @@ export default function ProfilePage() {
     }
   })
 
-  // Upload banner mutation
+  // Upload banner mutation (only for own profile)
   const uploadBannerMutation = useMutation({
     mutationFn: (file: File) => userService.uploadBanner(file),
     onSuccess: () => {
@@ -100,6 +105,8 @@ export default function ProfilePage() {
   })
 
   const handleFileUpload = (file: File, type: 'avatar' | 'banner') => {
+    if (!isOwnProfile) return // Only allow uploads for own profile
+    
     if (type === 'avatar') {
       setUploading(true)
       uploadAvatarMutation.mutate(file)
@@ -108,7 +115,7 @@ export default function ProfilePage() {
     }
   }
 
-  const profileData = fullProfile?.data || user
+  const profileData = fullProfile?.data || (isOwnProfile ? user : null)
 
   // Fetch user posts
   const { data: userPosts } = useQuery({
@@ -151,20 +158,22 @@ export default function ProfilePage() {
                 className="w-full h-full object-cover"
               />
             )}
-            <input
-              type="file"
-              id="banner-upload"
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleFileUpload(file, 'banner')
-              }}
-            />
+            {isOwnProfile && (
+              <input
+                type="file"
+                id="banner-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleFileUpload(file, 'banner')
+                }}
+              />
+            )}
             <Button
               variant="secondary"
               size="sm"
-              className="absolute top-4 right-4"
+              className={`absolute top-4 right-4 ${!isOwnProfile ? 'hidden' : ''}`}
               onClick={() => document.getElementById('banner-upload')?.click()}
               disabled={uploadBannerMutation.isPending}
             >
@@ -184,20 +193,22 @@ export default function ProfilePage() {
                     {getInitials(profileData.firstName, profileData.lastName)}
                   </AvatarFallback>
                 </Avatar>
-                <input
-                  type="file"
-                  id="avatar-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileUpload(file, 'avatar')
-                  }}
-                />
+                {isOwnProfile && (
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleFileUpload(file, 'avatar')
+                    }}
+                  />
+                )}
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="absolute bottom-2 right-2 rounded-full p-2"
+                  className={`absolute bottom-2 right-2 rounded-full p-2 ${!isOwnProfile ? 'hidden' : ''}`}
                   onClick={() => document.getElementById('avatar-upload')?.click()}
                   disabled={uploading}
                 >
@@ -229,12 +240,14 @@ export default function ProfilePage() {
 
               {/* Actions */}
               <div className="flex space-x-3 mt-4 sm:mt-0">
-                <Button asChild>
-                  <Link to="/settings">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Link>
-                </Button>
+                {isOwnProfile && (
+                  <Button asChild>
+                    <Link to="/settings">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -281,7 +294,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-700">
-              {connectionStats?.data?.totalConnections || 0}
+              {isOwnProfile ? (connectionStats?.data?.totalConnections || 0) : '—'}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
@@ -292,7 +305,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-700">
-              {userTeams?.pagination?.total || 0}
+              {isOwnProfile ? (userTeams?.pagination?.total || 0) : '—'}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
@@ -303,7 +316,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-700">
-              {userProjects?.pagination?.total || 0}
+              {isOwnProfile ? (userProjects?.pagination?.total || 0) : '—'}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <FolderOpen className="h-4 w-4 mr-1" />
@@ -314,7 +327,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-700">
-              {profileData.lastLoginAt ? formatRelativeTime(profileData.lastLoginAt) : 'Never'}
+              {profileData?.lastLoginAt ? formatRelativeTime(profileData.lastLoginAt) : 'Never'}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
               <Clock className="h-4 w-4 mr-1" />
@@ -326,12 +339,12 @@ export default function ProfilePage() {
 
       {/* Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-5' : 'grid-cols-3'}`}>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="projects">Projects</TabsTrigger>
+          {isOwnProfile && <TabsTrigger value="projects">Projects</TabsTrigger>}
           <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
+          {isOwnProfile && <TabsTrigger value="contact">Contact</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -430,14 +443,16 @@ export default function ProfilePage() {
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
                   <FileText className="h-5 w-5 mr-2" />
-                  My Posts ({userPosts?.pagination?.total || 0})
+                  {isOwnProfile ? 'My Posts' : `${profileData?.firstName}'s Posts`} ({userPosts?.pagination?.total || 0})
                 </span>
-                <Button asChild>
-                  <Link to="/dashboard">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Post
-                  </Link>
-                </Button>
+                {isOwnProfile && (
+                  <Button asChild>
+                    <Link to="/dashboard">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Post
+                    </Link>
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -456,106 +471,117 @@ export default function ProfilePage() {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
-                  <p className="text-gray-600 mb-6">Share your first post to get started.</p>
-                  <Button asChild>
-                    <Link to="/dashboard">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Post
-                    </Link>
-                  </Button>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {isOwnProfile ? 'No posts yet' : 'No posts to show'}
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    {isOwnProfile 
+                      ? 'Share your first post to get started.' 
+                      : `${profileData?.firstName} hasn't shared any posts yet.`
+                    }
+                  </p>
+                  {isOwnProfile && (
+                    <Button asChild>
+                      <Link to="/dashboard">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Post
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="projects">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <FolderOpen className="h-5 w-5 mr-2" />
-                  My Projects ({userProjects?.pagination?.total || 0})
-                </span>
-                <Button asChild>
-                  <Link to="/dashboard/projects/new">
-                    <Target className="h-4 w-4 mr-2" />
-                    New Project
-                  </Link>
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userProjects?.data?.length ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userProjects.data.map((project: any) => (
-                    <Link key={project.id} to={`/dashboard/projects/${project.id}`}>
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900 truncate">
-                              {project.title}
-                            </h3>
-                            <UIBadge variant={
-                              project.status === 'ACTIVE' ? 'default' :
-                              project.status === 'COMPLETED' ? 'secondary' :
-                              project.status === 'PLANNING' ? 'outline' : 'destructive'
-                            }>
-                              {formatEnumValue(project.status)}
-                            </UIBadge>
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                            {project.description}
-                          </p>
-
-                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {project.startDate ? formatDateShort(project.startDate) : 'No date'}
-                            </div>
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-1" />
-                              {project.currentMembers}
-                            </div>
-                          </div>
-
-                          {project.tags && project.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {project.tags.slice(0, 3).map((tag: string) => (
-                                <UIBadge key={tag} variant="outline" className="text-xs">
-                                  {tag}
-                                </UIBadge>
-                              ))}
-                              {project.tags.length > 3 && (
-                                <span className="text-xs text-gray-500">
-                                  +{project.tags.length - 3} more
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <FolderOpen className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-                  <p className="text-gray-600 mb-6">Create your first project to get started.</p>
+        {isOwnProfile && (
+          <TabsContent value="projects">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <FolderOpen className="h-5 w-5 mr-2" />
+                    My Projects ({userProjects?.pagination?.total || 0})
+                  </span>
                   <Button asChild>
                     <Link to="/dashboard/projects/new">
                       <Target className="h-4 w-4 mr-2" />
-                      Create Project
+                      New Project
                     </Link>
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userProjects?.data?.length ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {userProjects.data.map((project: any) => (
+                      <Link key={project.id} to={`/dashboard/projects/${project.id}`}>
+                        <Card className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                {project.title}
+                              </h3>
+                              <UIBadge variant={
+                                project.status === 'ACTIVE' ? 'default' :
+                                project.status === 'COMPLETED' ? 'secondary' :
+                                project.status === 'PLANNING' ? 'outline' : 'destructive'
+                              }>
+                                {formatEnumValue(project.status)}
+                              </UIBadge>
+                            </div>
+                            
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                              {project.description}
+                            </p>
+
+                            <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                {project.startDate ? formatDateShort(project.startDate) : 'No date'}
+                              </div>
+                              <div className="flex items-center">
+                                <Users className="h-4 w-4 mr-1" />
+                                {project.currentMembers}
+                              </div>
+                            </div>
+
+                            {project.tags && project.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {project.tags.slice(0, 3).map((tag: string) => (
+                                  <UIBadge key={tag} variant="outline" className="text-xs">
+                                    {tag}
+                                  </UIBadge>
+                                ))}
+                                {project.tags.length > 3 && (
+                                  <span className="text-xs text-gray-500">
+                                    +{project.tags.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <FolderOpen className="mx-auto h-24 w-24 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                    <p className="text-gray-600 mb-6">Create your first project to get started.</p>
+                    <Button asChild>
+                      <Link to="/dashboard/projects/new">
+                        <Target className="h-4 w-4 mr-2" />
+                        Create Project
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="about">
           <Card>
@@ -594,91 +620,93 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="contact">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Mail className="h-5 w-5 mr-2" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Email</label>
-                      <p className="text-gray-900">{profileData.email}</p>
+        {isOwnProfile && (
+          <TabsContent value="contact">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Mail className="h-5 w-5 mr-2" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Email</label>
+                        <p className="text-gray-900">{profileData.email}</p>
+                      </div>
                     </div>
+
+                    {profileData.city && (
+                      <div className="flex items-center space-x-3">
+                        <MapPin className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">City</label>
+                          <p className="text-gray-900">{profileData.city}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileData.country && (
+                      <div className="flex items-center space-x-3">
+                        <MapPin className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Country</label>
+                          <p className="text-gray-900">{profileData.country}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileData.address && (
+                      <div className="flex items-center space-x-3">
+                        <MapPin className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Address</label>
+                          <p className="text-gray-900">{profileData.address}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileData.timezone && (
+                      <div className="flex items-center space-x-3">
+                        <Clock className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Timezone</label>
+                          <p className="text-gray-900">{profileData.timezone}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {profileData.city && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">City</label>
-                        <p className="text-gray-900">{profileData.city}</p>
+                  <div className="space-y-4">
+                    {profileData.company && (
+                      <div className="flex items-center space-x-3">
+                        <Building className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Company</label>
+                          <p className="text-gray-900">{profileData.company}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {profileData.country && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Country</label>
-                        <p className="text-gray-900">{profileData.country}</p>
+                    {profileData.position && (
+                      <div className="flex items-center space-x-3">
+                        <Award className="h-5 w-5 text-gray-400" />
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Position</label>
+                          <p className="text-gray-900">{profileData.position}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {profileData.address && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Address</label>
-                        <p className="text-gray-900">{profileData.address}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {profileData.timezone && (
-                    <div className="flex items-center space-x-3">
-                      <Clock className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Timezone</label>
-                        <p className="text-gray-900">{profileData.timezone}</p>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-
-                <div className="space-y-4">
-                  {profileData.company && (
-                    <div className="flex items-center space-x-3">
-                      <Building className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Company</label>
-                        <p className="text-gray-900">{profileData.company}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {profileData.position && (
-                    <div className="flex items-center space-x-3">
-                      <Award className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Position</label>
-                        <p className="text-gray-900">{profileData.position}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

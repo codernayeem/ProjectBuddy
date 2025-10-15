@@ -41,6 +41,7 @@ function App() {
               <Route path="connections" element={<ConnectionsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile/:userId" element={<ProfilePage />} />
             </Route>
             
             <Route path="/settings" element={<SettingsPage />} />
