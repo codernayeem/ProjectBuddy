@@ -175,6 +175,33 @@ export class UserService {
     };
   }
 
+  async getUserRecommendations(
+    userId: string,
+    params: PaginationParams
+  ): Promise<{ users: any[]; total: number }> {
+    // Try to get personalized recommendations
+    let result = await this.userRepository.getRecommendedUsers(userId, params);
+    
+    // If no recommendations found, get random popular users as fallback
+    if (result.users.length === 0) {
+      result = await this.userRepository.search({
+        ...params,
+        query: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+        filters: { isActive: true },
+      });
+    }
+    
+    return {
+      users: result.users.map(user => {
+        const { passwordHash: _, refreshToken: __, ...userWithoutSensitiveData } = user as any;
+        return userWithoutSensitiveData;
+      }),
+      total: result.total,
+    };
+  }
+
   async deleteUser(id: string): Promise<void> {
     await this.userRepository.delete(id);
   }

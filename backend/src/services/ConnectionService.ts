@@ -104,17 +104,21 @@ export class ConnectionService {
 
   async getConnectionStatus(userId1: string, userId2: string): Promise<{
     status: string | null;
+    connectionId?: string;
     canSendRequest: boolean;
     isPending: boolean;
     isConnected: boolean;
+    isSentByMe: boolean;
   }> {
-    const status = await this.connectionRepository.getConnectionStatus(userId1, userId2);
+    const result = await this.connectionRepository.getConnectionStatus(userId1, userId2);
     
     return {
-      status,
-      canSendRequest: !status,
-      isPending: status === 'PENDING',
-      isConnected: status === 'ACCEPTED',
+      status: result?.status || null,
+      connectionId: result?.connectionId,
+      canSendRequest: !result,
+      isPending: result?.status === 'PENDING',
+      isConnected: result?.status === 'ACCEPTED',
+      isSentByMe: result?.senderId === userId1,
     };
   }
 

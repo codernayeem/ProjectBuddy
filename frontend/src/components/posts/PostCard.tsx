@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { 
   Heart, 
   MessageCircle, 
@@ -140,21 +141,25 @@ export function PostCard({
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start space-x-3">
-          <Avatar className="h-12 w-12">
-            <AvatarImage 
-              src={post.author?.avatar || undefined} 
-              alt={post.author ? `${post.author.firstName} ${post.author.lastName}` : 'User'}
-            />
-            <AvatarFallback>
-              {post.author ? getInitials(post.author.firstName, post.author.lastName) : 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <Link to={`/dashboard/profile/${post.author?.id}`} className="flex-shrink-0">
+            <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+              <AvatarImage 
+                src={post.author?.avatar || undefined} 
+                alt={post.author ? `${post.author.firstName} ${post.author.lastName}` : 'User'}
+              />
+              <AvatarFallback>
+                {post.author ? getInitials(post.author.firstName, post.author.lastName) : 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h3 className="font-semibold">
-                  {post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Unknown User'}
-                </h3>
+                <Link to={`/dashboard/profile/${post.author?.id}`}>
+                  <h3 className="font-semibold hover:text-blue-600 cursor-pointer transition-colors">
+                    {post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Unknown User'}
+                  </h3>
+                </Link>
                 <p className="text-sm text-gray-600">
                   @{post.author?.username || 'unknown'} • {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                 </p>

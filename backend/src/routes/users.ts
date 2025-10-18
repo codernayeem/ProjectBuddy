@@ -11,6 +11,8 @@ const userController = new UserController();
 // Protected routes
 router.use(authenticate);
 
+router.get('/recommendations', userController.getUserRecommendations);
+
 router.put('/profile', validate(updateUserSchema), userController.updateProfile);
 
 router.post('/avatar', uploadAvatar.single('avatar'), userController.uploadAvatar);

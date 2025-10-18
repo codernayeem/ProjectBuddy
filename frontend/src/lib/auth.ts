@@ -111,7 +111,7 @@ export const userService = {
   },
 
   // Search users
-  searchUsers: async (filters: SearchFilters): Promise<ApiResponse<User[]>> => {
+  searchUsers: async (filters: SearchFilters): Promise<ApiResponse<{ users: User[]; total: number }>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -128,7 +128,7 @@ export const userService = {
   },
 
   // Get user recommendations
-  getUserRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<User[]>> => {
+  getUserRecommendations: async (page = 1, limit = 10): Promise<ApiResponse<{ users: User[]; total: number }>> => {
     const response = await api.get(`/users/recommendations?page=${page}&limit=${limit}`)
     return response.data
   },

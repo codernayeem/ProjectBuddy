@@ -43,7 +43,14 @@ export const connectionService = {
   },
 
   // Get connection status with specific user
-  getConnectionStatus: async (userId: string): Promise<ApiResponse<{ status: ConnectionStatus | null, connectionId?: string }>> => {
+  getConnectionStatus: async (userId: string): Promise<ApiResponse<{ 
+    status: ConnectionStatus | null;
+    connectionId?: string;
+    canSendRequest: boolean;
+    isPending: boolean;
+    isConnected: boolean;
+    isSentByMe: boolean;
+  }>> => {
     const response = await api.get(`/connections/status/${userId}`)
     return response.data
   },

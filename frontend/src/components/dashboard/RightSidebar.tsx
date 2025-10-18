@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
+import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +10,17 @@ import {
   TrendingUp, 
   Users, 
   Calendar, 
-  Star,
   ExternalLink,
   ChevronRight,
   MessageSquare,
   Heart,
-  Share2
+  Share2,
+  UserPlus,
+  Loader2
 } from 'lucide-react';
+import { userService } from '@/lib/auth';
+import { connectionService } from '@/lib/connections';
+import { getInitials } from '@/lib/utils';
 
 const trendingTopics = [
   { name: 'React 19', posts: '1.2k posts', growth: '+25%' },
@@ -23,32 +30,7 @@ const trendingTopics = [
   { name: 'Design Systems', posts: '678 posts', growth: '+8%' },
 ];
 
-const suggestedConnections = [
-  {
-    id: 1,
-    name: 'Sarah Chen',
-    title: 'Senior Frontend Developer at Google',
-    avatar: null,
-    mutualConnections: 12,
-    skills: ['React', 'TypeScript', 'Next.js']
-  },
-  {
-    id: 2,
-    name: 'Marcus Johnson',
-    title: 'Product Manager at Stripe',
-    avatar: null,
-    mutualConnections: 8,
-    skills: ['Product Strategy', 'Agile', 'Analytics']
-  },
-  {
-    id: 3,
-    name: 'Lisa Wang',
-    title: 'UX Designer at Figma',
-    avatar: null,
-    mutualConnections: 15,
-    skills: ['Design Systems', 'Prototyping', 'User Research']
-  },
-];
+// Removed hardcoded suggestedConnections - now using real API data from component
 
 const upcomingEvents = [
   {
@@ -95,6 +77,27 @@ const recentActivity = [
 
 export default function RightSidebar() {
   const [activeTab, setActiveTab] = useState('trending');
+  const queryClient = useQueryClient();
+
+  // Fetch real user recommendations
+  const { data: recommendationsData, isLoading: loadingRecommendations } = useQuery({
+    queryKey: ['user-recommendations'],
+    queryFn: () => userService.getUserRecommendations(1, 3),
+  });
+
+  // Mutation for sending connection requests
+  const sendRequestMutation = useMutation({
+    mutationFn: (userId: string) => connectionService.sendRequest(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-recommendations'] });
+      toast.success('Connection request sent!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to send connection request');
+    },
+  });
+
+  const suggestedConnections = recommendationsData?.data?.users || [];
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -160,37 +163,74 @@ export default function RightSidebar() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {suggestedConnections.map((person) => (
-                  <div key={person.id} className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={person.avatar ? person.avatar : ''} alt={person.name} />
-                        <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {person.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {person.title}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {person.mutualConnections} mutual connections
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {person.skills.slice(0, 2).map((skill) => (
-                            <Badge key={skill} variant="outline" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Connect
-                    </Button>
+                {loadingRecommendations ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                   </div>
-                ))}
+                ) : suggestedConnections.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No recommendations available at the moment.
+                  </p>
+                ) : (
+                  suggestedConnections.map((person) => {
+                    const fullName = `${person.firstName} ${person.lastName}`;
+                    const initials = getInitials(person.firstName, person.lastName);
+
+                    return (
+                      <div key={person.id} className="space-y-3">
+                        <div className="flex items-start space-x-3">
+                          <Link to={`/dashboard/profile/${person.id}`}>
+                            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+                              <AvatarImage src={person.avatar || ''} alt={fullName} />
+                              <AvatarFallback>{initials}</AvatarFallback>
+                            </Avatar>
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <Link 
+                              to={`/dashboard/profile/${person.id}`}
+                              className="text-sm font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 transition-colors block"
+                            >
+                              {fullName}
+                            </Link>
+                            {person.position && (
+                              <p className="text-xs text-gray-500 truncate">
+                                {person.position}{person.company ? ` at ${person.company}` : ''}
+                              </p>
+                            )}
+                            {person.skills && person.skills.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {person.skills.slice(0, 2).map((skill) => (
+                                  <Badge key={skill} variant="outline" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => sendRequestMutation.mutate(person.id)}
+                          disabled={sendRequestMutation.isPending}
+                        >
+                          {sendRequestMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Connect
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
 

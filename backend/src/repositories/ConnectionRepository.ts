@@ -155,7 +155,7 @@ export class ConnectionRepository {
     return !!connection;
   }
 
-  async getConnectionStatus(userId1: string, userId2: string): Promise<string | null> {
+  async getConnectionStatus(userId1: string, userId2: string): Promise<{ status: string; senderId: string; connectionId: string } | null> {
     const connection = await prisma.connection.findFirst({
       where: {
         OR: [
@@ -163,10 +163,10 @@ export class ConnectionRepository {
           { senderId: userId2, receiverId: userId1 },
         ],
       },
-      select: { status: true },
+      select: { id: true, status: true, senderId: true },
     });
 
-    return connection?.status || null;
+    return connection ? { status: connection.status, senderId: connection.senderId, connectionId: connection.id } : null;
   }
 
   async countConnections(userId: string): Promise<number> {

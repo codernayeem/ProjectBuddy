@@ -118,6 +118,29 @@ export class UserController {
     }
   };
 
+  getUserRecommendations = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const pagination = getPaginationParams(req.query.page as string, req.query.limit as string);
+
+      const params = {
+        ...pagination,
+        skip: (pagination.page - 1) * pagination.limit,
+      };
+
+      const result = await this.userService.getUserRecommendations(req.user.id, params);
+
+      res.json(createResponse(true, 'User recommendations retrieved successfully', result));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get user recommendations';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
   // Account Management
   deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {
     try {

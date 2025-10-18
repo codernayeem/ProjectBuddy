@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { Link } from 'react-router';
 import { 
   Heart, 
   Trash2, 
@@ -75,23 +76,27 @@ export function CommentItem({
   return (
     <div className={`space-y-3 ${level > 0 ? 'ml-8 pl-4 border-l border-gray-200' : ''}`}>
       <div className="flex space-x-3">
-        <Avatar className="h-8 w-8">
-          <AvatarImage 
-            src={comment.author?.avatar || undefined} 
-            alt={`${comment.author.firstName} ${comment.author.lastName}`}
-          />
-          <AvatarFallback>
-            {getInitials(comment.author.firstName, comment.author.lastName)}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/dashboard/profile/${comment.author?.id}`} className="flex-shrink-0">
+          <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+            <AvatarImage 
+              src={comment.author?.avatar || undefined} 
+              alt={`${comment.author.firstName} ${comment.author.lastName}`}
+            />
+            <AvatarFallback>
+              {getInitials(comment.author.firstName, comment.author.lastName)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         
         <div className="flex-1">
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2">
-                <span className="font-semibold text-sm">
-                  {comment.author.firstName} {comment.author.lastName}
-                </span>
+                <Link to={`/dashboard/profile/${comment.author?.id}`}>
+                  <span className="font-semibold text-sm hover:text-blue-600 cursor-pointer transition-colors">
+                    {comment.author.firstName} {comment.author.lastName}
+                  </span>
+                </Link>
                 <span className="text-xs text-gray-500">
                   {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </span>

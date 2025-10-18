@@ -18,7 +18,11 @@ import {
   BookOpen,
   Target,
   FileText,
-  Plus
+  Plus,
+  UserPlus,
+  UserCheck,
+  UserX,
+  UserMinus
 } from 'lucide-react'
 import { userService } from '@/lib/auth'
 import { projectService } from '@/lib/projects'
@@ -122,6 +126,52 @@ export default function ProfilePage() {
     queryKey: ['user-posts', profileData?.id],
     queryFn: () => postService.getUserPosts(profileData!.id),
     enabled: !!profileData?.id,
+  })
+
+  // Fetch connection status with this user (if viewing someone else's profile)
+  const { data: connectionStatus } = useQuery({
+    queryKey: ['connection-status', profileUserId],
+    queryFn: () => connectionService.getConnectionStatus(profileUserId!),
+    enabled: !isOwnProfile && !!profileUserId,
+  })
+
+  // Send connection request mutation
+  const sendConnectionMutation = useMutation({
+    mutationFn: (userId: string) => connectionService.sendRequest(userId),
+    onSuccess: () => {
+      toast.success('Connection request sent!')
+      queryClient.invalidateQueries({ queryKey: ['connection-status', profileUserId] })
+    },
+    onError: () => {
+      toast.error('Failed to send connection request')
+    },
+  })
+
+  // Respond to connection request mutation
+  const respondToConnectionMutation = useMutation({
+    mutationFn: ({ connectionId, action }: { connectionId: string; action: 'accept' | 'decline' }) =>
+      connectionService.respondToRequest(connectionId, action),
+    onSuccess: (_data, variables) => {
+      toast.success(variables.action === 'accept' ? 'Connection request accepted!' : 'Connection request declined')
+      queryClient.invalidateQueries({ queryKey: ['connection-status', profileUserId] })
+      queryClient.invalidateQueries({ queryKey: ['connections'] })
+    },
+    onError: () => {
+      toast.error('Failed to respond to connection request')
+    },
+  })
+
+  // Remove connection mutation
+  const removeConnectionMutation = useMutation({
+    mutationFn: (connectionId: string) => connectionService.removeConnection(connectionId),
+    onSuccess: () => {
+      toast.success('Connection removed')
+      queryClient.invalidateQueries({ queryKey: ['connection-status', profileUserId] })
+      queryClient.invalidateQueries({ queryKey: ['connections'] })
+    },
+    onError: () => {
+      toast.error('Failed to remove connection')
+    },
   })
 
   // Delete post mutation
@@ -240,13 +290,81 @@ export default function ProfilePage() {
 
               {/* Actions */}
               <div className="flex space-x-3 mt-4 sm:mt-0">
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <Button asChild>
                     <Link to="/settings">
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Link>
                   </Button>
+                ) : (
+                  <>
+                    {/* Connection action buttons for other users */}
+                    {connectionStatus?.data?.isConnected && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (connectionStatus.data?.connectionId) {
+                            removeConnectionMutation.mutate(connectionStatus.data.connectionId)
+                          }
+                        }}
+                        disabled={removeConnectionMutation.isPending}
+                      >
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Connected
+                      </Button>
+                    )}
+                    {connectionStatus?.data?.isPending && !connectionStatus?.data?.isSentByMe && (
+                      <>
+                        {/* Request received from this user */}
+                        <Button
+                          variant="default"
+                          onClick={() => {
+                            if (connectionStatus.data?.connectionId) {
+                              respondToConnectionMutation.mutate({
+                                connectionId: connectionStatus.data.connectionId,
+                                action: 'accept',
+                              })
+                            }
+                          }}
+                          disabled={respondToConnectionMutation.isPending}
+                        >
+                          <UserCheck className="h-4 w-4 mr-2" />
+                          Accept Request
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (connectionStatus.data?.connectionId) {
+                              respondToConnectionMutation.mutate({
+                                connectionId: connectionStatus.data.connectionId,
+                                action: 'decline',
+                              })
+                            }
+                          }}
+                          disabled={respondToConnectionMutation.isPending}
+                        >
+                          <UserX className="h-4 w-4 mr-2" />
+                          Decline
+                        </Button>
+                      </>
+                    )}
+                    {connectionStatus?.data?.isPending && connectionStatus?.data?.isSentByMe && (
+                      <Button variant="outline" disabled>
+                        <UserMinus className="h-4 w-4 mr-2" />
+                        Request Sent
+                      </Button>
+                    )}
+                    {connectionStatus?.data?.canSendRequest && (
+                      <Button
+                        onClick={() => sendConnectionMutation.mutate(profileUserId!)}
+                        disabled={sendConnectionMutation.isPending}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Connect
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
