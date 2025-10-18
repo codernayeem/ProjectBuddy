@@ -245,6 +245,32 @@ export class TeamRepository {
     });
   }
 
+  async getTeamMember(teamId: string, userId: string) {
+    return prisma.teamMember.findFirst({
+      where: {
+        teamId,
+        userId,
+        isActive: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        customRoles: {
+          include: {
+            customRole: true,
+          },
+        },
+      },
+    });
+  }
+
   async getMemberStatus(teamId: string, userId: string): Promise<string | null> {
     const member = await prisma.teamMember.findUnique({
       where: {

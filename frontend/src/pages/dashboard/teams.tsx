@@ -89,7 +89,7 @@ export default function TeamsPage() {
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={team.logo || undefined} alt={team.name} />
+                <AvatarImage src={team.avatar || undefined} alt={team.name} />
                 <AvatarFallback>{team.name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
@@ -99,9 +99,9 @@ export default function TeamsPage() {
                   </Link>
                 </h3>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <span>{team.currentMemberCount} members</span>
+                  <span>{team.memberCount || team.currentMemberCount} members</span>
                   <span>•</span>
-                  <span>By {team.creator.firstName} {team.creator.lastName}</span>
+                  <span>By {team.owner?.firstName} {team.owner?.lastName}</span>
                 </div>
               </div>
             </div>
@@ -137,20 +137,20 @@ export default function TeamsPage() {
             </div>
           )}
 
-          {(team.requiredSkills.length > 0 || team.preferredSkills.length > 0) && (
+          {team.skills && team.skills.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-medium text-gray-700 mb-2">Skills:</p>
               <div className="flex flex-wrap gap-1">
-                {team.requiredSkills.slice(0, 3).map((skill: string) => (
+                {team.skills.slice(0, 5).map((skill: string) => (
                   <Badge key={skill} variant="default" className="text-xs">
                     {skill}
                   </Badge>
                 ))}
-                {team.preferredSkills.slice(0, 2).map((skill: string) => (
-                  <Badge key={skill} variant="outline" className="text-xs">
-                    {skill}
+                {team.skills.length > 5 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{team.skills.length - 5} more
                   </Badge>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -161,7 +161,7 @@ export default function TeamsPage() {
                 <Calendar className="w-4 h-4" />
                 <span>{formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}</span>
               </span>
-              {team._count.projects > 0 && (
+              {team._count?.projects > 0 && (
                 <span>{team._count.projects} projects</span>
               )}
             </div>

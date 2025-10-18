@@ -200,6 +200,7 @@ model TeamCustomRole {
   name        String
   description String?
   color       String?  // For UI display
+  isAdmin     Boolean  @default(false) // Simple: admin or non-admin
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -630,18 +631,60 @@ model MessageReaction {
 }
 
 model ChatRoom {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  teamId      String
-  isPrivate   Boolean  @default(false)
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  teamId          String
+  isPrivate       Boolean  @default(false)
+  allowedRoles    String[] @default([]) // Empty = all members can access
+  createdBy       String
+  lastMessageAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team     Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
 
   @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id          String      @id @default(uuid())
+  content     String
+  type        MessageType @default(TEXT)
+  senderId    String
+  chatRoomId  String
+  replyToId   String?
+  attachments String[]    @default([])
+  metadata    Json?
+  isEdited    Boolean     @default(false)
+  editedAt    DateTime?
+  isDeleted   Boolean     @default(false)
+  deletedAt   DateTime?
+  isPinned    Boolean     @default(false)
+  readBy      String[]    @default([])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  chatRoom  ChatRoom      @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  replyTo   ChatMessage?  @relation("ChatMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   ChatMessage[] @relation("ChatMessageReplies")
+  reactions ChatMessageReaction[]
+
+  @@map("chat_messages")
+}
+
+model ChatMessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("chat_message_reactions")
 }
 
 enum NotificationType {

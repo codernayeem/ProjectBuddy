@@ -349,8 +349,8 @@ export interface Team {
   followerCount: number
   createdAt: string
   updatedAt: string
-  owner: User
-  members: TeamMember[]
+  owner?: User
+  members?: TeamMember[]
   customRoles?: TeamCustomRole[]
   invitations?: TeamInvitation[]
   joinRequests?: TeamJoinRequest[]
@@ -358,6 +358,13 @@ export interface Team {
   milestones?: TeamMilestone[]
   achievements?: TeamAchievement[]
   followers?: TeamFollow[]
+  _count?: {
+    members?: number
+    followers?: number
+    projects?: number
+    milestones?: number
+    achievements?: number
+  }
 }
 
 export interface TeamMember {

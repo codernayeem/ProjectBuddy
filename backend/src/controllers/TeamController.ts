@@ -62,8 +62,10 @@ export class TeamController {
 
       const result = await this.teamService.getTeams(params);
       res.json({
+        success: true,
         message: 'Teams fetched successfully',
-        data: result
+        data: result.teams,
+        pagination: result.pagination
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -404,8 +406,15 @@ export class TeamController {
 
       const result = await this.teamService.getUserTeams(userId, params);
       res.json({
+        success: true,
         message: 'User teams fetched successfully',
-        data: result
+        data: result.teams,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / params.limit)
+        }
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -456,9 +465,10 @@ export class TeamController {
       }
 
       // TODO: Implement AI-based recommendations
+      // For now, return empty array with consistent structure
       res.json({
         message: 'Recommended teams fetched successfully',
-        data: { teams: [], total: 0 }
+        data: []
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
