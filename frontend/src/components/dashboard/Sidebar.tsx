@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -14,6 +15,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { connectionService } from '@/lib/connections';
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
@@ -33,6 +35,14 @@ export default function Sidebar() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // Fetch connection stats
+  const { data: statsData } = useQuery({
+    queryKey: ['connection-stats'],
+    queryFn: () => connectionService.getConnectionStats(),
+  });
+
+  const connectionCount = statsData?.data?.totalConnections || 0;
+
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
       {/* User Profile Section */}
@@ -51,12 +61,8 @@ export default function Sidebar() {
         </p>
         <div className="flex space-x-3 lg:space-x-4 mt-2 lg:mt-3 text-xs lg:text-sm text-gray-600 dark:text-gray-300">
           <div className="text-center">
-            <div className="font-semibold">245</div>
+            <div className="font-semibold">{connectionCount}</div>
             <div className="text-xs">Connections</div>
-          </div>
-          <div className="text-center">
-            <div className="font-semibold">12</div>
-            <div className="text-xs">Teams</div>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ import connectionRoutes from './routes/connections';
 import teamRoutes from './routes/teams';
 import postRoutes from './routes/posts';
 import commentRoutes from './routes/comments';
+import messageRoutes from './routes/messages';
 
 const app = express();
 const server = createServer(app);
@@ -101,6 +102,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {

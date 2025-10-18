@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, Search, Bell, MessageSquare, Home, Plus, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
+import { messageService } from '@/lib/messages';
 import MobileSearch from './MobileSearch';
 
 interface TopNavbarProps {
@@ -25,6 +27,15 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { user, logout } = useAuth();
+
+  // Fetch unread message count
+  const { data: unreadData } = useQuery({
+    queryKey: ['unread-messages'],
+    queryFn: () => messageService.getUnreadCount(),
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const unreadCount = unreadData?.data?.count || 0;
 
   return (
     <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -106,15 +117,19 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
           </DropdownMenu>
 
           {/* Messages */}
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10 ">
-            <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 text-xs flex items-center justify-center text-white"
-            >
-              3
-            </Badge>
-          </Button>
+          <Link to="/dashboard/messages">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
+              <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 text-xs flex items-center justify-center text-white"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">

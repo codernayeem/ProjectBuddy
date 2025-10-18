@@ -22,7 +22,8 @@ import {
   UserPlus,
   UserCheck,
   UserX,
-  UserMinus
+  UserMinus,
+  MessageSquare
 } from 'lucide-react'
 import { userService } from '@/lib/auth'
 import { projectService } from '@/lib/projects'
@@ -37,12 +38,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { formatRelativeTime, formatDateShort, getInitials, formatEnumValue } from '@/lib/utils'
 import { PostCard } from '@/components/posts/PostCard'
 import { useDeletePost } from '@/hooks/usePosts'
-import { useParams, Link } from 'react-router'
+import { useParams, Link, useNavigate } from 'react-router'
 
 export default function ProfilePage() {
   const { userId } = useParams()
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [uploading, setUploading] = useState(false)
 
   // Determine which user's profile to show
@@ -362,6 +364,16 @@ export default function ProfilePage() {
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Connect
+                      </Button>
+                    )}
+                    {/* Message button - show for connected users */}
+                    {connectionStatus?.data?.isConnected && (
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate('/dashboard/messages')}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Message
                       </Button>
                     )}
                   </>

@@ -12,6 +12,7 @@ import HomePage from "@/pages/dashboard/home";
 import TeamsPage from "@/pages/dashboard/teams";
 import ProjectsPage from "@/pages/dashboard/projects";
 import ConnectionsPage from "@/pages/dashboard/connections";
+import MessagesPage from "@/pages/dashboard/messages";
 import NotificationsPage from "@/pages/dashboard/notifications";
 import ProfilePage from "@/pages/dashboard/profile";
 import SettingsPage from "@/pages/settings";
@@ -39,6 +40,7 @@ function App() {
               <Route path="teams" element={<TeamsPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="connections" element={<ConnectionsPage />} />
+              <Route path="messages" element={<MessagesPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="profile/:userId" element={<ProfilePage />} />

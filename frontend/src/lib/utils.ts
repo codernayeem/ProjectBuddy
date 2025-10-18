@@ -56,7 +56,10 @@ export function formatRelativeTime(dateString: string): string {
   return `${diffInYears} year${diffInYears === 1 ? '' : 's'} ago`
 }
 
-export function getInitials(firstName: string, lastName: string): string {
+export function getInitials(firstName?: string, lastName?: string): string {
+  if (!firstName && !lastName) return '??'
+  if (!firstName) return lastName!.charAt(0).toUpperCase()
+  if (!lastName) return firstName.charAt(0).toUpperCase()
   return `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}`
 }
 

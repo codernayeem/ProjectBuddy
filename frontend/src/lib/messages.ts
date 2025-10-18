@@ -11,13 +11,13 @@ import {
 
 export const messageService = {
   // Conversations
-  getConversations: async (page = 1, limit = 20): Promise<ApiResponse<Conversation[]>> => {
-    const response = await api.get(`/conversations?page=${page}&limit=${limit}`)
+  getConversations: async (page = 1, limit = 20): Promise<ApiResponse<{ conversations: Conversation[]; total: number }>> => {
+    const response = await api.get(`/messages/conversations?page=${page}&limit=${limit}`)
     return response.data
   },
 
   getConversation: async (conversationId: string): Promise<ApiResponse<Conversation>> => {
-    const response = await api.get(`/conversations/${conversationId}`)
+    const response = await api.get(`/messages/conversations/${conversationId}`)
     return response.data
   },
 
@@ -27,7 +27,7 @@ export const messageService = {
     title?: string
     description?: string
   }): Promise<ApiResponse<Conversation>> => {
-    const response = await api.post('/conversations', data)
+    const response = await api.post('/messages/conversations', data)
     return response.data
   },
 
@@ -36,49 +36,49 @@ export const messageService = {
     description?: string
     avatar?: string
   }): Promise<ApiResponse<Conversation>> => {
-    const response = await api.put(`/conversations/${conversationId}`, data)
+    const response = await api.put(`/messages/conversations/${conversationId}`, data)
     return response.data
   },
 
   deleteConversation: async (conversationId: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/conversations/${conversationId}`)
+    const response = await api.delete(`/messages/conversations/${conversationId}`)
     return response.data
   },
 
   // Conversation participants
   addParticipant: async (conversationId: string, userId: string, role = 'member'): Promise<ApiResponse<ConversationParticipant>> => {
-    const response = await api.post(`/conversations/${conversationId}/participants`, { userId, role })
+    const response = await api.post(`/messages/conversations/${conversationId}/participants`, { userId, role })
     return response.data
   },
 
   removeParticipant: async (conversationId: string, userId: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/conversations/${conversationId}/participants/${userId}`)
+    const response = await api.delete(`/messages/conversations/${conversationId}/participants/${userId}`)
     return response.data
   },
 
   updateParticipantRole: async (conversationId: string, userId: string, role: string): Promise<ApiResponse<void>> => {
-    const response = await api.put(`/conversations/${conversationId}/participants/${userId}/role`, { role })
+    const response = await api.put(`/messages/conversations/${conversationId}/participants/${userId}/role`, { role })
     return response.data
   },
 
   leaveConversation: async (conversationId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/conversations/${conversationId}/leave`)
+    const response = await api.post(`/messages/conversations/${conversationId}/leave`)
     return response.data
   },
 
   muteConversation: async (conversationId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/conversations/${conversationId}/mute`)
+    const response = await api.post(`/messages/conversations/${conversationId}/mute`)
     return response.data
   },
 
   unmuteConversation: async (conversationId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/conversations/${conversationId}/unmute`)
+    const response = await api.post(`/messages/conversations/${conversationId}/unmute`)
     return response.data
   },
 
   // Messages
-  getMessages: async (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<Message[]>> => {
-    const response = await api.get(`/conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
+  getMessages: async (conversationId: string, page = 1, limit = 50): Promise<ApiResponse<{ messages: Message[]; total: number }>> => {
+    const response = await api.get(`/messages/conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
     return response.data
   },
 
@@ -89,17 +89,17 @@ export const messageService = {
     attachments?: string[]
     metadata?: Record<string, any>
   }): Promise<ApiResponse<Message>> => {
-    const response = await api.post(`/conversations/${conversationId}/messages`, data)
+    const response = await api.post(`/messages/conversations/${conversationId}/messages`, data)
     return response.data
   },
 
   updateMessage: async (messageId: string, content: string): Promise<ApiResponse<Message>> => {
-    const response = await api.put(`/messages/${messageId}`, { content })
+    const response = await api.put(`/messages/messages/${messageId}`, { content })
     return response.data
   },
 
   deleteMessage: async (messageId: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/messages/${messageId}`)
+    const response = await api.delete(`/messages/messages/${messageId}`)
     return response.data
   },
 
@@ -132,8 +132,8 @@ export const messageService = {
   // Message status
   markAsRead: async (conversationId: string, messageId?: string): Promise<ApiResponse<void>> => {
     const endpoint = messageId 
-      ? `/conversations/${conversationId}/messages/${messageId}/read`
-      : `/conversations/${conversationId}/read`
+      ? `/messages/conversations/${conversationId}/messages/${messageId}/read`
+      : `/messages/conversations/${conversationId}/read`
     const response = await api.post(endpoint)
     return response.data
   },
