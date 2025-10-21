@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, Search, Bell, MessageSquare, Home, ChevronDown } from 'lucide-react';
+import { Menu, Search, Bell, MessageSquare, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';

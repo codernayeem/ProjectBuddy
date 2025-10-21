@@ -188,6 +188,38 @@ export function PostCard({
             
             <p className="text-gray-800 dark:text-gray-200 mb-3 whitespace-pre-wrap">{post.content}</p>
             
+            {/* Media Display */}
+            {post.media && post.media.length > 0 && (
+              <div className={`mb-3 grid gap-2 ${
+                post.media.length === 1 ? 'grid-cols-1' : 
+                post.media.length === 2 ? 'grid-cols-2' : 
+                post.media.length === 3 ? 'grid-cols-3' : 
+                'grid-cols-2'
+              }`}>
+                {post.media.map((mediaUrl, index) => {
+                  const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('.mov') || mediaUrl.includes('.webm');
+                  return (
+                    <div key={index} className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                      {isVideo ? (
+                        <video 
+                          src={mediaUrl} 
+                          controls 
+                          className="w-full h-auto max-h-96 object-contain"
+                        />
+                      ) : (
+                        <img 
+                          src={mediaUrl} 
+                          alt={`Post media ${index + 1}`} 
+                          className="w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(mediaUrl, '_blank')}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {post.tags.map((tag: string) => (
@@ -217,15 +249,6 @@ export function PostCard({
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>{post.commentsCount || 0}</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="flex items-center space-x-1"
-                  disabled
-                >
-                  <Share className="w-4 h-4" />
-                  <span>{post.sharesCount || 0}</span>
                 </Button>
               </div>
               {showActions && isOwner && (

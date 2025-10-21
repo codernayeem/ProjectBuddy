@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PostController } from '../controllers/PostController';
 import { authenticate } from '../middlewares/auth';
 import { validate, validateQuery } from '../middlewares/validation';
+import { uploadProjectFiles } from '../middlewares/upload';
 import { 
   createPostSchema, 
   updatePostSchema, 
@@ -21,6 +22,8 @@ router.use(authenticate);
 router.get('/', validateQuery(paginationSchema), postController.searchPosts);
 
 router.post('/', validate(createPostSchema), postController.createPost);
+
+router.post('/upload-media', uploadProjectFiles.array('media', 5), postController.uploadPostMedia);
 
 router.post('/team', validate(createPostSchema), postController.createTeamPost);
 

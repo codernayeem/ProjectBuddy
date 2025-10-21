@@ -68,11 +68,11 @@ export const postService = {
   },
 
   // Upload media for post
-  uploadMedia: async (files: File[]): Promise<ApiResponse<{ urls: string[] }>> => {
+  uploadMedia: async (files: File[]): Promise<ApiResponse<{ media: string[] }>> => {
     const formData = new FormData()
     files.forEach(file => formData.append('media', file))
     
-    const response = await api.post('/posts/media', formData, {
+    const response = await api.post('/posts/upload-media', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

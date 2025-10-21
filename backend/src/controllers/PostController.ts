@@ -41,6 +41,28 @@ export class PostController {
     }
   };
 
+  // Upload post media
+  uploadPostMedia = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        res.status(400).json(createErrorResponse('No files uploaded'));
+        return;
+      }
+
+      const mediaUrls = req.files.map((file: any) => file.path);
+
+      res.json(createResponse(true, 'Media uploaded successfully', { media: mediaUrls }));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload media';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
   // Create a team post
   createTeamPost = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
