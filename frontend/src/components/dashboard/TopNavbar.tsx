@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
 import { messageService } from '@/lib/messages';
+import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import MobileSearch from './MobileSearch';
 
 interface TopNavbarProps {
@@ -34,6 +35,9 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
     queryFn: () => messageService.getUnreadCount(),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Fetch unread notification count
+  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount();
 
   const unreadCount = unreadData?.data?.count || 0;
 
@@ -132,15 +136,19 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
           </Link>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
-            <Bell className="h-4 w-4 md:h-5 md:w-5" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 text-xs flex items-center justify-center text-white"
-            >
-              5
-            </Badge>
-          </Button>
+          <Link to="/dashboard/notifications">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
+              <Bell className="h-4 w-4 md:h-5 md:w-5" />
+              {unreadNotificationCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 text-xs flex items-center justify-center text-white"
+                >
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
 
           {/* Theme Toggle */}
           <ThemeToggle />

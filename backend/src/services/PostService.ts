@@ -252,7 +252,7 @@ export class PostService {
     });
 
     // Create notification for post author (if not commenting on own post)
-    if (post.authorId && post.authorId !== userId) {
+    if (post.authorId && post.authorId !== userId && !parentId) {
       await this.notificationRepository.create({
         type: 'POST_COMMENT',
         title: 'New comment on your post',
@@ -265,7 +265,17 @@ export class PostService {
 
     // If it's a reply, notify the parent comment author
     if (parentId) {
-      // TODO: Get parent comment author and notify
+      const parentComment = await this.postRepository.getCommentById(parentId);
+      if (parentComment && parentComment.authorId !== userId) {
+        await this.notificationRepository.create({
+          type: 'COMMENT_REPLY',
+          title: 'New reply to your comment',
+          message: 'Someone replied to your comment',
+          userId: parentComment.authorId,
+          data: { postId, commentId: comment.id, parentCommentId: parentId },
+          category: 'social',
+        });
+      }
     }
 
     // Update post comment count

@@ -44,8 +44,7 @@ export function PostCard({
   onReact, 
   onEdit, 
   onDelete, 
-  showActions = false, 
-  showComments = true,
+  showActions = false,
   isOwner = false 
 }: PostCardProps) {
   const { user: currentUser } = useAuthStore();

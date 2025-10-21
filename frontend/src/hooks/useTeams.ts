@@ -192,7 +192,7 @@ export function useInviteToTeam() {
       teamId: string; 
       data: { inviteeId?: string; email?: string; roleId?: string; message?: string; }
     }) => teamService.inviteToTeam(teamId, data),
-    onSuccess: (_, { teamId }) => {
+    onSuccess: () => {
       // Invalidate invitations
       queryClient.invalidateQueries({ queryKey: teamKeys.invitations() });
       

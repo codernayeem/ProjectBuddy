@@ -23,6 +23,8 @@ import teamJoinRequestRoutes from './routes/teamJoinRequests';
 import postRoutes from './routes/posts';
 import commentRoutes from './routes/comments';
 import messageRoutes from './routes/messages';
+import notificationRoutes from './routes/notifications';
+import searchRoutes from './routes/search';
 
 const app = express();
 const server = createServer(app);
@@ -109,6 +111,8 @@ app.use('/api', teamJoinRequestRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {

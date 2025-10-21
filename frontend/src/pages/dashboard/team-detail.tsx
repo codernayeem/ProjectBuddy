@@ -28,7 +28,7 @@ import {
 import { 
   ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
   Settings, UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
-  Crown, AlertCircle, Plus, X, MessageSquare, Target, CheckCircle2,
+  Crown, Plus, X, MessageSquare, Target, CheckCircle2,
   Clock, Rocket, Pause, XCircle, FolderGit2, ExternalLink, Edit
 } from 'lucide-react';
 import { 

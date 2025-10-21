@@ -18,6 +18,7 @@ import ProjectsPage from "@/pages/dashboard/projects";
 import ConnectionsPage from "@/pages/dashboard/connections";
 import MessagesPage from "@/pages/dashboard/messages";
 import NotificationsPage from "@/pages/dashboard/notifications";
+import SearchPage from "@/pages/dashboard/search";
 import ProfilePage from "@/pages/dashboard/profile";
 import SettingsPage from "@/pages/settings";
 import NotFound from "@/pages/not-found";
@@ -50,6 +51,7 @@ function App() {
               <Route path="connections" element={<ConnectionsPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="search" element={<SearchPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="profile/:userId" element={<ProfilePage />} />
             </Route>

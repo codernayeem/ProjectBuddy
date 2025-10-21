@@ -5,130 +5,59 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Bell, Check, X, Trash2, Users, Heart, MessageCircle, 
+  Bell, Check, Trash2, Users, Heart, MessageCircle, 
   Share, UserPlus, Briefcase, Award, Calendar, Settings,
-  MoreHorizontal, CheckCircle, Filter
+  MoreHorizontal, CheckCircle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router';
+import { useUnreadNotificationCount, useNotifications } from '@/hooks/useNotifications';
+import { notificationService } from '@/lib/notifications';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 
 export default function NotificationsPage() {
   const [selectedTab, setSelectedTab] = useState('all');
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [page] = useState(1);
+  const queryClient = useQueryClient();
 
-  // Mock data - replace with real API calls
-  const notifications = [
-    {
-      id: '1',
-      type: 'CONNECTION_REQUEST',
-      title: 'New connection request',
-      message: 'Sarah Johnson wants to connect with you',
-      actor: {
-        id: 'user-1',
-        name: 'Sarah Johnson',
-        username: 'sarahjdev',
-        avatar: '/avatars/sarah.jpg'
-      },
-      isRead: false,
-      createdAt: '2024-03-15T10:30:00Z',
-      actionUrl: '/connections',
-      metadata: {
-        connectionId: 'conn-1'
-      }
+  // Fetch notifications based on selected tab
+  const getFilters = () => {
+    if (selectedTab === 'unread') return { isRead: false };
+    if (selectedTab === 'connections') return { category: 'social' };
+    if (selectedTab === 'posts') return { category: 'social' };
+    if (selectedTab === 'projects') return { category: 'team' };
+    return undefined;
+  };
+
+  const { data: notificationsData, isLoading } = useNotifications(page, 20, getFilters());
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
+
+  const notifications = notificationsData?.data || [];
+
+  // Mutations
+  const markAsReadMutation = useMutation({
+    mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
-    {
-      id: '2',
-      type: 'TEAM_INVITATION',
-      title: 'Team invitation',
-      message: 'You have been invited to join Frontend Masters team',
-      actor: {
-        id: 'user-2',
-        name: 'Alex Chen',
-        username: 'alexchen',
-        avatar: '/avatars/alex.jpg'
-      },
-      team: {
-        id: 'team-1',
-        name: 'Frontend Masters',
-        logo: '/teams/frontend-masters.jpg'
-      },
-      isRead: false,
-      createdAt: '2024-03-15T09:15:00Z',
-      actionUrl: '/teams/team-1',
-      metadata: {
-        invitationId: 'inv-1'
-      }
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => notificationService.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
-    {
-      id: '3',
-      type: 'POST_REACTION',
-      title: 'Someone liked your post',
-      message: 'Maria Garcia liked your post about React best practices',
-      actor: {
-        id: 'user-3',
-        name: 'Maria Garcia',
-        username: 'mariagarcia',
-        avatar: '/avatars/maria.jpg'
-      },
-      isRead: true,
-      createdAt: '2024-03-15T08:45:00Z',
-      actionUrl: '/dashboard#post-123',
-      metadata: {
-        postId: 'post-123',
-        reactionType: 'like'
-      }
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: (notificationId: string) => notificationService.deleteNotification(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
-    {
-      id: '4',
-      type: 'POST_COMMENT',
-      title: 'New comment on your post',
-      message: 'David Kumar commented: "Great insights! Could you share more about the performance optimizations?"',
-      actor: {
-        id: 'user-4',
-        name: 'David Kumar',
-        username: 'davidkumar',
-        avatar: '/avatars/david.jpg'
-      },
-      isRead: true,
-      createdAt: '2024-03-14T16:20:00Z',
-      actionUrl: '/dashboard#post-456',
-      metadata: {
-        postId: 'post-456',
-        commentId: 'comment-789'
-      }
-    },
-    {
-      id: '5',
-      type: 'PROJECT_MILESTONE',
-      title: 'Project milestone completed',
-      message: 'E-commerce Dashboard project reached 75% completion',
-      project: {
-        id: 'project-1',
-        name: 'E-commerce Dashboard',
-        logo: '/projects/ecommerce.jpg'
-      },
-      isRead: true,
-      createdAt: '2024-03-14T14:10:00Z',
-      actionUrl: '/projects/project-1',
-      metadata: {
-        milestoneId: 'milestone-1',
-        percentage: 75
-      }
-    },
-    {
-      id: '6',
-      type: 'ACHIEVEMENT_UNLOCKED',
-      title: 'Achievement unlocked!',
-      message: 'You earned the "Collaboration Master" badge for contributing to 10+ projects',
-      isRead: false,
-      createdAt: '2024-03-14T12:00:00Z',
-      actionUrl: '/profile/achievements',
-      metadata: {
-        achievementId: 'collab-master',
-        badgeName: 'Collaboration Master'
-      }
-    }
-  ];
+  });
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -160,38 +89,22 @@ export default function NotificationsPage() {
 
   const filteredNotifications = notifications.filter(notification => {
     if (selectedTab === 'unread' && notification.isRead) return false;
-    if (selectedTab === 'connections' && !['CONNECTION_REQUEST', 'TEAM_INVITATION'].includes(notification.type)) return false;
-    if (selectedTab === 'posts' && !['POST_REACTION', 'POST_COMMENT', 'POST_SHARE'].includes(notification.type)) return false;
-    if (selectedTab === 'projects' && !['PROJECT_MILESTONE', 'ACHIEVEMENT_UNLOCKED'].includes(notification.type)) return false;
-    if (showUnreadOnly && notification.isRead) return false;
+    if (selectedTab === 'connections' && !['CONNECTION_REQUEST', 'CONNECTION_ACCEPTED', 'TEAM_INVITATION', 'TEAM_JOIN_REQUEST'].includes(notification.type)) return false;
+    if (selectedTab === 'posts' && !['POST_REACTION', 'POST_COMMENT', 'POST_SHARED', 'COMMENT_REACTION', 'COMMENT_REPLY', 'POST_MENTION'].includes(notification.type)) return false;
+    if (selectedTab === 'projects' && !['TEAM_MILESTONE_COMPLETED', 'ACHIEVEMENT_UNLOCKED', 'PROJECT_MILESTONE'].includes(notification.type)) return false;
     return true;
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
   const handleMarkAsRead = (notificationId: string) => {
-    console.log('Marking as read:', notificationId);
-    // TODO: Implement mark as read API call
+    markAsReadMutation.mutate(notificationId);
   };
 
   const handleMarkAllAsRead = () => {
-    console.log('Marking all as read');
-    // TODO: Implement mark all as read API call
+    markAllAsReadMutation.mutate();
   };
 
   const handleDeleteNotification = (notificationId: string) => {
-    console.log('Deleting notification:', notificationId);
-    // TODO: Implement delete notification API call
-  };
-
-  const handleAcceptInvitation = (invitationId: string) => {
-    console.log('Accepting invitation:', invitationId);
-    // TODO: Implement accept invitation API call
-  };
-
-  const handleDeclineInvitation = (invitationId: string) => {
-    console.log('Declining invitation:', invitationId);
-    // TODO: Implement decline invitation API call
+    deleteNotificationMutation.mutate(notificationId);
   };
 
   const NotificationCard = ({ notification }: { notification: any }) => (
@@ -221,15 +134,15 @@ export default function NotificationsPage() {
                 <div className="flex items-center space-x-4 text-xs text-gray-500">
                   <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                   
-                  {notification.actor && (
+                  {(notification.data as any)?.senderUsername && (
                     <div className="flex items-center space-x-1">
                       <Avatar className="h-4 w-4">
-                        <AvatarImage src={notification.actor.avatar} alt={notification.actor.name} />
+                        <AvatarImage src={(notification.data as any).senderAvatar} alt={(notification.data as any).senderUsername} />
                         <AvatarFallback className="text-xs">
-                          {notification.actor.name.split(' ').map((n: string) => n[0]).join('')}
+                          {(notification.data as any).senderUsername?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span>@{notification.actor.username}</span>
+                      <span>@{(notification.data as any).senderUsername}</span>
                     </div>
                   )}
                 </div>
@@ -263,51 +176,24 @@ export default function NotificationsPage() {
               </div>
             </div>
 
-            {/* Action Buttons for specific notification types */}
-            {notification.type === 'CONNECTION_REQUEST' && (
-              <div className="flex space-x-2 mt-3">
-                <Button size="sm" onClick={() => handleAcceptInvitation(notification.metadata.connectionId)}>
-                  <Check className="w-4 h-4 mr-1" />
-                  Accept
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDeclineInvitation(notification.metadata.connectionId)}>
-                  <X className="w-4 h-4 mr-1" />
-                  Decline
-                </Button>
-              </div>
-            )}
-
-            {notification.type === 'TEAM_INVITATION' && (
-              <div className="flex space-x-2 mt-3">
-                <Button size="sm" onClick={() => handleAcceptInvitation(notification.metadata.invitationId)}>
-                  <Check className="w-4 h-4 mr-1" />
-                  Join Team
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDeclineInvitation(notification.metadata.invitationId)}>
-                  <X className="w-4 h-4 mr-1" />
-                  Decline
-                </Button>
-              </div>
-            )}
-
             {/* Team/Project info */}
-            {notification.team && (
+            {(notification.data as any)?.team && (
               <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 rounded-lg">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={notification.team.logo} alt={notification.team.name} />
-                  <AvatarFallback className="text-xs">{notification.team.name[0]}</AvatarFallback>
+                  <AvatarImage src={(notification.data as any).team.logo} alt={(notification.data as any).team.name} />
+                  <AvatarFallback className="text-xs">{(notification.data as any).team.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-gray-900">{notification.team.name}</span>
+                <span className="text-sm font-medium text-gray-900">{(notification.data as any).team.name}</span>
               </div>
             )}
 
-            {notification.project && (
+            {(notification.data as any)?.project && (
               <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 rounded-lg">
                 <Briefcase className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">{notification.project.name}</span>
-                {notification.metadata.percentage && (
+                <span className="text-sm font-medium text-gray-900">{(notification.data as any).project.name}</span>
+                {(notification.data as any).percentage && (
                   <Badge variant="outline" className="text-xs">
-                    {notification.metadata.percentage}% Complete
+                    {(notification.data as any).percentage}% Complete
                   </Badge>
                 )}
               </div>
@@ -320,44 +206,48 @@ export default function NotificationsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-600 mt-2">
-            Stay updated with your connections, teams, and projects.
-          </p>
-          {unreadCount > 0 && (
-            <Badge variant="default" className="mt-2">
-              {unreadCount} unread
-            </Badge>
-          )}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading notifications...</p>
+          </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-            className={showUnreadOnly ? 'bg-blue-50 border-blue-200' : ''}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            {showUnreadOnly ? 'Show All' : 'Unread Only'}
-          </Button>
-          
-          {unreadCount > 0 && (
-            <Button variant="outline" onClick={handleMarkAllAsRead}>
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Mark All Read
-            </Button>
-          )}
-          
-          <Button variant="outline" asChild>
-            <Link to="/settings#notifications">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Link>
-          </Button>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+              <p className="text-gray-600 mt-2">
+                Stay updated with your connections, teams, and projects.
+              </p>
+              {unreadCount > 0 && (
+                <Badge variant="default" className="mt-2">
+                  {unreadCount} unread
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleMarkAllAsRead}
+                  disabled={markAllAsReadMutation.isPending}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Mark All Read
+                </Button>
+              )}
+              
+              <Button variant="outline" asChild>
+                <Link to="/settings#notifications">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Link>
+              </Button>
+            </div>
+          </div>
 
       <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -468,6 +358,8 @@ export default function NotificationsPage() {
           )}
         </TabsContent>
       </Tabs>
+        </>
+      )}
     </div>
   );
 }

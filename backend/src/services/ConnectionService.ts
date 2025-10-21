@@ -1,15 +1,18 @@
 import { Connection } from '@prisma/client';
 import { ConnectionRepository } from '../repositories/ConnectionRepository';
 import { UserRepository } from '../repositories/UserRepository';
+import { NotificationRepository } from '../repositories/NotificationRepository';
 import { PaginationParams } from '../types';
 
 export class ConnectionService {
   private connectionRepository: ConnectionRepository;
   private userRepository: UserRepository;
+  private notificationRepository: NotificationRepository;
 
   constructor() {
     this.connectionRepository = new ConnectionRepository();
     this.userRepository = new UserRepository();
+    this.notificationRepository = new NotificationRepository();
   }
 
   async sendConnectionRequest(senderId: string, receiverId: string): Promise<Connection> {
@@ -39,7 +42,23 @@ export class ConnectionService {
       throw new Error('Connection already exists or pending');
     }
 
-    return this.connectionRepository.create(senderId, receiverId);
+    const connection = await this.connectionRepository.create(senderId, receiverId);
+
+    // Create notification for receiver
+    await this.notificationRepository.createConnectionNotification(
+      receiverId,
+      senderId,
+      'CONNECTION_REQUEST',
+      'New Connection Request',
+      `${sender.firstName} ${sender.lastName} sent you a connection request`,
+      {
+        senderUsername: sender.username,
+        senderAvatar: sender.avatar,
+        connectionId: connection.id,
+      }
+    );
+
+    return connection;
   }
 
   async respondToConnectionRequest(
@@ -69,7 +88,28 @@ export class ConnectionService {
       block: 'BLOCKED' as const,
     };
 
-    return this.connectionRepository.updateStatus(connectionId, statusMap[action]);
+    const updatedConnection = await this.connectionRepository.updateStatus(connectionId, statusMap[action]);
+
+    // Create notification for sender if accepted
+    if (action === 'accept') {
+      const receiver = await this.userRepository.findById(userId);
+      if (receiver) {
+        await this.notificationRepository.createConnectionNotification(
+          connection.senderId,
+          userId,
+          'CONNECTION_ACCEPTED',
+          'Connection Accepted',
+          `${receiver.firstName} ${receiver.lastName} accepted your connection request`,
+          {
+            receiverUsername: receiver.username,
+            receiverAvatar: receiver.avatar,
+            connectionId: connection.id,
+          }
+        );
+      }
+    }
+
+    return updatedConnection;
   }
 
   async removeConnection(connectionId: string, userId: string): Promise<void> {
