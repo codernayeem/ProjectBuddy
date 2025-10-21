@@ -186,4 +186,67 @@ export class UserController {
       res.status(500).json(createErrorResponse(errorMessage));
     }
   };
+
+  // University Management
+  getUserUniversities = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const universities = await this.userService.getUserUniversities(req.user.id);
+      res.json(createResponse(true, 'Universities fetched successfully', universities));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch universities';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  addUniversity = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const university = await this.userService.addUniversity(req.user.id, req.body);
+      res.status(201).json(createResponse(true, 'University added successfully', university));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add university';
+      res.status(400).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  updateUniversity = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { universityId } = req.params;
+      const university = await this.userService.updateUniversity(universityId, req.user.id, req.body);
+      res.json(createResponse(true, 'University updated successfully', university));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update university';
+      res.status(400).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  deleteUniversity = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { universityId } = req.params;
+      await this.userService.deleteUniversity(universityId, req.user.id);
+      res.json(createResponse(true, 'University deleted successfully'));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete university';
+      res.status(400).json(createErrorResponse(errorMessage));
+    }
+  };
 }

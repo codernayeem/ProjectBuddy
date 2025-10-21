@@ -11,6 +11,13 @@ export class UserRepository {
     return prisma.user.findUnique({
       where: { id },
       include: includeDetails ? {
+        universities: {
+          orderBy: [
+            { status: 'desc' },
+            { endYear: 'desc' },
+            { startYear: 'desc' },
+          ],
+        },
         teamMemberships: {
           include: {
             team: {
@@ -393,5 +400,40 @@ export class UserRepository {
     ]);
 
     return { users, total };
+  }
+
+  // University methods
+  async getUserUniversities(userId: string) {
+    return prisma.userUniversity.findMany({
+      where: { userId },
+      orderBy: [
+        { status: 'desc' }, // CURRENT first, then GRADUATED
+        { endYear: 'desc' },
+        { startYear: 'desc' },
+      ],
+    });
+  }
+
+  async createUniversity(data: Prisma.UserUniversityCreateInput) {
+    return prisma.userUniversity.create({ data });
+  }
+
+  async updateUniversity(universityId: string, data: Prisma.UserUniversityUpdateInput) {
+    return prisma.userUniversity.update({
+      where: { id: universityId },
+      data,
+    });
+  }
+
+  async deleteUniversity(universityId: string) {
+    return prisma.userUniversity.delete({
+      where: { id: universityId },
+    });
+  }
+
+  async getUniversityById(universityId: string) {
+    return prisma.userUniversity.findUnique({
+      where: { id: universityId },
+    });
   }
 }

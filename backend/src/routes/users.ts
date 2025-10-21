@@ -27,4 +27,10 @@ router.get('/:id', userController.getUserById);
 
 router.delete('/account', authenticate, userController.deleteAccount);
 
+// University routes
+router.get('/me/universities', userController.getUserUniversities);
+router.post('/me/universities', userController.addUniversity);
+router.put('/me/universities/:universityId', userController.updateUniversity);
+router.delete('/me/universities/:universityId', userController.deleteUniversity);
+
 export default router;

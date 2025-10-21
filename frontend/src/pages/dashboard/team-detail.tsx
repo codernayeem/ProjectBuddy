@@ -729,6 +729,58 @@ export default function TeamDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Universities Section */}
+              {team.members && team.members.length > 0 && (() => {
+                const allUniversities = team.members
+                  .flatMap((member: any) => member.user?.universities || [])
+                  .filter((uni: any) => uni);
+                
+                if (allUniversities.length === 0) return null;
+
+                // Group universities and count occurrences
+                const universityMap = new Map<string, { count: number; status: Set<string> }>();
+                allUniversities.forEach((uni: any) => {
+                  const existing = universityMap.get(uni.universityName) || { count: 0, status: new Set() };
+                  existing.count += 1;
+                  existing.status.add(uni.status);
+                  universityMap.set(uni.universityName, existing);
+                });
+
+                // Sort by count (most common first)
+                const sortedUniversities = Array.from(universityMap.entries())
+                  .sort((a, b) => b[1].count - a[1].count);
+
+                return (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      Team Universities
+                    </h3>
+                    <div className="space-y-2">
+                      {sortedUniversities.map(([name, data]) => (
+                        <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium">{name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {data.status.has('CURRENT') && (
+                              <Badge variant="default" className="text-xs">Current</Badge>
+                            )}
+                            {data.status.has('GRADUATED') && (
+                              <Badge variant="secondary" className="text-xs">Graduated</Badge>
+                            )}
+                            <span className="text-sm text-gray-600">
+                              {data.count} member{data.count > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>

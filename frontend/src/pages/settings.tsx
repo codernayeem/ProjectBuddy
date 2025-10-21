@@ -21,12 +21,18 @@ import {
   Mail,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  GraduationCap,
+  Plus,
+  X,
+  Edit
 } from 'lucide-react'
 import { authService } from '@/lib/auth'
 import { userService } from '@/lib/auth'
 import { notificationService } from '@/lib/notifications'
 import { useAuth, useRequireAuth } from '@/hooks/useAuth'
+import { useUserUniversities, useAddUniversity, useUpdateUniversity, useDeleteUniversity } from '@/hooks/useUniversities'
+import { CreateUniversityData, UserUniversity } from '@/lib/universities'
 import { Button } from '@/components/ui/button'
 import { LoadingPage } from '@/components/ui/LoadingSpinner'
 import { Link } from 'react-router'
@@ -96,6 +102,252 @@ const passwordSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 type PasswordFormData = z.infer<typeof passwordSchema>
+
+// Education Tab Component
+function EducationTab() {
+  const { data: universities, isLoading } = useUserUniversities();
+  const addUniversityMutation = useAddUniversity();
+  const updateUniversityMutation = useUpdateUniversity();
+  const deleteUniversityMutation = useDeleteUniversity();
+
+  const [isAddingUniversity, setIsAddingUniversity] = useState(false);
+  const [editingUniversity, setEditingUniversity] = useState<UserUniversity | null>(null);
+  const [universityForm, setUniversityForm] = useState<CreateUniversityData>({
+    universityName: '',
+    status: 'CURRENT',
+    startYear: undefined,
+    endYear: undefined,
+  });
+
+  const handleAddUniversity = async () => {
+    if (!universityForm.universityName) {
+      toast.error('University name is required');
+      return;
+    }
+
+    await addUniversityMutation.mutateAsync(universityForm);
+    setIsAddingUniversity(false);
+    setUniversityForm({
+      universityName: '',
+      status: 'CURRENT',
+      startYear: undefined,
+      endYear: undefined,
+    });
+  };
+
+  const handleUpdateUniversity = async () => {
+    if (!editingUniversity) return;
+
+    await updateUniversityMutation.mutateAsync({
+      universityId: editingUniversity.id,
+      data: universityForm,
+    });
+    setEditingUniversity(null);
+    setUniversityForm({
+      universityName: '',
+      status: 'CURRENT',
+      startYear: undefined,
+      endYear: undefined,
+    });
+  };
+
+  const handleDeleteUniversity = async (universityId: string) => {
+    if (confirm('Are you sure you want to remove this university?')) {
+      await deleteUniversityMutation.mutateAsync(universityId);
+    }
+  };
+
+  const startEditing = (university: UserUniversity) => {
+    setEditingUniversity(university);
+    setUniversityForm({
+      universityName: university.universityName,
+      status: university.status,
+      startYear: university.startYear,
+      endYear: university.endYear,
+    });
+    setIsAddingUniversity(false);
+  };
+
+  const cancelEditing = () => {
+    setEditingUniversity(null);
+    setIsAddingUniversity(false);
+    setUniversityForm({
+      universityName: '',
+      status: 'CURRENT',
+      startYear: undefined,
+      endYear: undefined,
+    });
+  };
+
+  return (
+    <TabsContent value="education" className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <GraduationCap className="h-5 w-5 mr-2" />
+              Education
+            </CardTitle>
+            {!isAddingUniversity && !editingUniversity && (
+              <Button 
+                onClick={() => setIsAddingUniversity(true)} 
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add University
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Add/Edit Form */}
+          {(isAddingUniversity || editingUniversity) && (
+            <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">
+                  {editingUniversity ? 'Edit University' : 'Add New University'}
+                </h3>
+                <Button variant="ghost" size="sm" onClick={cancelEditing}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="universityName">University Name *</Label>
+                  <Input
+                    id="universityName"
+                    value={universityForm.universityName}
+                    onChange={(e) => setUniversityForm({ ...universityForm, universityName: e.target.value })}
+                    placeholder="e.g., Harvard University"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="status">Status *</Label>
+                  <Select
+                    value={universityForm.status}
+                    onValueChange={(value: 'CURRENT' | 'GRADUATED') => 
+                      setUniversityForm({ ...universityForm, status: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CURRENT">Current Student</SelectItem>
+                      <SelectItem value="GRADUATED">Graduated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startYear">Start Year</Label>
+                    <Input
+                      id="startYear"
+                      type="number"
+                      value={universityForm.startYear || ''}
+                      onChange={(e) => setUniversityForm({ 
+                        ...universityForm, 
+                        startYear: e.target.value ? parseInt(e.target.value) : undefined 
+                      })}
+                      placeholder="2020"
+                      min="1950"
+                      max={new Date().getFullYear() + 5}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="endYear">End Year</Label>
+                    <Input
+                      id="endYear"
+                      type="number"
+                      value={universityForm.endYear || ''}
+                      onChange={(e) => setUniversityForm({ 
+                        ...universityForm, 
+                        endYear: e.target.value ? parseInt(e.target.value) : undefined 
+                      })}
+                      placeholder="2024"
+                      min="1950"
+                      max={new Date().getFullYear() + 10}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={editingUniversity ? handleUpdateUniversity : handleAddUniversity}
+                    disabled={addUniversityMutation.isPending || updateUniversityMutation.isPending}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {editingUniversity ? 'Update' : 'Add'} University
+                  </Button>
+                  <Button variant="outline" onClick={cancelEditing}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Universities List */}
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-500">Loading...</div>
+          ) : universities && universities.length > 0 ? (
+            <div className="space-y-3">
+              {universities.map((university) => (
+                <div 
+                  key={university.id} 
+                  className="flex items-start justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">{university.universityName}</h4>
+                      <Badge variant={university.status === 'CURRENT' ? 'default' : 'secondary'}>
+                        {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
+                      </Badge>
+                    </div>
+                    {(university.startYear || university.endYear) && (
+                      <p className="text-sm text-gray-600">
+                        {university.startYear && `${university.startYear}`}
+                        {university.startYear && university.endYear && ' - '}
+                        {university.endYear && `${university.endYear}`}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEditing(university)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteUniversity(university.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="mb-2">No universities added yet</p>
+              <p className="text-sm">Add your universities to share your educational background</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth()
@@ -269,8 +521,9 @@ export default function SettingsPage() {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="education">Education</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -568,6 +821,9 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Education Tab */}
+        <EducationTab />
 
         {/* Account Tab */}
         <TabsContent value="account" className="space-y-6">

@@ -54,6 +54,12 @@ export class TeamRepository {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                universities: {
+                  orderBy: [
+                    { status: 'desc' },
+                    { endYear: 'desc' },
+                  ],
+                },
               },
             },
             customRoles: {

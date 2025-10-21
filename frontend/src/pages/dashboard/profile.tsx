@@ -23,7 +23,8 @@ import {
   UserCheck,
   UserX,
   UserMinus,
-  MessageSquare
+  MessageSquare,
+  GraduationCap
 } from 'lucide-react'
 import { userService } from '@/lib/auth'
 import { projectService } from '@/lib/projects'
@@ -287,6 +288,13 @@ export default function ProfilePage() {
                       {[profileData.city, profileData.country].filter(Boolean).join(', ')}
                     </span>
                   )}
+                  {/* Show current university */}
+                  {(profileData as any)?.universities?.find((u: any) => u.status === 'CURRENT') && (
+                    <span className="flex items-center">
+                      <GraduationCap className="h-4 w-4 mr-1" />
+                      {(profileData as any).universities.find((u: any) => u.status === 'CURRENT')?.universityName}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -457,11 +465,11 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-700">
-              {profileData?.lastLoginAt ? formatRelativeTime(profileData.lastLoginAt) : 'Never'}
+              {(profileData as any)?.universities?.length || 0}
             </div>
             <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
-              <Clock className="h-4 w-4 mr-1" />
-              Last Active
+              <GraduationCap className="h-4 w-4 mr-1" />
+              Universities
             </div>
           </CardContent>
         </Card>
@@ -746,6 +754,37 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+
+              {/* Education Section */}
+              {(profileData as any).universities && (profileData as any).universities.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Education
+                  </h3>
+                  <div className="space-y-3">
+                    {(profileData as any).universities.map((university: any) => (
+                      <div key={university.id} className="flex items-start justify-between p-3 border rounded-lg bg-gray-50">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold">{university.universityName}</h4>
+                            <UIBadge variant={university.status === 'CURRENT' ? 'default' : 'secondary'}>
+                              {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
+                            </UIBadge>
+                          </div>
+                          {(university.startYear || university.endYear) && (
+                            <p className="text-sm text-gray-600">
+                              {university.startYear && `${university.startYear}`}
+                              {university.startYear && university.endYear && ' - '}
+                              {university.endYear && `${university.endYear}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

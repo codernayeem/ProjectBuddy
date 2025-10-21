@@ -16,7 +16,8 @@ import {
   ConversationType,
   MessageType,
   NotificationType,
-  RecommendationType
+  RecommendationType,
+  UniversityStatus
 } from '@prisma/client';
 
 export interface AuthenticatedRequest extends Request {
@@ -255,4 +256,19 @@ export interface UserFilters {
   country?: string;
   city?: string;
   isActive?: boolean;
+}
+
+// University related types
+export interface CreateUserUniversityData {
+  universityName: string;
+  status: UniversityStatus;
+  startYear?: number;
+  endYear?: number;
+}
+
+export interface UpdateUserUniversityData {
+  universityName?: string;
+  status?: UniversityStatus;
+  startYear?: number;
+  endYear?: number;
 }

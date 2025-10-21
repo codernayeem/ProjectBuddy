@@ -213,4 +213,39 @@ export class UserService {
   async checkUsernameAvailability(username: string, excludeUserId?: string): Promise<boolean> {
     return this.userRepository.isUsernameAvailable(username, excludeUserId);
   }
+
+  // University methods
+  async getUserUniversities(userId: string) {
+    return this.userRepository.getUserUniversities(userId);
+  }
+
+  async addUniversity(userId: string, data: any) {
+    return this.userRepository.createUniversity({
+      universityName: data.universityName,
+      status: data.status,
+      startYear: data.startYear,
+      endYear: data.endYear,
+      user: { connect: { id: userId } },
+    });
+  }
+
+  async updateUniversity(universityId: string, userId: string, data: any) {
+    // Verify the university belongs to the user
+    const university = await this.userRepository.getUniversityById(universityId);
+    if (!university || university.userId !== userId) {
+      throw new Error('University not found or unauthorized');
+    }
+
+    return this.userRepository.updateUniversity(universityId, data);
+  }
+
+  async deleteUniversity(universityId: string, userId: string) {
+    // Verify the university belongs to the user
+    const university = await this.userRepository.getUniversityById(universityId);
+    if (!university || university.userId !== userId) {
+      throw new Error('University not found or unauthorized');
+    }
+
+    return this.userRepository.deleteUniversity(universityId);
+  }
 }
