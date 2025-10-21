@@ -455,6 +455,153 @@ export class TeamController {
     }
   };
 
+  public updateTeamProject = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { projectId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const project = await this.teamService.updateProject(projectId, userId, req.body);
+      res.json({
+        message: 'Team project updated successfully',
+        data: project
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  public deleteTeamProject = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { projectId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      await this.teamService.deleteProject(projectId, userId);
+      res.json({
+        message: 'Team project deleted successfully'
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  // Team milestones
+  public getTeamMilestones = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const milestones = await this.teamService.getTeamMilestones(id);
+      res.json({
+        message: 'Team milestones fetched successfully',
+        data: milestones
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  public createTeamMilestone = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const milestone = await this.teamService.createMilestone(id, userId, req.body);
+      res.status(201).json({
+        message: 'Team milestone created successfully',
+        data: milestone
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  public updateTeamMilestone = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { milestoneId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const milestone = await this.teamService.updateMilestone(milestoneId, userId, req.body);
+      res.json({
+        message: 'Team milestone updated successfully',
+        data: milestone
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  public completeMilestone = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { milestoneId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const milestone = await this.teamService.completeMilestone(milestoneId, userId);
+      res.json({
+        message: 'Milestone completed successfully',
+        data: milestone
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  // Team achievements
+  public getTeamAchievements = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const achievements = await this.teamService.getTeamAchievements(id);
+      res.json({
+        message: 'Team achievements fetched successfully',
+        data: achievements
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  public createTeamAchievement = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const achievement = await this.teamService.createAchievement(id, userId, req.body);
+      res.status(201).json({
+        message: 'Team achievement created successfully',
+        data: achievement
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
   // Recommendations
   public getRecommendedTeams = async (req: AuthRequest, res: Response): Promise<void> => {
     try {

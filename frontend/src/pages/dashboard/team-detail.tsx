@@ -28,7 +28,8 @@ import {
 import { 
   ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
   Settings, UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
-  Crown, AlertCircle, Plus, X
+  Crown, AlertCircle, Plus, X, MessageSquare, Target, CheckCircle2,
+  Clock, Rocket, Pause, XCircle, FolderGit2, ExternalLink, Edit
 } from 'lucide-react';
 import { 
   useTeam, 
@@ -44,6 +45,17 @@ import {
   useUpdateMemberRole,
   useInviteToTeam
 } from '@/hooks/useTeams';
+import {
+  useTeamProjects,
+  useCreateTeamProject,
+  useUpdateTeamProject,
+  useDeleteTeamProject,
+  useTeamMilestones,
+  useCreateTeamMilestone,
+  useUpdateTeamMilestone,
+  useCompleteMilestone
+} from '@/hooks/useTeamProjects';
+import { TeamProject, CreateTeamProjectData, TeamMilestone, CreateTeamMilestoneData } from '@/lib/teamProjects';
 import { useAuth } from '@/hooks/useAuth';
 import { usePosts } from '@/hooks/usePosts';
 import { formatDistanceToNow } from 'date-fns';
@@ -65,6 +77,16 @@ export default function TeamDetailPage() {
   const removeRoleMutation = useRemoveRoleFromMember();
   const updateMemberRoleMutation = useUpdateMemberRole();
   const inviteToTeamMutation = useInviteToTeam();
+
+  // Project mutations
+  const { data: projectsData } = useTeamProjects(teamId!);
+  const { data: milestonesData } = useTeamMilestones(teamId!);
+  const createProjectMutation = useCreateTeamProject();
+  const updateProjectMutation = useUpdateTeamProject();
+  const deleteProjectMutation = useDeleteTeamProject();
+  const createMilestoneMutation = useCreateTeamMilestone();
+  const updateMilestoneMutation = useUpdateTeamMilestone();
+  const completeMilestoneMutation = useCompleteMilestone();
 
   // Dialog states
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -342,7 +364,7 @@ export default function TeamDetailPage() {
                 </Badge>
                 <span className="text-sm text-gray-600 flex items-center">
                   <Users className="w-4 h-4 mr-1" />
-                  {team.memberCount} members
+                  {team.members?.length || 0} members
                 </span>
                 <span className="text-sm text-gray-600 flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
@@ -353,6 +375,14 @@ export default function TeamDetailPage() {
           </div>
 
           <div className="flex space-x-2">
+            {isMember && (
+              <Button variant="outline" asChild>
+                <Link to={`/dashboard/messages?teamId=${teamId}`}>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Team Chat
+                </Link>
+              </Button>
+            )}
             {isAdmin && (
               <>
                 <Button onClick={() => setInviteDialogOpen(true)}>
@@ -557,7 +587,7 @@ export default function TeamDetailPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Team Members ({team.memberCount})</CardTitle>
+                <CardTitle>Team Members ({team.members?.length || 0})</CardTitle>
                 {isAdmin && (
                   <Button size="sm" onClick={() => setInviteDialogOpen(true)}>
                     <UserPlus className="w-4 h-4 mr-2" />

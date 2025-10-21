@@ -24,6 +24,7 @@ export const messageService = {
   createConversation: async (data: {
     type: ConversationType
     participantIds: string[]
+    teamId?: string
     title?: string
     description?: string
   }): Promise<ApiResponse<Conversation>> => {
@@ -115,6 +116,12 @@ export const messageService = {
     attachments?: string[]
   }): Promise<ApiResponse<Message>> => {
     const response = await api.post(`/messages/direct/${userId}`, data)
+    return response.data
+  },
+
+  // Team chat
+  getTeamConversation: async (teamId: string): Promise<ApiResponse<Conversation>> => {
+    const response = await api.get(`/messages/team/${teamId}`)
     return response.data
   },
 

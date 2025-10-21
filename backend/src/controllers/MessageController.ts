@@ -365,6 +365,26 @@ export class MessageController {
     }
   };
 
+  // ===== TEAM CHAT =====
+
+  getTeamConversation = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      const { teamId } = req.params;
+
+      const conversation = await this.messageService.getOrCreateTeamConversation(req.user.id, teamId);
+
+      res.json(createResponse(true, 'Team conversation retrieved successfully', conversation));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get team conversation';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
   // ===== REACTIONS =====
 
   addReaction = async (req: AuthRequest, res: Response): Promise<void> => {

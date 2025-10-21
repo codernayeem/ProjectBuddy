@@ -1,6 +1,7 @@
 import { MessageRepository } from '../repositories/MessageRepository';
 import { ConversationType, MessageType } from '@prisma/client';
 import { PaginationParams } from '../types';
+import { prisma } from '../config/database';
 
 export class MessageService {
   private messageRepository: MessageRepository;
@@ -41,6 +42,51 @@ export class MessageService {
         type: ConversationType.DIRECT_MESSAGE,
         participantIds: [userId1, userId2],
         createdBy: userId1,
+      });
+    }
+
+    return conversation;
+  }
+
+  async getOrCreateTeamConversation(userId: string, teamId: string) {
+    // Check if user is a team member
+    const teamMember = await prisma.teamMember.findFirst({
+      where: {
+        teamId,
+        userId,
+      },
+    });
+
+    if (!teamMember) {
+      throw new Error('You must be a team member to access team chat');
+    }
+
+    // Check if team conversation already exists
+    let conversation = await this.messageRepository.getTeamConversation(teamId);
+
+    if (!conversation) {
+      // Get all team members
+      const teamMembers = await prisma.teamMember.findMany({
+        where: { teamId },
+        select: { userId: true },
+      });
+
+      // Get team info
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { name: true, avatar: true },
+      });
+
+      const participantIds = teamMembers.map(tm => tm.userId);
+
+      // Create new team conversation
+      conversation = await this.messageRepository.createConversation({
+        type: ConversationType.TEAM_CHAT,
+        participantIds,
+        createdBy: userId,
+        teamId,
+        title: team?.name ? `${team.name} Team Chat` : 'Team Chat',
+        avatar: team?.avatar || undefined,
       });
     }
 

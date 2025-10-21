@@ -52,7 +52,18 @@ router.delete('/roles/:roleId', teamController.deleteCustomRole);
 
 // Team projects
 router.get('/:id/projects', teamController.getTeamProjects);
-
 router.post('/:id/projects', teamController.createTeamProject);
+router.put('/:id/projects/:projectId', teamController.updateTeamProject);
+router.delete('/:id/projects/:projectId', teamController.deleteTeamProject);
+
+// Team milestones
+router.get('/:id/milestones', teamController.getTeamMilestones);
+router.post('/:id/milestones', teamController.createTeamMilestone);
+router.put('/:id/milestones/:milestoneId', teamController.updateTeamMilestone);
+router.post('/:id/milestones/:milestoneId/complete', teamController.completeMilestone);
+
+// Team achievements
+router.get('/:id/achievements', teamController.getTeamAchievements);
+router.post('/:id/achievements', teamController.createTeamAchievement);
 
 export default router;

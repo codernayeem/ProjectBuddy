@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import {
   MessageSquare,
   Send,
@@ -35,6 +35,8 @@ import {
 export default function MessagesPage() {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
+  const teamId = searchParams.get('teamId')
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [messageText, setMessageText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,6 +75,27 @@ export default function MessagesPage() {
       toast.error('Failed to start conversation')
     },
   })
+
+  // Start team chat mutation
+  const startTeamChatMutation = useMutation({
+    mutationFn: (teamId: string) => messageService.getTeamConversation(teamId),
+    onSuccess: (data) => {
+      if (data?.data?.id) {
+        setSelectedConversationId(data.data.id)
+        queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      }
+    },
+    onError: () => {
+      toast.error('Failed to open team chat')
+    },
+  })
+
+  // Load team chat if teamId is present
+  useEffect(() => {
+    if (teamId && !selectedConversationId) {
+      startTeamChatMutation.mutate(teamId)
+    }
+  }, [teamId])
 
   // Send message mutation
   const sendMessageMutation = useMutation({
@@ -145,6 +168,14 @@ export default function MessagesPage() {
 
   const filteredConversations = conversations.filter((conv: any) => {
     if (!searchQuery.trim()) return true
+    
+    // For team chats, search in title
+    if (conv.type === 'TEAM_CHAT') {
+      const title = (conv.title || '').toLowerCase()
+      return title.includes(searchQuery.toLowerCase())
+    }
+    
+    // For direct messages, search in other user's name
     const otherUser = getOtherParticipant(conv)
     const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`.toLowerCase()
     return fullName.includes(searchQuery.toLowerCase())
@@ -212,10 +243,18 @@ export default function MessagesPage() {
               </div>
             ) : (
               filteredConversations.map((conversation: any) => {
+              const isTeamChat = conversation.type === 'TEAM_CHAT'
               const otherUser = getOtherParticipant(conversation)
               const lastMessage = conversation.messages?.[0]
               const unreadCount = getUnreadCount(conversation)
-              const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`
+              
+              // For team chats, use conversation title and avatar
+              const displayName = isTeamChat 
+                ? (conversation.title || 'Team Chat')
+                : `${otherUser?.firstName} ${otherUser?.lastName}`
+              const displayAvatar = isTeamChat 
+                ? conversation.avatar 
+                : otherUser?.avatar
               
               return (
                 <button
@@ -226,14 +265,16 @@ export default function MessagesPage() {
                   }`}
                 >
                   <Avatar className="h-12 w-12 flex-shrink-0">
-                    <AvatarImage src={otherUser?.avatar || ''} alt={fullName} />
-                    <AvatarFallback>{getInitials(otherUser?.firstName, otherUser?.lastName)}</AvatarFallback>
+                    <AvatarImage src={displayAvatar || ''} alt={displayName} />
+                    <AvatarFallback>
+                      {isTeamChat ? <Users className="w-6 h-6" /> : getInitials(otherUser?.firstName, otherUser?.lastName)}
+                    </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-semibold text-gray-900 truncate">
-                        {fullName}
+                        {displayName}
                       </h3>
                       {lastMessage && (
                         <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
@@ -328,9 +369,30 @@ export default function MessagesPage() {
               </Button>
               
               {selectedConversation && (() => {
+                const isTeamChat = selectedConversation.type === 'TEAM_CHAT'
                 const otherUser = getOtherParticipant(selectedConversation)
-                const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`
                 
+                if (isTeamChat) {
+                  const teamName = selectedConversation.title || 'Team Chat'
+                  return (
+                    <>
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={selectedConversation.avatar || ''} alt={teamName} />
+                        <AvatarFallback><Users className="w-5 h-5" /></AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {teamName}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {selectedConversation.participants?.length || 0} members
+                        </p>
+                      </div>
+                    </>
+                  )
+                }
+                
+                const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`
                 return (
                   <>
                     <Link to={`/dashboard/profile/${otherUser?.id}`}>

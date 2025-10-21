@@ -118,6 +118,31 @@ export class MessageRepository {
     });
   }
 
+  async getTeamConversation(teamId: string): Promise<any | null> {
+    return prisma.conversation.findFirst({
+      where: {
+        type: ConversationType.TEAM_CHAT,
+        teamId,
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async createConversation(data: {
     type: ConversationType;
     participantIds: string[];

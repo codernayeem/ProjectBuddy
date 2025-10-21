@@ -433,6 +433,10 @@ export class TeamService {
     return milestone;
   }
 
+  async updateMilestone(milestoneId: string, userId: string, data: Partial<CreateTeamMilestoneData>): Promise<TeamMilestone> {
+    return this.teamRepository.updateMilestone(milestoneId, data);
+  }
+
   // Team Achievements
   async createAchievement(teamId: string, userId: string, data: CreateTeamAchievementData): Promise<TeamAchievement> {
     const isMember = await this.teamRepository.isMember(teamId, userId);

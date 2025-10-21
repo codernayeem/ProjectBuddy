@@ -40,6 +40,9 @@ router.delete('/messages/:messageId/reactions/:emoji', messageController.removeR
 router.get('/direct/:userId', messageController.getDirectConversation);
 router.post('/direct/:userId', validate(sendMessageSchema), messageController.sendDirectMessage);
 
+// ===== TEAM CHAT =====
+router.get('/team/:teamId', messageController.getTeamConversation);
+
 // ===== SEARCH & UTILITY =====
 router.get('/search', messageController.searchMessages);
 router.get('/unread-count', messageController.getUnreadCount);
