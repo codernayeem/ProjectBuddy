@@ -384,15 +384,25 @@ export class TeamService {
       throw new Error('You must be a team member to create projects');
     }
 
+    const { startDate, endDate, ...projectData } = data;
+
     return this.teamRepository.createProject({
-      ...data,
+      ...projectData,
+      ...(startDate && { startDate: new Date(startDate as any) }),
+      ...(endDate && { endDate: new Date(endDate as any) }),
       team: { connect: { id: teamId } },
       createdBy: userId,
     });
   }
 
   async updateProject(projectId: string, userId: string, data: Partial<CreateTeamProjectData>): Promise<TeamProject> {
-    return this.teamRepository.updateProject(projectId, data);
+    const { startDate, endDate, ...projectData } = data;
+    
+    return this.teamRepository.updateProject(projectId, {
+      ...projectData,
+      ...(startDate && { startDate: new Date(startDate as any) }),
+      ...(endDate && { endDate: new Date(endDate as any) }),
+    });
   }
 
   async deleteProject(projectId: string, userId: string): Promise<void> {
@@ -406,10 +416,13 @@ export class TeamService {
       throw new Error('You must be a team member to create milestones');
     }
 
+    const { projectId, dueDate, ...milestoneData } = data;
+    
     return this.teamRepository.createMilestone({
-      ...data,
+      ...milestoneData,
+      ...(dueDate && { dueDate: new Date(dueDate as any) }),
       team: { connect: { id: teamId } },
-      ...(data.projectId && { project: { connect: { id: data.projectId } } }),
+      ...(projectId && { project: { connect: { id: projectId } } }),
       createdBy: userId,
     });
   }
@@ -434,7 +447,12 @@ export class TeamService {
   }
 
   async updateMilestone(milestoneId: string, userId: string, data: Partial<CreateTeamMilestoneData>): Promise<TeamMilestone> {
-    return this.teamRepository.updateMilestone(milestoneId, data);
+    const { dueDate, ...milestoneData } = data;
+    
+    return this.teamRepository.updateMilestone(milestoneId, {
+      ...milestoneData,
+      ...(dueDate && { dueDate: new Date(dueDate as any) }),
+    });
   }
 
   // Team Achievements

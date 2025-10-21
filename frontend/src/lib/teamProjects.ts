@@ -5,7 +5,7 @@ export interface TeamProject {
   title: string;
   description: string;
   shortDescription?: string;
-  status: 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
+  status: 'PLANNING' | 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
   category?: string;
   startDate?: string;
   endDate?: string;

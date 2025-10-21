@@ -108,7 +108,31 @@ export default function TeamDetailPage() {
     canManageRoles: false,
   });
 
+  // Project dialog states
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<TeamProject | null>(null);
+  const [projectFormData, setProjectFormData] = useState<CreateTeamProjectData>({
+    title: '',
+    description: '',
+    shortDescription: '',
+    category: '',
+    requiredSkills: [],
+    tags: [],
+    repositoryUrl: '',
+    liveUrl: '',
+    documentationUrl: '',
+  });
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
+  const [milestoneFormData, setMilestoneFormData] = useState<CreateTeamMilestoneData>({
+    title: '',
+    description: '',
+    projectId: '',
+  });
+
   const team = teamData?.data;
+  const projects = projectsData || [];
+  const milestones = milestonesData || [];
 
   const handleJoinTeam = async () => {
     if (!teamId) return;
@@ -285,6 +309,125 @@ export default function TeamDetailPage() {
     }
   };
 
+  // Project handlers
+  const handleCreateProject = async () => {
+    if (!teamId) return;
+    
+    try {
+      await createProjectMutation.mutateAsync({
+        teamId,
+        data: projectFormData,
+      });
+      setProjectDialogOpen(false);
+      setProjectFormData({
+        title: '',
+        description: '',
+        shortDescription: '',
+        category: '',
+        requiredSkills: [],
+        tags: [],
+        repositoryUrl: '',
+        liveUrl: '',
+        documentationUrl: '',
+      });
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    }
+  };
+
+  const handleUpdateProject = async () => {
+    if (!teamId || !selectedProject) return;
+    
+    try {
+      await updateProjectMutation.mutateAsync({
+        teamId,
+        projectId: selectedProject.id,
+        data: projectFormData,
+      });
+      setEditProjectDialogOpen(false);
+      setSelectedProject(null);
+    } catch (error) {
+      console.error('Failed to update project:', error);
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!teamId) return;
+    
+    try {
+      await deleteProjectMutation.mutateAsync({ teamId, projectId });
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+    }
+  };
+
+  const handleCreateMilestone = async () => {
+    if (!teamId) return;
+    
+    try {
+      await createMilestoneMutation.mutateAsync({
+        teamId,
+        data: milestoneFormData,
+      });
+      setMilestoneDialogOpen(false);
+      setMilestoneFormData({
+        title: '',
+        description: '',
+        projectId: '',
+      });
+    } catch (error) {
+      console.error('Failed to create milestone:', error);
+    }
+  };
+
+  const handleUpdateMilestoneStatus = async (milestoneId: string, status: string) => {
+    if (!teamId) return;
+    
+    try {
+      if (status === 'COMPLETED') {
+        await completeMilestoneMutation.mutateAsync({ teamId, milestoneId });
+      } else {
+        await updateMilestoneMutation.mutateAsync({
+          teamId,
+          milestoneId,
+          data: { status } as any,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update milestone:', error);
+    }
+  };
+
+  const handleUpdateProjectStatus = async (projectId: string, status: string) => {
+    if (!teamId) return;
+    
+    try {
+      await updateProjectMutation.mutateAsync({
+        teamId,
+        projectId,
+        data: { status } as any,
+      });
+    } catch (error) {
+      console.error('Failed to update project status:', error);
+    }
+  };
+
+  const openEditProjectDialog = (project: TeamProject) => {
+    setSelectedProject(project);
+    setProjectFormData({
+      title: project.title,
+      description: project.description,
+      shortDescription: project.shortDescription,
+      category: project.category,
+      requiredSkills: project.requiredSkills || [],
+      tags: project.tags || [],
+      repositoryUrl: project.repositoryUrl,
+      liveUrl: project.liveUrl,
+      documentationUrl: project.documentationUrl,
+    });
+    setEditProjectDialogOpen(true);
+  };
+
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
       case 'PUBLIC': return <Globe className="w-4 h-4" />;
@@ -301,6 +444,45 @@ export default function TeamDetailPage() {
       case 'INVITE_ONLY': return 'text-blue-600 bg-blue-50 border-blue-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
+  };
+
+  const getProjectStatusBadge = (status: string) => {
+    const styles = {
+      PLANNING: { icon: Clock, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+      ACTIVE: { icon: Rocket, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+      COMPLETED: { icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200' },
+      ON_HOLD: { icon: Pause, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+      CANCELLED: { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200' },
+    };
+    
+    const config = styles[status as keyof typeof styles] || styles.PLANNING;
+    const Icon = config.icon;
+    
+    return (
+      <Badge className={`${config.color} border`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status.replace('_', ' ')}
+      </Badge>
+    );
+  };
+
+  const getMilestoneStatusBadge = (status: string) => {
+    const styles = {
+      PENDING: { icon: Clock, color: 'bg-gray-100 text-gray-800 border-gray-200' },
+      IN_PROGRESS: { icon: Target, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+      COMPLETED: { icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200' },
+      CANCELLED: { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200' },
+    };
+    
+    const config = styles[status as keyof typeof styles] || styles.PENDING;
+    const Icon = config.icon;
+    
+    return (
+      <Badge className={`${config.color} border text-xs`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status.replace('_', ' ')}
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -796,7 +978,10 @@ export default function TeamDetailPage() {
               <div className="flex items-center justify-between">
                 <CardTitle>Team Projects</CardTitle>
                 {isAdmin && (
-                  <Button size="sm" disabled>
+                  <Button 
+                    size="sm" 
+                    onClick={() => setProjectDialogOpen(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Project
                   </Button>
@@ -804,11 +989,204 @@ export default function TeamDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No projects yet</p>
-                <p className="text-sm text-gray-500">Projects feature coming soon!</p>
-              </div>
+              {projects.length === 0 ? (
+                <div className="text-center py-12">
+                  <FolderGit2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">No projects yet</p>
+                  <p className="text-sm text-gray-500">
+                    {isAdmin 
+                      ? "Create your first project to get started!" 
+                      : "Projects will appear here once created."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {projects.map((project: TeamProject) => (
+                    <div key={project.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{project.title}</h3>
+                            {getProjectStatusBadge(project.status)}
+                          </div>
+                          {project.shortDescription && (
+                            <p className="text-sm text-gray-600 mb-2">{project.shortDescription}</p>
+                          )}
+                          <p className="text-sm text-gray-700">{project.description}</p>
+                        </div>
+                        {isAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEditProjectDialog(project)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Project
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleUpdateProjectStatus(project.id, 'PLANNING')}>
+                                <Clock className="w-4 h-4 mr-2" />
+                                Set to Planning
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateProjectStatus(project.id, 'ACTIVE')}>
+                                <Rocket className="w-4 h-4 mr-2" />
+                                Set to Active
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateProjectStatus(project.id, 'COMPLETED')}>
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Mark as Completed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateProjectStatus(project.id, 'ON_HOLD')}>
+                                <Pause className="w-4 h-4 mr-2" />
+                                Put On Hold
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Project
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+
+                      {/* Project Details */}
+                      <div className="grid grid-cols-2 gap-3 mt-3 mb-3">
+                        {project.category && (
+                          <div className="text-sm">
+                            <span className="text-gray-500">Category:</span>
+                            <span className="ml-2 font-medium">{project.category}</span>
+                          </div>
+                        )}
+                        {project.startDate && (
+                          <div className="text-sm">
+                            <span className="text-gray-500">Start Date:</span>
+                            <span className="ml-2 font-medium">
+                              {new Date(project.startDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        {project.endDate && (
+                          <div className="text-sm">
+                            <span className="text-gray-500">End Date:</span>
+                            <span className="ml-2 font-medium">
+                              {new Date(project.endDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Links */}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {project.repositoryUrl && (
+                          <a 
+                            href={project.repositoryUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <FolderGit2 className="w-4 h-4" />
+                            Repository
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        {project.liveUrl && (
+                          <a 
+                            href={project.liveUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <Rocket className="w-4 h-4" />
+                            Live Demo
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Skills & Tags */}
+                      {(project.requiredSkills?.length || project.tags?.length) && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {project.requiredSkills?.map((skill, idx) => (
+                            <Badge key={`skill-${idx}`} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {project.tags?.map((tag, idx) => (
+                            <Badge key={`tag-${idx}`} variant="outline" className="text-xs">
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Milestones */}
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold flex items-center gap-2">
+                            <Target className="w-4 h-4" />
+                            Milestones
+                          </h4>
+                          {isAdmin && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setMilestoneFormData({ ...milestoneFormData, projectId: project.id });
+                                setMilestoneDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Add
+                            </Button>
+                          )}
+                        </div>
+                        {milestones.filter(m => m.projectId === project.id).length === 0 ? (
+                          <p className="text-xs text-gray-500">No milestones yet</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {milestones
+                              .filter(m => m.projectId === project.id)
+                              .map((milestone: TeamMilestone) => (
+                                <div key={milestone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-medium">{milestone.title}</p>
+                                      {getMilestoneStatusBadge(milestone.status)}
+                                    </div>
+                                    {milestone.description && (
+                                      <p className="text-xs text-gray-600 mt-1">{milestone.description}</p>
+                                    )}
+                                    {milestone.dueDate && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Due: {new Date(milestone.dueDate).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {isAdmin && milestone.status !== 'COMPLETED' && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleUpdateMilestoneStatus(milestone.id, 'COMPLETED')}
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1130,6 +1508,318 @@ export default function TeamDetailPage() {
             </Button>
             <Button onClick={handleAssignRole} disabled={assignRoleMutation.isPending}>
               Assign Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Project Dialog */}
+      <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+            <DialogDescription>
+              Add a new project for your team to work on.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="project-title">Project Title *</Label>
+              <Input
+                id="project-title"
+                value={projectFormData.title}
+                onChange={(e) => setProjectFormData({ ...projectFormData, title: e.target.value })}
+                placeholder="Enter project title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-short-desc">Short Description</Label>
+              <Input
+                id="project-short-desc"
+                value={projectFormData.shortDescription || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, shortDescription: e.target.value })}
+                placeholder="Brief one-liner about the project"
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-desc">Description *</Label>
+              <textarea
+                id="project-desc"
+                className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                value={projectFormData.description}
+                onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
+                placeholder="Detailed description of the project"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="project-category">Category</Label>
+                <Input
+                  id="project-category"
+                  value={projectFormData.category || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, category: e.target.value })}
+                  placeholder="e.g., Web App, Mobile, API"
+                />
+              </div>
+              <div>
+                <Label htmlFor="project-duration">Estimated Duration</Label>
+                <Input
+                  id="project-duration"
+                  value={projectFormData.estimatedDuration || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, estimatedDuration: e.target.value })}
+                  placeholder="e.g., 3 months"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="project-start">Start Date</Label>
+                <Input
+                  id="project-start"
+                  type="date"
+                  value={projectFormData.startDate || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, startDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="project-end">End Date</Label>
+                <Input
+                  id="project-end"
+                  type="date"
+                  value={projectFormData.endDate || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="project-repo">Repository URL</Label>
+              <Input
+                id="project-repo"
+                value={projectFormData.repositoryUrl || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, repositoryUrl: e.target.value })}
+                placeholder="https://github.com/..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-live">Live URL</Label>
+              <Input
+                id="project-live"
+                value={projectFormData.liveUrl || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, liveUrl: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-docs">Documentation URL</Label>
+              <Input
+                id="project-docs"
+                value={projectFormData.documentationUrl || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, documentationUrl: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-skills">Required Skills (comma-separated)</Label>
+              <Input
+                id="project-skills"
+                value={projectFormData.requiredSkills?.join(', ') || ''}
+                onChange={(e) => setProjectFormData({ 
+                  ...projectFormData, 
+                  requiredSkills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                })}
+                placeholder="React, Node.js, PostgreSQL"
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-tags">Tags (comma-separated)</Label>
+              <Input
+                id="project-tags"
+                value={projectFormData.tags?.join(', ') || ''}
+                onChange={(e) => setProjectFormData({ 
+                  ...projectFormData, 
+                  tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                })}
+                placeholder="frontend, backend, ai"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProjectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateProject} 
+              disabled={!projectFormData.title || !projectFormData.description || createProjectMutation.isPending}
+            >
+              Create Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={editProjectDialogOpen} onOpenChange={setEditProjectDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update project information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-project-title">Project Title *</Label>
+              <Input
+                id="edit-project-title"
+                value={projectFormData.title}
+                onChange={(e) => setProjectFormData({ ...projectFormData, title: e.target.value })}
+                placeholder="Enter project title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-project-short-desc">Short Description</Label>
+              <Input
+                id="edit-project-short-desc"
+                value={projectFormData.shortDescription || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, shortDescription: e.target.value })}
+                placeholder="Brief one-liner about the project"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-project-desc">Description *</Label>
+              <textarea
+                id="edit-project-desc"
+                className="w-full min-h-[100px] px-3 py-2 border rounded-md"
+                value={projectFormData.description}
+                onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
+                placeholder="Detailed description of the project"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-project-category">Category</Label>
+                <Input
+                  id="edit-project-category"
+                  value={projectFormData.category || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, category: e.target.value })}
+                  placeholder="e.g., Web App, Mobile, API"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-project-duration">Estimated Duration</Label>
+                <Input
+                  id="edit-project-duration"
+                  value={projectFormData.estimatedDuration || ''}
+                  onChange={(e) => setProjectFormData({ ...projectFormData, estimatedDuration: e.target.value })}
+                  placeholder="e.g., 3 months"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="edit-project-repo">Repository URL</Label>
+              <Input
+                id="edit-project-repo"
+                value={projectFormData.repositoryUrl || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, repositoryUrl: e.target.value })}
+                placeholder="https://github.com/..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-project-live">Live URL</Label>
+              <Input
+                id="edit-project-live"
+                value={projectFormData.liveUrl || ''}
+                onChange={(e) => setProjectFormData({ ...projectFormData, liveUrl: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-project-skills">Required Skills (comma-separated)</Label>
+              <Input
+                id="edit-project-skills"
+                value={projectFormData.requiredSkills?.join(', ') || ''}
+                onChange={(e) => setProjectFormData({ 
+                  ...projectFormData, 
+                  requiredSkills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                })}
+                placeholder="React, Node.js, PostgreSQL"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-project-tags">Tags (comma-separated)</Label>
+              <Input
+                id="edit-project-tags"
+                value={projectFormData.tags?.join(', ') || ''}
+                onChange={(e) => setProjectFormData({ 
+                  ...projectFormData, 
+                  tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
+                })}
+                placeholder="frontend, backend, ai"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditProjectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateProject} 
+              disabled={!projectFormData.title || !projectFormData.description || updateProjectMutation.isPending}
+            >
+              Update Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Milestone Dialog */}
+      <Dialog open={milestoneDialogOpen} onOpenChange={setMilestoneDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Milestone</DialogTitle>
+            <DialogDescription>
+              Add a new milestone to track project progress.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="milestone-title">Milestone Title *</Label>
+              <Input
+                id="milestone-title"
+                value={milestoneFormData.title}
+                onChange={(e) => setMilestoneFormData({ ...milestoneFormData, title: e.target.value })}
+                placeholder="Enter milestone title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="milestone-desc">Description</Label>
+              <textarea
+                id="milestone-desc"
+                className="w-full min-h-[80px] px-3 py-2 border rounded-md"
+                value={milestoneFormData.description || ''}
+                onChange={(e) => setMilestoneFormData({ ...milestoneFormData, description: e.target.value })}
+                placeholder="Describe what needs to be accomplished"
+              />
+            </div>
+            <div>
+              <Label htmlFor="milestone-due">Due Date</Label>
+              <Input
+                id="milestone-due"
+                type="date"
+                value={milestoneFormData.dueDate || ''}
+                onChange={(e) => setMilestoneFormData({ ...milestoneFormData, dueDate: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMilestoneDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateMilestone} 
+              disabled={!milestoneFormData.title || createMilestoneMutation.isPending}
+            >
+              Create Milestone
             </Button>
           </DialogFooter>
         </DialogContent>
