@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,13 +9,12 @@ import * as z from 'zod'
 import {
   User,
   Shield,
-  Bell,
   Trash2,
   Save,
   Eye,
   EyeOff,
   AlertCircle,
-  Settings as SettingsIcon,
+  SettingsIcon,
   Lock,
   Mail,
   GraduationCap,
@@ -25,7 +24,6 @@ import {
 } from 'lucide-react'
 import { authService } from '@/lib/auth'
 import { userService } from '@/lib/auth'
-import { notificationService } from '@/lib/notifications'
 import { useAuth, useRequireAuth } from '@/hooks/useAuth'
 import { useUserUniversities, useAddUniversity, useUpdateUniversity, useDeleteUniversity } from '@/hooks/useUniversities'
 import { CreateUniversityData, UserUniversity } from '@/lib/universities'
@@ -46,7 +44,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { Separator } from '@/components/ui/separator'
 import { 
@@ -198,7 +195,7 @@ function EducationTab() {
         <CardContent className="space-y-4">
           {/* Add/Edit Form */}
           {(isAddingUniversity || editingUniversity) && (
-            <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+            <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">
                   {editingUniversity ? 'Edit University' : 'Add New University'}
@@ -289,7 +286,7 @@ function EducationTab() {
 
           {/* Universities List */}
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading...</div>
           ) : universities && universities.length > 0 ? (
             <div className="space-y-3">
               {universities.map((university) => (
@@ -305,7 +302,7 @@ function EducationTab() {
                       </Badge>
                     </div>
                     {(university.startYear || university.endYear) && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {university.startYear && `${university.startYear}`}
                         {university.startYear && university.endYear && ' - '}
                         {university.endYear && `${university.endYear}`}
@@ -333,8 +330,8 @@ function EducationTab() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
               <p className="mb-2">No universities added yet</p>
               <p className="text-sm">Add your universities to share your educational background</p>
             </div>
@@ -362,12 +359,6 @@ export default function SettingsPage() {
   if (!isAuthenticated) {
     return <LoadingPage />
   }
-
-  // Fetch notification preferences
-  const { data: notificationPrefs } = useQuery({
-    queryKey: ['notification-preferences'],
-    queryFn: () => notificationService.getPreferences()
-  })
 
   // Profile form
   const profileForm = useForm<ProfileFormData>({
@@ -424,19 +415,6 @@ export default function SettingsPage() {
     }
   })
 
-  // Update notification preferences mutation
-  const updateNotificationsMutation = useMutation({
-    mutationFn: (preferences: Record<string, boolean>) => 
-      notificationService.updatePreferences(preferences),
-    onSuccess: () => {
-      toast.success('Notification preferences updated!')
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] })
-    },
-    onError: () => {
-      toast.error('Failed to update notification preferences')
-    }
-  })
-
   // Delete account mutation
   const deleteAccountMutation = useMutation({
     mutationFn: () => userService.deleteAccount(),
@@ -471,14 +449,6 @@ export default function SettingsPage() {
 
   const onPasswordSubmit = (data: PasswordFormData) => {
     changePasswordMutation.mutate(data)
-  }
-
-  const handleNotificationChange = (key: string, value: boolean) => {
-    const currentPrefs = notificationPrefs?.data || {}
-    updateNotificationsMutation.mutate({
-      ...currentPrefs,
-      [key]: value
-    })
   }
 
   if (!user) {
@@ -517,12 +487,11 @@ export default function SettingsPage() {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="education">Education</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -546,17 +515,9 @@ export default function SettingsPage() {
                   </Avatar>
                   <div>
                     <h3 className="text-lg font-medium">Profile Photo</h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      JPG, GIF or PNG. Max size of 5MB.
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      Avatar is managed through your profile settings
                     </p>
-                    <div className="flex space-x-2">
-                      <Button type="button" variant="outline" size="sm">
-                        Upload Photo
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm">
-                        Remove
-                      </Button>
-                    </div>
                   </div>
                 </div>
 
@@ -648,7 +609,7 @@ export default function SettingsPage() {
                     rows={4}
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {profileForm.watch('bio')?.length || 0}/500 characters
                   </p>
                   {profileForm.formState.errors.bio && (
@@ -848,21 +809,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Separator />
 
-              <div>
-                <h3 className="text-lg font-medium mb-4">Account Statistics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-muted dark:bg-muted/50 rounded-lg border border-border">
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">0</div>
-                    <div className="text-sm text-muted-foreground">Projects Created</div>
-                  </div>
-                  <div className="text-center p-4 bg-muted dark:bg-muted/50 rounded-lg border border-border">
-                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</div>
-                    <div className="text-sm text-muted-foreground">Connections</div>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -959,15 +906,15 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center text-red-600">
+              <CardTitle className="flex items-center text-red-600 dark:text-red-400">
                 <AlertCircle className="h-5 w-5 mr-2" />
                 Danger Zone
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border border-red-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-red-800 mb-2">Delete Account</h3>
-                <p className="text-red-600 mb-4">
+              <div className="border border-red-200 dark:border-red-800 rounded-lg p-4 bg-red-50 dark:bg-red-900/10">
+                <h3 className="text-lg font-medium text-red-800 dark:text-red-400 mb-2">Delete Account</h3>
+                <p className="text-red-600 dark:text-red-400 mb-4">
                   Once you delete your account, there is no going back. Please be certain.
                 </p>
                 <AlertDialog>
@@ -1000,41 +947,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Bell className="h-5 w-5 mr-2" />
-                Notification Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {[
-                { key: 'emailNotifications', label: 'Email Notifications', description: 'Receive notifications via email' },
-                { key: 'pushNotifications', label: 'Push Notifications', description: 'Receive browser push notifications' },
-                { key: 'projectUpdates', label: 'Project Updates', description: 'Get notified about project activity' },
-                { key: 'connectionRequests', label: 'Connection Requests', description: 'Get notified when someone wants to connect' },
-                { key: 'teamInvitations', label: 'Team Invitations', description: 'Get notified when invited to teams' },
-                { key: 'messageNotifications', label: 'Messages', description: 'Get notified about new messages' },
-                { key: 'marketingEmails', label: 'Marketing Emails', description: 'Receive updates about new features and tips' },
-              ].map((setting) => (
-                <div key={setting.key} className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium">{setting.label}</Label>
-                    <p className="text-sm text-gray-500">{setting.description}</p>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs?.data?.[setting.key] ?? true}
-                    onCheckedChange={(checked: boolean) => handleNotificationChange(setting.key, checked)}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
 
       </Tabs>
       </div>
