@@ -98,7 +98,7 @@ export default function TeamsPage() {
                     {team.name}
                   </Link>
                 </h3>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <span>{team.memberCount || team.currentMemberCount} members</span>
                   <span>•</span>
                   <span>By {team.owner?.firstName} {team.owner?.lastName}</span>
@@ -118,7 +118,7 @@ export default function TeamsPage() {
             </div>
           </div>
 
-          <p className="text-gray-700 mb-4 line-clamp-3">
+          <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
             {team.description || 'No description available.'}
           </p>
 
@@ -139,7 +139,7 @@ export default function TeamsPage() {
 
           {team.skills && team.skills.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Skills:</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skills:</p>
               <div className="flex flex-wrap gap-1">
                 {team.skills.slice(0, 5).map((skill: string) => (
                   <Badge key={skill} variant="default" className="text-xs">
@@ -156,7 +156,7 @@ export default function TeamsPage() {
           )}
 
           <div className="flex items-center justify-between pt-4 border-t">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
               <span className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
                 <span>{formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}</span>
@@ -220,7 +220,7 @@ export default function TeamsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Teams</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Teams</h1>
           <p className="text-gray-600 mt-2">
             Discover and join amazing teams, or create your own to collaborate on projects.
           </p>
@@ -262,7 +262,7 @@ export default function TeamsPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Popular Tags:</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Popular Tags:</p>
                   <div className="flex flex-wrap gap-2">
                     {popularTags.map((tag) => (
                       <Badge
@@ -296,9 +296,9 @@ export default function TeamsPage() {
           {teamsData?.data?.length === 0 && !teamsLoading && (
             <Card className="p-12 text-center">
               <CardContent>
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No teams found</h3>
-                <p className="text-gray-600 mb-4">
+                <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No teams found</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Try adjusting your search criteria or browse all teams.
                 </p>
                 <Button onClick={() => {
@@ -328,9 +328,9 @@ export default function TeamsPage() {
           {userTeamsData?.data?.length === 0 && !userTeamsLoading && (
             <Card className="p-12 text-center">
               <CardContent>
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">You haven't joined any teams yet</h3>
-                <p className="text-gray-600 mb-4">
+                <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">You haven't joined any teams yet</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Discover teams to collaborate on exciting projects!
                 </p>
                 <Button onClick={() => setSelectedTab('discover')}>
@@ -357,9 +357,9 @@ export default function TeamsPage() {
           {recommendationsData?.data?.length === 0 && !recommendationsLoading && (
             <Card className="p-12 text-center">
               <CardContent>
-                <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No recommendations available</h3>
-                <p className="text-gray-600 mb-4">
+                <Star className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No recommendations available</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Complete your profile and join some teams to get personalized recommendations.
                 </p>
                 <Button onClick={() => setSelectedTab('discover')}>

@@ -346,7 +346,7 @@ export default function SearchPage() {
             {recommendedUsers.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">People You May Know</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">People You May Know</h2>
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/dashboard/connections">View All</Link>
                   </Button>
@@ -363,7 +363,7 @@ export default function SearchPage() {
             {suggestedTeams.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Teams For You</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Teams For You</h2>
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/dashboard/teams">View All</Link>
                   </Button>
@@ -378,7 +378,7 @@ export default function SearchPage() {
 
             {/* Popular Skills */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Trending Skills</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Trending Skills</h2>
               <p className="text-sm text-gray-600 mb-3">Click any skill to search for people and teams</p>
               <div className="flex flex-wrap gap-2">
                 {popularSkills.slice(0, 20).map((skill: string) => (
@@ -396,7 +396,7 @@ export default function SearchPage() {
 
             {/* Quick Actions */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Popular Searches</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Popular Searches</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card 
                   className="cursor-pointer hover:shadow-md transition-shadow"
@@ -459,7 +459,7 @@ export default function SearchPage() {
             {/* Quick Search Tips */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Search Tips</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Search Tips</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Find People</h3>
@@ -522,7 +522,7 @@ export default function SearchPage() {
         <TabsContent value="all" className="space-y-6">
           {users.length > 0 && (
             <div>
-              <h2 className="text-xl font-bold mb-4">People ({totalUsers})</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">People ({totalUsers})</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((user: any) => (
                   <UserCard key={user.id} user={user} />
@@ -533,7 +533,7 @@ export default function SearchPage() {
 
           {teams.length > 0 && (
             <div>
-              <h2 className="text-xl font-bold mb-4">Teams ({totalTeams})</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Teams ({totalTeams})</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {teams.map((team: any) => (
                   <TeamCard key={team.id} team={team} />

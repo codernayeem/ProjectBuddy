@@ -145,7 +145,7 @@ export default function TeamInvitationsPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Team Invitations</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Team Invitations</h1>
             <p className="text-gray-600 mt-2">
               Manage invitations sent to join {team.name}
             </p>

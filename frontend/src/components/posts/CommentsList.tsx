@@ -45,7 +45,7 @@ export function CommentsList({
     <div className="space-y-4">
       {/* Comment form toggle */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">
+        <h3 className="font-semibold text-gray-900 dark:text-white">
           Comments ({total})
         </h3>
         <Button 
@@ -59,7 +59,7 @@ export function CommentsList({
 
       {/* Comment form */}
       {showCommentForm && (
-        <div className="border-t pt-4">
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
           <CommentForm 
             onSubmit={handleAddComment}
             onCancel={() => setShowCommentForm(false)}

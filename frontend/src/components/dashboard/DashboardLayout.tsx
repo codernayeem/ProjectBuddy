@@ -15,26 +15,26 @@ export default function DashboardLayout() {
   
   return (
     <ErrorBoundaryWrapper fullHeight>
-      <div className="h-screen bg-gray-50">
+      <div className="h-screen bg-gray-50 dark:bg-gray-900">
         {/* Mobile Navigation */}
         <MobileNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
         {/* Desktop Layout */}
         <div className="hidden lg:flex h-full">
           {/* Left Sidebar */}
-          <div className="fixed inset-y-0 left-0 w-64  shadow-sm border-r border-gray-200">
+          <div className="fixed inset-y-0 left-0 w-64 shadow-sm border-r border-gray-200 dark:border-gray-700">
             <Sidebar />
           </div>
           
           {/* Main Content */}
           <div className="flex-1 ml-64 mr-80 flex flex-col h-full">
             {/* Top Navigation */}
-            <div className="sticky top-0 z-40  shadow-sm border-b border-gray-200">
+            <div className="sticky top-0 z-40 shadow-sm border-b border-gray-200 dark:border-gray-700">
               <TopNavbar setSidebarOpen={setSidebarOpen} />
             </div>
             
             {/* Page Content */}
-            <main className={isMessagesPage ? 'flex-1 overflow-hidden' : 'py-8 px-6'}>
+            <main className={isMessagesPage ? 'flex-1 overflow-hidden' : 'py-8 px-6 bg-gray-50 dark:bg-gray-900'}>
               {isMessagesPage ? (
                 <ErrorBoundaryWrapper
                   title="Content Error"
@@ -56,7 +56,7 @@ export default function DashboardLayout() {
           </div>
           
           {/* Right Sidebar */}
-          <div className="fixed inset-y-0 right-0 w-80 shadow-sm border-l border-gray-200">
+          <div className="fixed inset-y-0 right-0 w-80 shadow-sm border-l border-gray-200 dark:border-gray-700">
             <RightSidebar />
           </div>
         </div>
@@ -64,12 +64,12 @@ export default function DashboardLayout() {
         {/* Mobile Layout */}
         <div className="lg:hidden flex flex-col h-full">
           {/* Mobile Top Navigation */}
-          <div className="flex-shrink-0 z-40 shadow-sm border-b border-gray-200">
+          <div className="flex-shrink-0 z-40 shadow-sm border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <TopNavbar setSidebarOpen={setSidebarOpen} />
           </div>
           
           {/* Mobile Main Content */}
-          <main className={isMessagesPage ? 'flex-1 overflow-hidden' : 'flex-1 overflow-y-auto py-4 px-4'}>
+          <main className={isMessagesPage ? 'flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900' : 'flex-1 overflow-y-auto py-4 px-4 bg-gray-50 dark:bg-gray-900'}>
             <ErrorBoundaryWrapper
               title="Content Error"
               description="There was an error loading this content. Please try refreshing."

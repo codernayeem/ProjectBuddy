@@ -194,14 +194,14 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="flex h-full bg-gray-50 overflow-hidden">
+    <div className="flex h-full bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {/* Conversations List */}
-      <div className={`w-full md:w-96 bg-white border-r border-gray-200 flex flex-col ${
+      <div className={`w-full md:w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col ${
         selectedConversationId && 'hidden md:flex'
       }`}>
         {/* Header - Fixed */}
-        <div className="p-4 border-b border-gray-200 flex-shrink-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Messages</h1>
           
           {/* Search */}
           <div className="relative">
@@ -218,7 +218,7 @@ export default function MessagesPage() {
 
         {/* Tabs for Messages and All Connections - Scrollable */}
         <Tabs defaultValue="messages" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="w-full justify-start rounded-none border-b flex-shrink-0">
+          <TabsList className="w-full justify-start rounded-none border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <TabsTrigger value="messages" className="flex-1">
               Messages {conversations.length > 0 && `(${conversations.length})`}
             </TabsTrigger>
@@ -260,8 +260,8 @@ export default function MessagesPage() {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`w-full p-4 flex items-start space-x-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
-                    selectedConversationId === conversation.id ? 'bg-blue-50' : ''
+                  className={`w-full p-4 flex items-start space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${
+                    selectedConversationId === conversation.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <Avatar className="h-12 w-12 flex-shrink-0">
@@ -273,11 +273,11 @@ export default function MessagesPage() {
                   
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                         {displayName}
                       </h3>
                       {lastMessage && (
-                        <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
                           {formatRelativeTime(lastMessage.createdAt)}
                         </span>
                       )}
@@ -285,7 +285,7 @@ export default function MessagesPage() {
                     
                     {lastMessage && (
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 truncate flex-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate flex-1">
                           {lastMessage.senderId === user?.id && 'You: '}
                           {lastMessage.content}
                         </p>
@@ -328,7 +328,7 @@ export default function MessagesPage() {
                     key={connection.id}
                     onClick={() => startConversationMutation.mutate(connectionUser?.id)}
                     disabled={startConversationMutation.isPending || !connectionUser}
-                    className="w-full p-4 flex items-center space-x-3 hover:bg-gray-50 transition-colors border-b border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-4 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Avatar className="h-12 w-12 flex-shrink-0">
                       <AvatarImage src={connectionUser?.avatar || ''} alt={fullName} />
@@ -336,15 +336,15 @@ export default function MessagesPage() {
                     </Avatar>
                     
                     <div className="flex-1 min-w-0 text-left">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                         {fullName}
                       </h3>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         @{connectionUser?.username}
                       </p>
                     </div>
 
-                    <MessageSquare className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <MessageSquare className="h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                   </button>
                 )
               })
@@ -355,9 +355,9 @@ export default function MessagesPage() {
 
       {/* Chat Area */}
       {selectedConversationId ? (
-        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+        <div className="flex-1 flex flex-col bg-white dark:bg-gray-800 overflow-hidden">
           {/* Chat Header - Fixed */}
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
@@ -381,10 +381,10 @@ export default function MessagesPage() {
                         <AvatarFallback><Users className="w-5 h-5" /></AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 dark:text-white">
                           {teamName}
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {selectedConversation.participants?.length || 0} members
                         </p>
                       </div>
@@ -404,11 +404,11 @@ export default function MessagesPage() {
                     <div>
                       <Link
                         to={`/dashboard/profile/${otherUser?.id}`}
-                        className="font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                        className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                       >
                         {fullName}
                       </Link>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {otherUser?.isActive ? 'Active' : 'Offline'}
                       </p>
                     </div>
@@ -479,18 +479,18 @@ export default function MessagesPage() {
                       <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                         <div className={`rounded-2xl px-4 py-2 ${
                           isOwnMessage
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-900'
+                            ? 'bg-gray-800 dark:bg-gray-700 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                         }`}>
                           <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                         </div>
                         
                         <div className="flex items-center space-x-1 mt-1">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {formatRelativeTime(message.createdAt)}
                           </span>
                           {isOwnMessage && (
-                            <span className="text-gray-500">
+                            <span className="text-gray-500 dark:text-gray-400">
                               {message.readBy?.length > 1 ? (
                                 <CheckCheck className="h-3 w-3" />
                               ) : (
@@ -509,7 +509,7 @@ export default function MessagesPage() {
           </div>
 
           {/* Message Input - Fixed */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 flex-shrink-0">
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-end space-x-2">
               <Textarea
                 value={messageText}
@@ -566,16 +566,16 @@ export default function MessagesPage() {
                 )}
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Press Enter to send, Shift+Enter for new line
             </p>
           </form>
         </div>
       ) : (
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-gray-50 p-8 text-center">
-          <MessageSquare className="h-16 w-16 text-gray-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a conversation</h2>
-          <p className="text-gray-500 max-w-md">
+        <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-8 text-center">
+          <MessageSquare className="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Select a conversation</h2>
+          <p className="text-gray-500 dark:text-gray-400 max-w-md">
             Choose a conversation from the list to start messaging, or visit a user's profile to send them a message
           </p>
         </div>

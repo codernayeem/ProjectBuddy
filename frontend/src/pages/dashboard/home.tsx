@@ -3,18 +3,18 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { 
-  Users, Calendar
-} from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useFeed, useReactToPost } from '@/hooks/usePosts';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
 import { ReactionType } from '@/types/types';
 import { PostCard } from '@/components/posts/PostCard';
 import { PostCreator } from '@/components/posts/PostCreator';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardHomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: feedData, isLoading: feedLoading, error: feedError } = useFeed(1, 10);
   const { data: userTeamsData } = useTeams(1, 10);
   const reactToPostMutation = useReactToPost();
@@ -53,7 +53,7 @@ export default function DashboardHomePage() {
 
   if (feedLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -61,10 +61,10 @@ export default function DashboardHomePage() {
 
   if (feedError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Card className="p-6 max-w-md">
           <CardContent>
-            <p className="text-red-600 text-center">Failed to load feed. Please try again.</p>
+            <p className="text-red-600 dark:text-red-400 text-center">Failed to load feed. Please try again.</p>
             <Button 
               className="w-full mt-4" 
               onClick={() => window.location.reload()}
@@ -92,13 +92,13 @@ export default function DashboardHomePage() {
               </p>
             </div>
             <div className="hidden md:flex space-x-2">
-              <Button variant="secondary" size="sm">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => navigate('/dashboard/connections')}
+              >
                 <Users className="h-4 w-4 mr-2" />
                 View Requests
-              </Button>
-              <Button variant="outline" size="sm" className="border-gray-300 hover:bg-white hover:text-primary-600">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
               </Button>
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function DashboardHomePage() {
             {!feedData?.data || feedData.data.length === 0 ? (
               <Card className="p-6 text-center">
                 <CardContent>
-                  <p className="text-gray-600">No posts in your feed yet. Start following teams and users to see their updates!</p>
+                  <p className="text-gray-600 dark:text-gray-400">No posts in your feed yet. Start following teams and users to see their updates!</p>
                 </CardContent>
               </Card>
             ) : (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, Search, Bell, MessageSquare, Home, Plus, ChevronDown } from 'lucide-react';
+import { Menu, Search, Bell, MessageSquare, Home, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -108,29 +108,6 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
           >
             <Search className="h-4 w-4" />
           </Button>
-
-          {/* Create button - Hidden on small screens */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10 hidden sm:flex">
-                <Plus className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Post
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Plus className="mr-2 h-4 w-4" />
-                Start Team
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Plus className="mr-2 h-4 w-4" />
-                New Project
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {/* Messages */}
           <Link to="/dashboard/messages">

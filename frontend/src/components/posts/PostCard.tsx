@@ -155,17 +155,17 @@ export function PostCard({
             <div className="flex items-center justify-between mb-2">
               <div>
                 <Link to={`/dashboard/profile/${post.author?.id}`}>
-                  <h3 className="font-semibold hover:text-blue-600 cursor-pointer transition-colors">
+                  <h3 className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">
                     {post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Unknown User'}
                   </h3>
                 </Link>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <span>@{post.author?.username || 'unknown'}</span>
                   {post.team && (
                     <>
                       <span>•</span>
                       <span>posted in</span>
-                      <Link to={`/dashboard/teams/${post.team.id}`} className="flex items-center space-x-1 hover:text-blue-600 font-medium">
+                      <Link to={`/dashboard/teams/${post.team.id}`} className="flex items-center space-x-1 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                         <Users className="w-3 h-3" />
                         <span>{post.team.name}</span>
                       </Link>
@@ -186,7 +186,7 @@ export function PostCard({
               </div>
             </div>
             
-            <p className="text-gray-800 mb-3 whitespace-pre-wrap">{post.content}</p>
+            <p className="text-gray-800 dark:text-gray-200 mb-3 whitespace-pre-wrap">{post.content}</p>
             
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
@@ -198,7 +198,7 @@ export function PostCard({
               </div>
             )}
             
-            <div className="flex items-center justify-between pt-3 border-t">
+            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-6">
                 <Button 
                   variant="ghost" 
@@ -255,7 +255,7 @@ export function PostCard({
       
       {/* Comments Section */}
       {showCommentsSection && (
-        <div className="border-t px-6 pb-6">
+        <div className="border-t border-gray-200 dark:border-gray-700 px-6 pb-6">
           <CommentsList
             postId={post.id}
             comments={comments}

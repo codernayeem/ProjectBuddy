@@ -145,7 +145,7 @@ export default function CreateTeamPage() {
           </Link>
         </Button>
 
-        <h1 className="text-3xl font-bold text-gray-900">Create a New Team</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create a New Team</h1>
         <p className="text-gray-600 mt-2">
           Start a team to collaborate with others on exciting projects.
         </p>

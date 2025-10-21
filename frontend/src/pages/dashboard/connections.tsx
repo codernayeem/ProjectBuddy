@@ -164,13 +164,13 @@ export default function ConnectionsPage() {
             </Link>
             <div className="flex-1 min-w-0">
               <Link to={`/dashboard/profile/${userData.id}`}>
-                <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors truncate">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors truncate">
                   {userData.firstName} {userData.lastName}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-500">@{userData.username}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">@{userData.username}</p>
               {userData.bio && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{userData.bio}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{userData.bio}</p>
               )}
               {userData.skills && userData.skills.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
@@ -180,7 +180,7 @@ export default function ConnectionsPage() {
                     </Badge>
                   ))}
                   {userData.skills.length > 3 && (
-                    <span className="text-xs text-gray-500">+{userData.skills.length - 3} more</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">+{userData.skills.length - 3} more</span>
                   )}
                 </div>
               )}
@@ -198,8 +198,8 @@ export default function ConnectionsPage() {
     <div className="container mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Connections</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Connections</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
           Build your professional network and collaborate with others
         </p>
       </div>
@@ -213,10 +213,10 @@ export default function ConnectionsPage() {
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                   {stats?.data?.totalConnections || 0}
                 </p>
-                <p className="text-sm text-gray-600">Total Connections</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Connections</p>
               </div>
             </div>
           </CardContent>
@@ -228,10 +228,10 @@ export default function ConnectionsPage() {
                 <Clock className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                   {stats?.data?.pendingRequests || 0}
                 </p>
-                <p className="text-sm text-gray-600">Pending Requests</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Pending Requests</p>
               </div>
             </div>
           </CardContent>
@@ -243,10 +243,10 @@ export default function ConnectionsPage() {
                 <Mail className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                   {stats?.data?.sentRequests || 0}
                 </p>
-                <p className="text-sm text-gray-600">Sent Requests</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Sent Requests</p>
               </div>
             </div>
           </CardContent>
@@ -291,9 +291,9 @@ export default function ConnectionsPage() {
           ) : !connections?.data?.length ? (
             <Card>
               <CardContent className="p-12 text-center">
-                <Users className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No connections yet</h3>
-                <p className="text-gray-600 mb-6">
+                <Users className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No connections yet</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
                   Start building your professional network by connecting with other users.
                 </p>
               </CardContent>
@@ -307,8 +307,8 @@ export default function ConnectionsPage() {
                   userData={otherUser}
                   action={
                     <>
-                      <span className="text-xs text-gray-500 mr-3">
-                        {formatRelativeTime(connection.updatedAt)}
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mr-3">
+                        {formatRelativeTime(connection.createdAt)}
                       </span>
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/dashboard/profile/${otherUser.id}`}>
@@ -357,9 +357,9 @@ export default function ConnectionsPage() {
           ) : !pendingRequests?.data?.length ? (
             <Card>
               <CardContent className="p-12 text-center">
-                <Clock className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No pending requests</h3>
-                <p className="text-gray-600">
+                <Clock className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No pending requests</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any pending connection requests at the moment.
                 </p>
               </CardContent>
@@ -372,7 +372,7 @@ export default function ConnectionsPage() {
                 action={
                   <>
                     <div className="text-right mr-3">
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {formatRelativeTime(request.createdAt)}
                       </p>
                     </div>
@@ -429,7 +429,7 @@ export default function ConnectionsPage() {
           {/* Search Results */}
           {searchResults.length > 0 ? (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Search Results ({searchResults.length})
               </h3>
               {searchResults.map((foundUser) => (
@@ -461,9 +461,9 @@ export default function ConnectionsPage() {
           ) : searchQuery && !isSearching ? (
             <Card>
               <CardContent className="p-12 text-center">
-                <Search className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-                <p className="text-gray-600">
+                <Search className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No users found</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   Try adjusting your search terms or browse recommended users below.
                 </p>
               </CardContent>
@@ -473,7 +473,7 @@ export default function ConnectionsPage() {
           {/* Recommended Users */}
           {recommendations?.data?.users && recommendations.data.users.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Suggested Connections
               </h3>
               {recommendations.data.users.map((recommendedUser: any) => (

@@ -121,10 +121,10 @@ export default function RightSidebar() {
                   trendingHashtags.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
                       <div className="flex-1">
-                        <div className="font-medium text-sm text-blue-600 dark:text-blue-400">{item.hashtag}</div>
-                        <div className="text-xs text-gray-500">{item.count} posts</div>
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-200">{item.hashtag}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{item.count} posts</div>
                       </div>
-                      <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-900/20">
+                      <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
                         {item.growth}
                       </Badge>
                     </div>
@@ -149,7 +149,7 @@ export default function RightSidebar() {
                     <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                   </div>
                 ) : suggestedConnections.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                     No recommendations available at the moment.
                   </p>
                 ) : (
@@ -161,7 +161,7 @@ export default function RightSidebar() {
                       <div key={person.id} className="space-y-3">
                         <div className="flex items-start space-x-3">
                           <Link to={`/dashboard/profile/${person.id}`}>
-                            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+                            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-500 dark:hover:ring-blue-400 transition-all">
                               <AvatarImage src={person.avatar || ''} alt={fullName} />
                               <AvatarFallback>{initials}</AvatarFallback>
                             </Avatar>
@@ -169,12 +169,12 @@ export default function RightSidebar() {
                           <div className="flex-1 min-w-0">
                             <Link 
                               to={`/dashboard/profile/${person.id}`}
-                              className="text-sm font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 transition-colors block"
+                              className="text-sm font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors block"
                             >
                               {fullName}
                             </Link>
                             {person.position && (
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                 {person.position}{person.company ? ` at ${person.company}` : ''}
                               </p>
                             )}
@@ -230,7 +230,7 @@ export default function RightSidebar() {
                     <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                   </div>
                 ) : recentNotifications.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                     No recent notifications
                   </p>
                 ) : (
@@ -244,10 +244,10 @@ export default function RightSidebar() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm">
-                          <span className="font-medium">{notification.title}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">{notification.title}</span>
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{notification.message}</p>
-                        <p className="text-xs text-gray-500">{getTimeAgo(notification.createdAt)}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{getTimeAgo(notification.createdAt)}</p>
                       </div>
                     </div>
                   ))

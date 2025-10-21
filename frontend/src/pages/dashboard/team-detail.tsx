@@ -439,10 +439,10 @@ export default function TeamDetailPage() {
 
   const getVisibilityColor = (visibility: string) => {
     switch (visibility) {
-      case 'PUBLIC': return 'text-green-600 bg-green-50 border-green-200';
-      case 'PRIVATE': return 'text-red-600 bg-red-50 border-red-200';
-      case 'INVITE_ONLY': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'PUBLIC': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+      case 'PRIVATE': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+      case 'INVITE_ONLY': return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -468,10 +468,10 @@ export default function TeamDetailPage() {
 
   const getMilestoneStatusBadge = (status: string) => {
     const styles = {
-      PENDING: { icon: Clock, color: 'bg-gray-100 text-gray-800 border-gray-200' },
-      IN_PROGRESS: { icon: Target, color: 'bg-blue-100 text-blue-800 border-blue-200' },
-      COMPLETED: { icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200' },
-      CANCELLED: { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200' },
+      PENDING: { icon: Clock, color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-600' },
+      IN_PROGRESS: { icon: Target, color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+      COMPLETED: { icon: CheckCircle2, color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800' },
+      CANCELLED: { icon: XCircle, color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800' },
     };
     
     const config = styles[status as keyof typeof styles] || styles.PENDING;
@@ -498,8 +498,8 @@ export default function TeamDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="p-12 text-center">
           <CardContent>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Team not found</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Team not found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               The team you're looking for doesn't exist or you don't have access to it.
             </p>
             <Button asChild>
@@ -537,18 +537,18 @@ export default function TeamDetailPage() {
               <AvatarFallback className="text-2xl">{team.name[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
-              <p className="text-gray-600 mt-1">{team.shortDescription || team.description}</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{team.name}</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">{team.shortDescription || team.description}</p>
               <div className="flex items-center space-x-4 mt-3">
                 <Badge variant="outline" className={`flex items-center space-x-1 ${getVisibilityColor(team.visibility)}`}>
                   {getVisibilityIcon(team.visibility)}
                   <span className="capitalize">{team.visibility.toLowerCase()}</span>
                 </Badge>
-                <span className="text-sm text-gray-600 flex items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
                   <Users className="w-4 h-4 mr-1" />
                   {team.members?.length || 0} members
                 </span>
-                <span className="text-sm text-gray-600 flex items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
                   Created {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
                 </span>
@@ -657,13 +657,13 @@ export default function TeamDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                <p className="text-gray-700">{team.description}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h3>
+                <p className="text-gray-700 dark:text-gray-300">{team.description}</p>
               </div>
 
               {team.tags && team.tags.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Tags</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {team.tags.map((tag: string) => (
                       <Badge key={tag} variant="secondary">
@@ -676,7 +676,7 @@ export default function TeamDetailPage() {
 
               {team.skills && team.skills.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Skills</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {team.skills.map((skill: string) => (
                       <Badge key={skill} variant="default">
@@ -689,8 +689,8 @@ export default function TeamDetailPage() {
 
               {(team.country || team.city) && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
-                  <p className="text-gray-700 flex items-center">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Location</h3>
+                  <p className="text-gray-700 dark:text-gray-300 flex items-center">
                     <MapPin className="w-4 h-4 mr-2" />
                     {[team.city, team.country].filter(Boolean).join(', ')}
                   </p>
@@ -699,7 +699,7 @@ export default function TeamDetailPage() {
 
               {team.website && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Website</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Website</h3>
                   <a 
                     href={team.website} 
                     target="_blank" 
@@ -713,7 +713,7 @@ export default function TeamDetailPage() {
               )}
 
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Owner</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Owner</h3>
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={team.owner?.avatar || undefined} />
@@ -725,7 +725,7 @@ export default function TeamDetailPage() {
                     <p className="font-medium">
                       {team.owner?.firstName} {team.owner?.lastName}
                     </p>
-                    <p className="text-sm text-gray-600">@{team.owner?.username}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">@{team.owner?.username}</p>
                   </div>
                 </div>
               </div>
@@ -753,15 +753,15 @@ export default function TeamDetailPage() {
 
                 return (
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                       <Target className="w-4 h-4" />
                       Team Universities
                     </h3>
                     <div className="space-y-2">
                       {sortedUniversities.map(([name, data]) => (
-                        <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={name} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                           <div className="flex items-center gap-2">
-                            <Target className="w-4 h-4 text-blue-600" />
+                            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="font-medium">{name}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -771,7 +771,7 @@ export default function TeamDetailPage() {
                             {data.status.has('GRADUATED') && (
                               <Badge variant="secondary" className="text-xs">Graduated</Badge>
                             )}
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
                               {data.count} member{data.count > 1 ? 's' : ''}
                             </span>
                           </div>
@@ -810,7 +810,7 @@ export default function TeamDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-600">No posts yet. Be the first to share something!</p>
+                  <p className="text-gray-600 dark:text-gray-400">No posts yet. Be the first to share something!</p>
                 </div>
               )}
             </CardContent>
@@ -838,7 +838,7 @@ export default function TeamDetailPage() {
                     const memberIsAdmin = member.isAdmin || memberIsOwner;
                     
                     return (
-                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={member.user?.avatar || undefined} />
@@ -865,7 +865,7 @@ export default function TeamDetailPage() {
                               )}
                             </div>
                             <div className="flex items-center space-x-2 mt-1">
-                              <p className="text-sm text-gray-600">@{member.user?.username}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">@{member.user?.username}</p>
                               {member.customRoles && member.customRoles.length > 0 && (
                                 <div className="flex gap-1">
                                   {member.customRoles.map((cr: any) => (
@@ -884,7 +884,7 @@ export default function TeamDetailPage() {
                               )}
                             </div>
                             {member.user?.bio && (
-                              <p className="text-sm text-gray-500 mt-1">{member.user.bio}</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{member.user.bio}</p>
                             )}
                           </div>
                         </div>
@@ -920,7 +920,7 @@ export default function TeamDetailPage() {
                     );
                   })
                 ) : (
-                  <p className="text-gray-600 text-center py-8">No members yet</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-center py-8">No members yet</p>
                 )}
               </div>
             </CardContent>
@@ -942,41 +942,41 @@ export default function TeamDetailPage() {
               <CardContent>
                 <div className="space-y-3">
                   {/* Default Roles */}
-                  <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <Crown className="w-5 h-5 text-yellow-600" />
+                          <Crown className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                           <h4 className="font-semibold">Owner</h4>
                           <Badge variant="secondary">Default</Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Full control over the team</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Full control over the team</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <Shield className="w-5 h-5 text-blue-600" />
+                          <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                           <h4 className="font-semibold">Admin</h4>
                           <Badge variant="secondary">Default</Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Can manage members and settings</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Can manage members and settings</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <Users className="w-5 h-5 text-green-600" />
+                          <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
                           <h4 className="font-semibold">Member</h4>
                           <Badge variant="secondary">Default</Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Regular team member</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Regular team member</p>
                       </div>
                     </div>
                   </div>
@@ -996,9 +996,9 @@ export default function TeamDetailPage() {
                               <Badge variant="outline">Custom</Badge>
                             </div>
                             {role.description && (
-                              <p className="text-sm text-gray-600 mt-1">{role.description}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{role.description}</p>
                             )}
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {role.members?.length || 0} member{role.members?.length !== 1 ? 's' : ''}
                             </p>
                           </div>
@@ -1014,7 +1014,7 @@ export default function TeamDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p>No custom roles yet. Create one to get started!</p>
                     </div>
                   )}
@@ -1043,9 +1043,9 @@ export default function TeamDetailPage() {
             <CardContent>
               {projects.length === 0 ? (
                 <div className="text-center py-12">
-                  <FolderGit2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">No projects yet</p>
-                  <p className="text-sm text-gray-500">
+                  <FolderGit2 className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">No projects yet</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {isAdmin 
                       ? "Create your first project to get started!" 
                       : "Projects will appear here once created."}
@@ -1062,9 +1062,9 @@ export default function TeamDetailPage() {
                             {getProjectStatusBadge(project.status)}
                           </div>
                           {project.shortDescription && (
-                            <p className="text-sm text-gray-600 mb-2">{project.shortDescription}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{project.shortDescription}</p>
                           )}
-                          <p className="text-sm text-gray-700">{project.description}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{project.description}</p>
                         </div>
                         {isAdmin && (
                           <DropdownMenu>
@@ -1112,13 +1112,13 @@ export default function TeamDetailPage() {
                       <div className="grid grid-cols-2 gap-3 mt-3 mb-3">
                         {project.category && (
                           <div className="text-sm">
-                            <span className="text-gray-500">Category:</span>
+                            <span className="text-gray-500 dark:text-gray-400">Category:</span>
                             <span className="ml-2 font-medium">{project.category}</span>
                           </div>
                         )}
                         {project.startDate && (
                           <div className="text-sm">
-                            <span className="text-gray-500">Start Date:</span>
+                            <span className="text-gray-500 dark:text-gray-400">Start Date:</span>
                             <span className="ml-2 font-medium">
                               {new Date(project.startDate).toLocaleDateString()}
                             </span>
@@ -1126,7 +1126,7 @@ export default function TeamDetailPage() {
                         )}
                         {project.endDate && (
                           <div className="text-sm">
-                            <span className="text-gray-500">End Date:</span>
+                            <span className="text-gray-500 dark:text-gray-400">End Date:</span>
                             <span className="ml-2 font-medium">
                               {new Date(project.endDate).toLocaleDateString()}
                             </span>
@@ -1200,23 +1200,23 @@ export default function TeamDetailPage() {
                           )}
                         </div>
                         {milestones.filter(m => m.projectId === project.id).length === 0 ? (
-                          <p className="text-xs text-gray-500">No milestones yet</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">No milestones yet</p>
                         ) : (
                           <div className="space-y-2">
                             {milestones
                               .filter(m => m.projectId === project.id)
                               .map((milestone: TeamMilestone) => (
-                                <div key={milestone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <div key={milestone.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                       <p className="text-sm font-medium">{milestone.title}</p>
                                       {getMilestoneStatusBadge(milestone.status)}
                                     </div>
                                     {milestone.description && (
-                                      <p className="text-xs text-gray-600 mt-1">{milestone.description}</p>
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{milestone.description}</p>
                                     )}
                                     {milestone.dueDate && (
-                                      <p className="text-xs text-gray-500 mt-1">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         Due: {new Date(milestone.dueDate).toLocaleDateString()}
                                       </p>
                                     )}
@@ -1254,12 +1254,12 @@ export default function TeamDetailPage() {
                   <Calendar className="w-5 h-5 text-blue-500 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Team created</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <p className="text-sm">More activity will appear here as the team grows</p>
                 </div>
               </div>
@@ -1435,7 +1435,7 @@ export default function TeamDetailPage() {
                   onChange={(e) => setNewRoleColor(e.target.value)}
                   className="h-10 w-20 rounded cursor-pointer"
                 />
-                <span className="text-sm text-gray-600">{newRoleColor}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{newRoleColor}</span>
               </div>
             </div>
           </div>
@@ -1544,7 +1544,7 @@ export default function TeamDetailPage() {
                 ) || [];
                 return memberRoleIds.includes(role.id);
               }) && rolesData?.data?.length > 0 && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   This member already has all available roles.
                 </p>
               )}

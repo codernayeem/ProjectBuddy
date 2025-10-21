@@ -89,19 +89,19 @@ export function CommentItem({
         </Link>
         
         <div className="flex-1">
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2">
                 <Link to={`/dashboard/profile/${comment.author?.id}`}>
-                  <span className="font-semibold text-sm hover:text-blue-600 cursor-pointer transition-colors">
+                  <span className="font-semibold text-sm text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">
                     {comment.author.firstName} {comment.author.lastName}
                   </span>
                 </Link>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </span>
                 {comment.isEdited && (
-                  <span className="text-xs text-gray-400">(edited)</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">(edited)</span>
                 )}
               </div>
               {isOwner && (
@@ -135,7 +135,7 @@ export function CommentItem({
                 submitLabel="Save"
               />
             ) : (
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                 {comment.content}
               </p>
             )}

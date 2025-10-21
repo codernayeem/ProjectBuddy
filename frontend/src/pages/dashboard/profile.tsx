@@ -272,12 +272,12 @@ export default function ProfilePage() {
               {/* Name and Basic Info */}
               <div className="flex-1 space-y-2">
                 <div className="flex items-center space-x-2">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     {profileData.firstName} {profileData.lastName}
                   </h1>
                 </div>
-                <p className="text-lg text-gray-600">@{profileData.username}</p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <p className="text-lg text-gray-600 dark:text-gray-400">@{profileData.username}</p>
+                <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                   <span className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
                     Joined {formatDateShort(profileData.createdAt)}
@@ -392,7 +392,7 @@ export default function ProfilePage() {
             {/* Bio */}
             {profileData.bio && (
               <div className="mt-6">
-                <p className="text-gray-700 max-w-4xl">{profileData.bio}</p>
+                <p className="text-gray-700 dark:text-gray-300 max-w-4xl">{profileData.bio}</p>
               </div>
             )}
 
@@ -400,7 +400,7 @@ export default function ProfilePage() {
             <div className="mt-6 space-y-4">
               {profileData.skills && profileData.skills.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Skills</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {profileData.skills.map((skill: string) => (
                       <UIBadge key={skill} variant="outline">
@@ -412,7 +412,7 @@ export default function ProfilePage() {
               )}
               {profileData.interests && profileData.interests.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Interests</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-2">
                     {profileData.interests.map((interest: string) => (
                       <UIBadge key={interest} variant="secondary">
@@ -431,10 +431,10 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-700">
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
               {isOwnProfile ? (connectionStats?.data?.totalConnections || 0) : '—'}
             </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
               Connections
             </div>
@@ -442,10 +442,10 @@ export default function ProfilePage() {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-700">
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
               {isOwnProfile ? (userTeams?.pagination?.total || 0) : '—'}
             </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
               Teams
             </div>
@@ -453,10 +453,10 @@ export default function ProfilePage() {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-700">
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
               {isOwnProfile ? (userProjects?.pagination?.total || 0) : '—'}
             </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <FolderOpen className="h-4 w-4 mr-1" />
               Projects
             </div>
@@ -464,10 +464,10 @@ export default function ProfilePage() {
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-700">
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
               {(profileData as any)?.universities?.length || 0}
             </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center mt-1">
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <GraduationCap className="h-4 w-4 mr-1" />
               Universities
             </div>
@@ -498,19 +498,19 @@ export default function ProfilePage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">User Type</label>
-                    <p className="text-gray-900 mt-1">{formatEnumValue(profileData.userType)}</p>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">User Type</label>
+                    <p className="text-gray-900 dark:text-white mt-1">{formatEnumValue(profileData.userType)}</p>
                   </div>
                   {profileData.company && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Company</label>
-                      <p className="text-gray-900 mt-1">{profileData.company}</p>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
+                      <p className="text-gray-900 dark:text-white mt-1">{profileData.company}</p>
                     </div>
                   )}
                   {profileData.position && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Position</label>
-                      <p className="text-gray-900 mt-1">{profileData.position}</p>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                      <p className="text-gray-900 dark:text-white mt-1">{profileData.position}</p>
                     </div>
                   )}
                 </div>
@@ -531,10 +531,10 @@ export default function ProfilePage() {
                     href={profileData.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <Globe className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-sm">Website</span>
+                    <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                    <span className="text-sm text-gray-900 dark:text-white">Website</span>
                   </a>
                 )}
                 {profileData.github && (
@@ -542,10 +542,10 @@ export default function ProfilePage() {
                     href={profileData.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <Github className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-sm">GitHub</span>
+                    <Github className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                    <span className="text-sm text-gray-900 dark:text-white">GitHub</span>
                   </a>
                 )}
                 {profileData.linkedin && (
@@ -553,10 +553,10 @@ export default function ProfilePage() {
                     href={profileData.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <Linkedin className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-sm">LinkedIn</span>
+                    <Linkedin className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                    <span className="text-sm text-gray-900 dark:text-white">LinkedIn</span>
                   </a>
                 )}
                 {profileData.portfolio && (
@@ -564,10 +564,10 @@ export default function ProfilePage() {
                     href={profileData.portfolio}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <Award className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-sm">Portfolio</span>
+                    <Award className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                    <span className="text-sm text-gray-900 dark:text-white">Portfolio</span>
                   </a>
                 )}
               </CardContent>
@@ -608,11 +608,11 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <FileText className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <FileText className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     {isOwnProfile ? 'No posts yet' : 'No posts to show'}
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     {isOwnProfile 
                       ? 'Share your first post to get started.' 
                       : `${profileData?.firstName} hasn't shared any posts yet.`
@@ -705,9 +705,9 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <FolderOpen className="mx-auto h-24 w-24 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-                    <p className="text-gray-600 mb-6">Create your first project to get started.</p>
+                    <FolderOpen className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No projects yet</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first project to get started.</p>
                     <Button asChild>
                       <Link to="/dashboard/projects/new">
                         <Target className="h-4 w-4 mr-2" />
@@ -731,26 +731,26 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-3">Bio</h3>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Bio</h3>
                 {profileData.bio ? (
-                  <p className="text-gray-700 whitespace-pre-wrap">{profileData.bio}</p>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{profileData.bio}</p>
                 ) : (
-                  <p className="text-gray-500 italic">No bio added yet.</p>
+                  <p className="text-gray-500 dark:text-gray-400 italic">No bio added yet.</p>
                 )}
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-3">Account Information</h3>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Account Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Account Status</label>
-                    <p className="text-gray-900 mt-1">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Status</label>
+                    <p className="text-gray-900 dark:text-white mt-1">
                       {profileData.isActive ? '✅ Active' : '❌ Inactive'}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Member Since</label>
-                    <p className="text-gray-900 mt-1">{formatDateShort(profileData.createdAt)}</p>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Member Since</label>
+                    <p className="text-gray-900 dark:text-white mt-1">{formatDateShort(profileData.createdAt)}</p>
                   </div>
                 </div>
               </div>
@@ -764,16 +764,16 @@ export default function ProfilePage() {
                   </h3>
                   <div className="space-y-3">
                     {(profileData as any).universities.map((university: any) => (
-                      <div key={university.id} className="flex items-start justify-between p-3 border rounded-lg bg-gray-50">
+                      <div key={university.id} className="flex items-start justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold">{university.universityName}</h4>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">{university.universityName}</h4>
                             <UIBadge variant={university.status === 'CURRENT' ? 'default' : 'secondary'}>
                               {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
                             </UIBadge>
                           </div>
                           {(university.startYear || university.endYear) && (
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               {university.startYear && `${university.startYear}`}
                               {university.startYear && university.endYear && ' - '}
                               {university.endYear && `${university.endYear}`}
@@ -853,20 +853,20 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     {profileData.company && (
                       <div className="flex items-center space-x-3">
-                        <Building className="h-5 w-5 text-gray-400" />
+                        <Building className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Company</label>
-                          <p className="text-gray-900">{profileData.company}</p>
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
+                          <p className="text-gray-900 dark:text-white">{profileData.company}</p>
                         </div>
                       </div>
                     )}
 
                     {profileData.position && (
                       <div className="flex items-center space-x-3">
-                        <Award className="h-5 w-5 text-gray-400" />
+                        <Award className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Position</label>
-                          <p className="text-gray-900">{profileData.position}</p>
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                          <p className="text-gray-900 dark:text-white">{profileData.position}</p>
                         </div>
                       </div>
                     )}
