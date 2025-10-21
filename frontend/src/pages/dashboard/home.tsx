@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Users } from 'lucide-react';
-import { useFeed, useReactToPost } from '@/hooks/usePosts';
+import { useFeed, useReactToPost, useDeletePost } from '@/hooks/usePosts';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
 import { ReactionType } from '@/types/types';
@@ -18,6 +18,7 @@ export default function DashboardHomePage() {
   const { data: feedData, isLoading: feedLoading, error: feedError } = useFeed(1, 10);
   const { data: userTeamsData } = useTeams(1, 10);
   const reactToPostMutation = useReactToPost();
+  const deletePostMutation = useDeletePost();
 
   // Calculate stats from real data
   const stats = {
@@ -125,6 +126,7 @@ export default function DashboardHomePage() {
                   key={post.id} 
                   post={post} 
                   onReact={handleReaction}
+                  onDelete={(postId) => deletePostMutation.mutate(postId)}
                 />
               ))
             )}

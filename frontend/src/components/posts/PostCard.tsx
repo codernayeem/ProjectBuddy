@@ -14,11 +14,36 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Post, ReactionType } from '@/types/types';
 import { getInitials } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { useReactToPost, useRemoveReaction } from '@/hooks/usePosts';
+import { useReactToPost, useRemoveReaction, useUpdatePost } from '@/hooks/usePosts';
 import { 
   useComments, 
   useAddComment,
@@ -50,6 +75,12 @@ export function PostCard({
   const { user: currentUser } = useAuthStore();
   const [showCommentsSection, setShowCommentsSection] = useState(false);
   const [commentsPage, setCommentsPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editContent, setEditContent] = useState(post.content || '');
+
+  // Post mutations
+  const updatePostMutation = useUpdatePost();
 
   // Comments hooks
   const { data: commentsData, isLoading: commentsLoading } = useComments(
@@ -125,6 +156,19 @@ export function PostCard({
     await removeCommentReactionMutation.mutateAsync(commentId);
   };
 
+  const handleEditPost = async () => {
+    if (!editContent.trim() && (!post.media || post.media.length === 0)) {
+      return; // Don't allow empty posts
+    }
+    
+    await updatePostMutation.mutateAsync({
+      id: post.id,
+      data: { content: editContent }
+    });
+    
+    setShowEditDialog(false);
+  };
+
   const comments = commentsData?.data || [];
   const commentsTotal = commentsData?.pagination?.total || 0;
   const hasMoreComments = comments.length < commentsTotal;
@@ -180,9 +224,34 @@ export function PostCard({
                   <PostTypeIcon type={post.type} />
                   <span className="capitalize">{post.type.replace('_', ' ').toLowerCase()}</span>
                 </Badge>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
+                {currentUser && post.author && currentUser.id === post.author.id && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setEditContent(post.content || '');
+                          setShowEditDialog(true);
+                        }}
+                        className="cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Edit Post</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="cursor-pointer text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Delete Post</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
             
@@ -295,6 +364,68 @@ export function PostCard({
           />
         </div>
       )}
+
+      {/* Edit Post Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">Edit Post</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Make changes to your post here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="What's on your mind?"
+              className="min-h-[150px] bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(false)}
+              className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditPost}
+              disabled={!editContent.trim() && (!post.media || post.media.length === 0)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-gray-900 dark:text-white">Delete Post</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
+              Are you sure you want to delete this post? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDelete?.(post.id);
+                setShowDeleteDialog(false);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

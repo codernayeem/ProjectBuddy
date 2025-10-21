@@ -57,7 +57,7 @@ import {
 } from '@/hooks/useTeamProjects';
 import { TeamProject, CreateTeamProjectData, TeamMilestone, CreateTeamMilestoneData } from '@/lib/teamProjects';
 import { useAuth } from '@/hooks/useAuth';
-import { usePosts } from '@/hooks/usePosts';
+import { usePosts, useDeletePost } from '@/hooks/usePosts';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -77,6 +77,7 @@ export default function TeamDetailPage() {
   const removeRoleMutation = useRemoveRoleFromMember();
   const updateMemberRoleMutation = useUpdateMemberRole();
   const inviteToTeamMutation = useInviteToTeam();
+  const deletePostMutation = useDeletePost();
 
   // Project mutations
   const { data: projectsData } = useTeamProjects(teamId!);
@@ -799,7 +800,11 @@ export default function TeamDetailPage() {
               ) : teamPostsData?.data && teamPostsData.data.length > 0 ? (
                 <div className="space-y-4">
                   {teamPostsData.data.map((post: any) => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard 
+                      key={post.id} 
+                      post={post}
+                      onDelete={(postId) => deletePostMutation.mutate(postId)}
+                    />
                   ))}
                 </div>
               ) : (
