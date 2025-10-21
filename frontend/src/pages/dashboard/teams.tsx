@@ -94,7 +94,7 @@ export default function TeamsPage() {
               </Avatar>
               <div>
                 <h3 className="font-semibold text-lg">
-                  <Link to={`/teams/${team.id}`} className="hover:text-blue-600">
+                  <Link to={`/dashboard/teams/${team.id}`} className="hover:text-blue-600">
                     {team.name}
                   </Link>
                 </h3>
@@ -171,7 +171,7 @@ export default function TeamsPage() {
                 {isUserMember ? (
                   <>
                     <Button asChild variant="outline" size="sm">
-                      <Link to={`/teams/${team.id}`}>
+                      <Link to={`/dashboard/teams/${team.id}`}>
                         <ExternalLink className="w-4 h-4 mr-1" />
                         View
                       </Link>
@@ -191,7 +191,7 @@ export default function TeamsPage() {
                 ) : (
                   <>
                     <Button asChild variant="outline" size="sm">
-                      <Link to={`/teams/${team.id}`}>
+                      <Link to={`/dashboard/teams/${team.id}`}>
                         <ExternalLink className="w-4 h-4 mr-1" />
                         View
                       </Link>
@@ -226,7 +226,7 @@ export default function TeamsPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/teams/new">
+          <Link to="/dashboard/teams/new">
             <Plus className="w-4 h-4 mr-2" />
             Create Team
           </Link>
@@ -280,13 +280,13 @@ export default function TeamsPage() {
             </CardContent>
           </Card>
 
-          {/* Teams Grid */}
+          {/* Teams List */}
           {teamsLoading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {teamsData?.data?.map((team) => (
                 <TeamCard key={team.id} team={team} />
               ))}
@@ -318,7 +318,7 @@ export default function TeamsPage() {
               <LoadingSpinner size="lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {userTeamsData?.data?.map((team) => (
                 <TeamCard key={team.id} team={team} showMembershipActions={false} />
               ))}
@@ -347,7 +347,7 @@ export default function TeamsPage() {
               <LoadingSpinner size="lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {recommendationsData?.data?.map((team) => (
                 <TeamCard key={team.id} team={team} />
               ))}

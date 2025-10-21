@@ -4,13 +4,10 @@ import {
   CreateTeamData,
   UpdateTeamData,
   TeamMember,
-  TeamRole,
+  TeamCustomRole,
   TeamInvitation,
   ApiResponse,
   SearchFilters,
-  TeamMemberRole,
-  TeamType,
-  TeamVisibility,
   InvitationStatus,
 } from '@/types/types'
 
@@ -106,8 +103,8 @@ export const teamService = {
     return response.data
   },
 
-  updateMemberRole: async (teamId: string, userId: string, role: TeamMemberRole): Promise<ApiResponse<void>> => {
-    const response = await api.put(`/teams/${teamId}/members/${userId}/role`, { role })
+  updateMemberRole: async (teamId: string, userId: string, isAdmin: boolean): Promise<ApiResponse<void>> => {
+    const response = await api.put(`/teams/${teamId}/members/${userId}/role`, { isAdmin })
     return response.data
   },
 
@@ -117,18 +114,39 @@ export const teamService = {
   },
 
   // Team Roles
-  createRole: async (teamId: string, data: Omit<TeamRole, 'id' | 'teamId' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<TeamRole>> => {
+  getTeamRoles: async (teamId: string): Promise<ApiResponse<TeamCustomRole[]>> => {
+    const response = await api.get(`/teams/${teamId}/roles`)
+    return response.data
+  },
+
+  createRole: async (teamId: string, data: Omit<TeamCustomRole, 'id' | 'teamId' | 'createdAt' | 'updatedAt' | 'team' | 'members'>): Promise<ApiResponse<TeamCustomRole>> => {
     const response = await api.post(`/teams/${teamId}/roles`, data)
     return response.data
   },
 
-  updateRole: async (teamId: string, roleId: string, data: Partial<Omit<TeamRole, 'id' | 'teamId' | 'createdAt' | 'updatedAt'>>): Promise<ApiResponse<TeamRole>> => {
+  updateRole: async (teamId: string, roleId: string, data: Partial<Omit<TeamCustomRole, 'id' | 'teamId' | 'createdAt' | 'updatedAt' | 'team' | 'members'>>): Promise<ApiResponse<TeamCustomRole>> => {
     const response = await api.put(`/teams/${teamId}/roles/${roleId}`, data)
     return response.data
   },
 
   deleteRole: async (teamId: string, roleId: string): Promise<ApiResponse<void>> => {
     const response = await api.delete(`/teams/${teamId}/roles/${roleId}`)
+    return response.data
+  },
+
+  // Member role assignment
+  getMemberRoles: async (teamId: string, memberId: string): Promise<ApiResponse<any[]>> => {
+    const response = await api.get(`/teams/${teamId}/members/${memberId}/roles`)
+    return response.data
+  },
+
+  assignRoleToMember: async (teamId: string, memberId: string, roleId: string): Promise<ApiResponse<void>> => {
+    const response = await api.post(`/teams/${teamId}/members/${memberId}/roles/${roleId}`)
+    return response.data
+  },
+
+  removeRoleFromMember: async (teamId: string, memberId: string, roleId: string): Promise<ApiResponse<void>> => {
+    const response = await api.delete(`/teams/${teamId}/members/${memberId}/roles/${roleId}`)
     return response.data
   },
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { teamService } from '@/lib/teams';
-import { CreateTeamData, UpdateTeamData, InvitationStatus, TeamMemberCustomRole } from '@/types/types';
+import { CreateTeamData, UpdateTeamData, InvitationStatus } from '@/types/types';
 import { toast } from 'sonner';
 
 // Query keys
@@ -228,13 +228,13 @@ export function useRespondToInvitation() {
   });
 }
 
-// Update member role
+// Update member role (promote/demote admin)
 export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ teamId, userId, role }: { teamId: string; userId: string; role: TeamMemberCustomRole }) =>
-      teamService.updateMemberRole(teamId, userId, role),
+    mutationFn: ({ teamId, userId, isAdmin }: { teamId: string; userId: string; isAdmin: boolean }) =>
+      teamService.updateMemberRole(teamId, userId, isAdmin),
     onSuccess: (_, { teamId }) => {
       // Invalidate the specific team
       queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
@@ -263,6 +263,111 @@ export function useRemoveMember() {
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to remove member';
+      toast.error(message);
+    },
+  });
+}
+
+// Get team roles
+export function useTeamRoles(teamId: string) {
+  return useQuery({
+    queryKey: [...teamKeys.detail(teamId), 'roles'],
+    queryFn: () => teamService.getTeamRoles(teamId),
+    enabled: !!teamId,
+  });
+}
+
+// Create custom role
+export function useCreateRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, data }: { 
+      teamId: string; 
+      data: { name: string; description?: string; color?: string } 
+    }) => teamService.createRole(teamId, data),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: [...teamKeys.detail(teamId), 'roles'] });
+      queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      toast.success('Role created successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to create role';
+      toast.error(message);
+    },
+  });
+}
+
+// Update custom role
+export function useUpdateRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, roleId, data }: { 
+      teamId: string; 
+      roleId: string;
+      data: { name?: string; description?: string; color?: string } 
+    }) => teamService.updateRole(teamId, roleId, data),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: [...teamKeys.detail(teamId), 'roles'] });
+      toast.success('Role updated successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update role';
+      toast.error(message);
+    },
+  });
+}
+
+// Delete custom role
+export function useDeleteRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, roleId }: { teamId: string; roleId: string }) =>
+      teamService.deleteRole(teamId, roleId),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: [...teamKeys.detail(teamId), 'roles'] });
+      toast.success('Role deleted successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to delete role';
+      toast.error(message);
+    },
+  });
+}
+
+// Assign role to member
+export function useAssignRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, memberId, roleId }: { teamId: string; memberId: string; roleId: string }) =>
+      teamService.assignRoleToMember(teamId, memberId, roleId),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      toast.success('Role assigned successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to assign role';
+      toast.error(message);
+    },
+  });
+}
+
+// Remove role from member
+export function useRemoveRoleFromMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, memberId, roleId }: { teamId: string; memberId: string; roleId: string }) =>
+      teamService.removeRoleFromMember(teamId, memberId, roleId),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      toast.success('Role removed successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to remove role';
       toast.error(message);
     },
   });

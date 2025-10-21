@@ -1,0 +1,1025 @@
+import { useState } from 'react';
+import { useParams, Link } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/Badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { 
+  ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
+  Settings, UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
+  Crown, AlertCircle, Plus
+} from 'lucide-react';
+import { 
+  useTeam, 
+  useJoinTeam, 
+  useLeaveTeam, 
+  useRemoveMember,
+  useTeamRoles,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+  useAssignRole,
+  useUpdateMemberRole,
+  useInviteToTeam
+} from '@/hooks/useTeams';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
+
+export default function TeamDetailPage() {
+  const { teamId } = useParams<{ teamId: string }>();
+  const { user } = useAuth();
+  const { data: teamData, isLoading } = useTeam(teamId!);
+  const { data: rolesData } = useTeamRoles(teamId!);
+  const joinTeamMutation = useJoinTeam();
+  const leaveTeamMutation = useLeaveTeam();
+  const removeMemberMutation = useRemoveMember();
+  const createRoleMutation = useCreateRole();
+  const updateRoleMutation = useUpdateRole();
+  const deleteRoleMutation = useDeleteRole();
+  const assignRoleMutation = useAssignRole();
+  const updateMemberRoleMutation = useUpdateMemberRole();
+  const inviteToTeamMutation = useInviteToTeam();
+
+  // Dialog states
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [editRoleDialogOpen, setEditRoleDialogOpen] = useState(false);
+  const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<any>(null);
+  const [roleToEdit, setRoleToEdit] = useState<any>(null);
+  const [roleToDelete, setRoleToDelete] = useState<any>(null);
+  const [memberToAssignRole, setMemberToAssignRole] = useState<any>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleColor, setNewRoleColor] = useState('#6B7280');
+  const [newRolePermissions, setNewRolePermissions] = useState({
+    canInvite: false,
+    canRemove: false,
+    canManageRoles: false,
+  });
+
+  const team = teamData?.data;
+
+  const handleJoinTeam = async () => {
+    if (!teamId) return;
+    try {
+      await joinTeamMutation.mutateAsync(teamId);
+    } catch (error) {
+      console.error('Failed to join team:', error);
+    }
+  };
+
+  const handleLeaveTeam = async () => {
+    if (!teamId) return;
+    try {
+      await leaveTeamMutation.mutateAsync(teamId);
+    } catch (error) {
+      console.error('Failed to leave team:', error);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!teamId) return;
+    try {
+      await removeMemberMutation.mutateAsync({ teamId, userId });
+      setMemberToRemove(null);
+      toast.success('Member removed successfully');
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+    }
+  };
+
+  const handleInviteMember = async () => {
+    if (!inviteEmail.trim()) {
+      toast.error('Please enter an email address');
+      return;
+    }
+    if (!teamId) return;
+    
+    try {
+      await inviteToTeamMutation.mutateAsync({
+        teamId,
+        data: {
+          email: inviteEmail,
+          message: inviteMessage || undefined,
+        }
+      });
+      setInviteEmail('');
+      setInviteMessage('');
+      setInviteDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to invite member:', error);
+    }
+  };
+
+  const handleCreateRole = async () => {
+    if (!newRoleName.trim()) {
+      toast.error('Please enter a role name');
+      return;
+    }
+    if (!teamId) return;
+    
+    try {
+      await createRoleMutation.mutateAsync({
+        teamId,
+        data: {
+          name: newRoleName,
+          description: `Custom role with${newRolePermissions.canInvite ? ' invite,' : ''}${newRolePermissions.canRemove ? ' remove,' : ''}${newRolePermissions.canManageRoles ? ' manage roles' : ''} permissions`,
+        }
+      });
+      setNewRoleName('');
+      setNewRolePermissions({ canInvite: false, canRemove: false, canManageRoles: false });
+      setRoleDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to create role:', error);
+    }
+  };
+
+  const handleToggleAdmin = async (userId: string, currentIsAdmin: boolean) => {
+    if (!teamId) return;
+    try {
+      await updateMemberRoleMutation.mutateAsync({
+        teamId,
+        userId,
+        isAdmin: !currentIsAdmin,
+      });
+    } catch (error) {
+      console.error('Failed to update member role:', error);
+    }
+  };
+
+  const handleEditRole = (role: any) => {
+    setRoleToEdit(role);
+    setNewRoleName(role.name);
+    setNewRoleColor(role.color || '#6B7280');
+    setEditRoleDialogOpen(true);
+  };
+
+  const handleUpdateRole = async () => {
+    if (!newRoleName.trim()) {
+      toast.error('Please enter a role name');
+      return;
+    }
+    if (!teamId || !roleToEdit) return;
+    
+    try {
+      await updateRoleMutation.mutateAsync({
+        teamId,
+        roleId: roleToEdit.id,
+        data: {
+          name: newRoleName,
+          color: newRoleColor,
+        }
+      });
+      setEditRoleDialogOpen(false);
+      setRoleToEdit(null);
+      setNewRoleName('');
+      setNewRoleColor('#6B7280');
+    } catch (error) {
+      console.error('Failed to update role:', error);
+    }
+  };
+
+  const handleDeleteRole = async () => {
+    if (!teamId || !roleToDelete) return;
+    
+    try {
+      await deleteRoleMutation.mutateAsync({
+        teamId,
+        roleId: roleToDelete.id,
+      });
+      setRoleToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete role:', error);
+    }
+  };
+
+  const handleOpenAssignRole = (member: any) => {
+    setMemberToAssignRole(member);
+    setSelectedRoleId('');
+    setAssignRoleDialogOpen(true);
+  };
+
+  const handleAssignRole = async () => {
+    if (!selectedRoleId) {
+      toast.error('Please select a role');
+      return;
+    }
+    if (!teamId || !memberToAssignRole) return;
+    
+    try {
+      await assignRoleMutation.mutateAsync({
+        teamId,
+        memberId: memberToAssignRole.id,
+        roleId: selectedRoleId,
+      });
+      setAssignRoleDialogOpen(false);
+      setMemberToAssignRole(null);
+      setSelectedRoleId('');
+    } catch (error) {
+      console.error('Failed to assign role:', error);
+    }
+  };
+
+  const getVisibilityIcon = (visibility: string) => {
+    switch (visibility) {
+      case 'PUBLIC': return <Globe className="w-4 h-4" />;
+      case 'PRIVATE': return <Lock className="w-4 h-4" />;
+      case 'INVITE_ONLY': return <Eye className="w-4 h-4" />;
+      default: return <Globe className="w-4 h-4" />;
+    }
+  };
+
+  const getVisibilityColor = (visibility: string) => {
+    switch (visibility) {
+      case 'PUBLIC': return 'text-green-600 bg-green-50 border-green-200';
+      case 'PRIVATE': return 'text-red-600 bg-red-50 border-red-200';
+      case 'INVITE_ONLY': return 'text-blue-600 bg-blue-50 border-blue-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!team) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-12 text-center">
+          <CardContent>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Team not found</h3>
+            <p className="text-gray-600 mb-4">
+              The team you're looking for doesn't exist or you don't have access to it.
+            </p>
+            <Button asChild>
+              <Link to="/dashboard/teams">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Teams
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const isOwner = team.ownerId === user?.id;
+  const isMember = team.members?.some((member: any) => member.userId === user?.id);
+  const userMember = team.members?.find((member: any) => member.userId === user?.id);
+  const isAdmin = userMember?.isAdmin || isOwner;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-6">
+        <Button variant="ghost" asChild className="mb-4">
+          <Link to="/dashboard/teams">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Teams
+          </Link>
+        </Button>
+
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={team.avatar || undefined} alt={team.name} />
+              <AvatarFallback className="text-2xl">{team.name[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
+              <p className="text-gray-600 mt-1">{team.shortDescription || team.description}</p>
+              <div className="flex items-center space-x-4 mt-3">
+                <Badge variant="outline" className={`flex items-center space-x-1 ${getVisibilityColor(team.visibility)}`}>
+                  {getVisibilityIcon(team.visibility)}
+                  <span className="capitalize">{team.visibility.toLowerCase()}</span>
+                </Badge>
+                <span className="text-sm text-gray-600 flex items-center">
+                  <Users className="w-4 h-4 mr-1" />
+                  {team.memberCount} members
+                </span>
+                <span className="text-sm text-gray-600 flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Created {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex space-x-2">
+            {isAdmin && (
+              <>
+                <Button onClick={() => setInviteDialogOpen(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite Members
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to={`/dashboard/teams/${teamId}/settings`}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Link>
+                </Button>
+              </>
+            )}
+            {isMember && !isOwner && (
+              <Button 
+                variant="outline"
+                onClick={handleLeaveTeam}
+                disabled={leaveTeamMutation.isPending}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Leave Team
+              </Button>
+            )}
+            {!isMember && (
+              team.visibility === 'PUBLIC' ? (
+                <Button 
+                  onClick={handleJoinTeam}
+                  disabled={joinTeamMutation.isPending}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Join Team
+                </Button>
+              ) : (
+                <Button>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Request to Join
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Actions Bar */}
+      {isAdmin && (
+        <Card className="mb-6 bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-blue-900">
+                <Shield className="w-5 h-5" />
+                <span className="font-semibold">Admin Controls</span>
+              </div>
+              <div className="flex space-x-2">
+                <Button size="sm" variant="outline" onClick={() => setRoleDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create Role
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/dashboard/teams/${teamId}/join-requests`}>
+                    View Join Requests
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/dashboard/teams/${teamId}/invitations`}>
+                    Manage Invitations
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Content */}
+      <Tabs defaultValue="about" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="about">About</TabsTrigger>
+          <TabsTrigger value="members">Members ({team.memberCount})</TabsTrigger>
+          {isAdmin && <TabsTrigger value="roles">Roles</TabsTrigger>}
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="about" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>About</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                <p className="text-gray-700">{team.description}</p>
+              </div>
+
+              {team.tags && team.tags.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {team.tags.map((tag: string) => (
+                      <Badge key={tag} variant="secondary">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {team.skills && team.skills.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {team.skills.map((skill: string) => (
+                      <Badge key={skill} variant="default">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(team.country || team.city) && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
+                  <p className="text-gray-700 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {[team.city, team.country].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {team.website && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Website</h3>
+                  <a 
+                    href={team.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    {team.website}
+                  </a>
+                </div>
+              )}
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Owner</h3>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={team.owner?.avatar || undefined} />
+                    <AvatarFallback>
+                      {team.owner?.firstName?.[0]}{team.owner?.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">
+                      {team.owner?.firstName} {team.owner?.lastName}
+                    </p>
+                    <p className="text-sm text-gray-600">@{team.owner?.username}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="members" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Team Members ({team.memberCount})</CardTitle>
+                {isAdmin && (
+                  <Button size="sm" onClick={() => setInviteDialogOpen(true)}>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Invite
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {team.members && team.members.length > 0 ? (
+                  team.members.map((member: any) => {
+                    const memberIsOwner = member.userId === team.ownerId;
+                    const memberIsAdmin = member.isAdmin || memberIsOwner;
+                    
+                    return (
+                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={member.user?.avatar || undefined} />
+                            <AvatarFallback>
+                              {member.user?.firstName?.[0]}{member.user?.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <p className="font-medium">
+                                {member.user?.firstName} {member.user?.lastName}
+                              </p>
+                              {memberIsOwner && (
+                                <Badge variant="default" className="bg-yellow-500">
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  Owner
+                                </Badge>
+                              )}
+                              {memberIsAdmin && !memberIsOwner && (
+                                <Badge variant="default">
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  Admin
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <p className="text-sm text-gray-600">@{member.user?.username}</p>
+                              {member.customRoles && member.customRoles.length > 0 && (
+                                <div className="flex gap-1">
+                                  {member.customRoles.map((role: any) => (
+                                    <Badge 
+                                      key={role.id} 
+                                      variant="outline"
+                                      style={{ 
+                                        borderColor: role.color || '#6B7280',
+                                        color: role.color || '#6B7280'
+                                      }}
+                                    >
+                                      {role.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {member.user?.bio && (
+                              <p className="text-sm text-gray-500 mt-1">{member.user.bio}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {isAdmin && !memberIsOwner && member.userId !== user?.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleToggleAdmin(member.userId, memberIsAdmin)}>
+                                <Shield className="w-4 h-4 mr-2" />
+                                {memberIsAdmin ? 'Remove Admin' : 'Make Admin'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenAssignRole(member)}>
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Assign Role
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => setMemberToRemove(member)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Remove from Team
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-600 text-center py-8">No members yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="roles" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Custom Roles</CardTitle>
+                  <Button size="sm" onClick={() => setRoleDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Role
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* Default Roles */}
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Crown className="w-5 h-5 text-yellow-600" />
+                          <h4 className="font-semibold">Owner</h4>
+                          <Badge variant="secondary">Default</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">Full control over the team</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="w-5 h-5 text-blue-600" />
+                          <h4 className="font-semibold">Admin</h4>
+                          <Badge variant="secondary">Default</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">Can manage members and settings</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="w-5 h-5 text-green-600" />
+                          <h4 className="font-semibold">Member</h4>
+                          <Badge variant="secondary">Default</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">Regular team member</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Custom Roles */}
+                  {rolesData?.data && rolesData.data.length > 0 ? (
+                    rolesData.data.map((role: any) => (
+                      <div key={role.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="w-4 h-4 rounded-full" 
+                                style={{ backgroundColor: role.color || '#6B7280' }}
+                              />
+                              <h4 className="font-semibold">{role.name}</h4>
+                              <Badge variant="outline">Custom</Badge>
+                            </div>
+                            {role.description && (
+                              <p className="text-sm text-gray-600 mt-1">{role.description}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                              {role.members?.length || 0} member{role.members?.length !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="ghost" onClick={() => handleEditRole(role)}>
+                              Edit
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-red-600" onClick={() => setRoleToDelete(role)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No custom roles yet. Create one to get started!</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        <TabsContent value="projects" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Team Projects</CardTitle>
+                {isAdmin && (
+                  <Button size="sm" disabled>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Project
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No projects yet</p>
+                <p className="text-sm text-gray-500">Projects feature coming soon!</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3 p-3 border-l-2 border-blue-500">
+                  <Calendar className="w-5 h-5 text-blue-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Team created</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">More activity will appear here as the team grows</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Invite Member Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogDescription>
+              Send an invitation to join {team.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="colleague@example.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="message">Message (Optional)</Label>
+              <Input
+                id="message"
+                placeholder="Add a personal message..."
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleInviteMember}>
+              Send Invitation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Role Dialog */}
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Custom Role</DialogTitle>
+            <DialogDescription>
+              Define a new role with specific permissions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="roleName">Role Name</Label>
+              <Input
+                id="roleName"
+                placeholder="e.g., Moderator, Developer"
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Permissions</Label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newRolePermissions.canInvite}
+                    onChange={(e) => setNewRolePermissions({
+                      ...newRolePermissions,
+                      canInvite: e.target.checked
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Can invite members</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newRolePermissions.canRemove}
+                    onChange={(e) => setNewRolePermissions({
+                      ...newRolePermissions,
+                      canRemove: e.target.checked
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Can remove members</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={newRolePermissions.canManageRoles}
+                    onChange={(e) => setNewRolePermissions({
+                      ...newRolePermissions,
+                      canManageRoles: e.target.checked
+                    })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Can manage roles</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateRole}>
+              Create Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Member Confirmation Dialog */}
+      <Dialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Team Member</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {memberToRemove?.user?.firstName} {memberToRemove?.user?.lastName} from the team?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMemberToRemove(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleRemoveMember(memberToRemove?.userId)}
+              disabled={removeMemberMutation.isPending}
+            >
+              Remove Member
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={editRoleDialogOpen} onOpenChange={setEditRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Role</DialogTitle>
+            <DialogDescription>
+              Update the role name and color.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Role Name</label>
+              <input
+                type="text"
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+                placeholder="Enter role name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Role Color</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="color"
+                  value={newRoleColor}
+                  onChange={(e) => setNewRoleColor(e.target.value)}
+                  className="h-10 w-20 rounded cursor-pointer"
+                />
+                <span className="text-sm text-gray-600">{newRoleColor}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setEditRoleDialogOpen(false);
+              setRoleToEdit(null);
+              setNewRoleName('');
+              setNewRoleColor('#6B7280');
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateRole} disabled={updateRoleMutation.isPending}>
+              Update Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Role Confirmation Dialog */}
+      <Dialog open={!!roleToDelete} onOpenChange={() => setRoleToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Role</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the role "{roleToDelete?.name}"? 
+              This role will be removed from all members who have it assigned.
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoleToDelete(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteRole}
+              disabled={deleteRoleMutation.isPending}
+            >
+              Delete Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Role Dialog */}
+      <Dialog open={assignRoleDialogOpen} onOpenChange={setAssignRoleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Role</DialogTitle>
+            <DialogDescription>
+              Assign a custom role to {memberToAssignRole?.user?.firstName} {memberToAssignRole?.user?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Select Role</label>
+              <select
+                value={selectedRoleId}
+                onChange={(e) => setSelectedRoleId(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
+              >
+                <option value="">-- Choose a role --</option>
+                {rolesData?.data?.map((role: any) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {memberToAssignRole?.customRoles && memberToAssignRole.customRoles.length > 0 && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Current Roles</label>
+                <div className="flex flex-wrap gap-2">
+                  {memberToAssignRole.customRoles.map((role: any) => (
+                    <Badge key={role.id} style={{ backgroundColor: role.color || '#6B7280' }}>
+                      {role.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setAssignRoleDialogOpen(false);
+              setMemberToAssignRole(null);
+              setSelectedRoleId('');
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleAssignRole} disabled={assignRoleMutation.isPending}>
+              Assign Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

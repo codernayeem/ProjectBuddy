@@ -372,6 +372,7 @@ export interface TeamMember {
   teamId: string
   userId: string
   status: TeamMemberStatus
+  isAdmin?: boolean
   title?: string
   isActive: boolean
   joinedAt: string
