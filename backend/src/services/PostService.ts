@@ -8,6 +8,7 @@ import {
   PostFilters 
 } from '../types';
 import { Post, Comment, Reaction, Share, Bookmark, CommentReaction } from '@prisma/client';
+import { prisma } from '../config/database';
 
 export class PostService {
   private postRepository: PostRepository;
@@ -20,19 +21,29 @@ export class PostService {
 
   // Post CRUD operations
   async createPost(authorId: string | null, data: CreatePostData): Promise<Post> {
-    // Validate that either authorId or teamId is provided
-    if (!authorId && !data.teamId) {
-      throw new Error('Post must have either an author or be posted by a team');
+    // Validate that at least authorId is provided
+    if (!authorId) {
+      throw new Error('Post must have an author');
     }
 
-    if (authorId && data.teamId) {
-      throw new Error('Post cannot have both an author and be posted by a team');
+    // If teamId is provided, verify the author is a member of the team
+    if (data.teamId) {
+      const isMember = await prisma.teamMember.findFirst({
+        where: {
+          teamId: data.teamId,
+          userId: authorId,
+        },
+      });
+      
+      if (!isMember) {
+        throw new Error('You must be a member of the team to post on its behalf');
+      }
     }
 
     const post = await this.postRepository.create({
       content: data.content,
       type: data.type || 'GENERAL',
-      ...(authorId && { author: { connect: { id: authorId } } }),
+      author: { connect: { id: authorId } },
       ...(data.teamId && { team: { connect: { id: data.teamId } } }),
       media: data.media || [],
       tags: data.tags || [],

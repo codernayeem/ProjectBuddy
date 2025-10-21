@@ -222,7 +222,15 @@ export const paginationSchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).optional(),
   sortBy: Joi.string().optional(),
   sortOrder: Joi.string().valid('asc', 'desc').optional(),
-});
+  // Post filters
+  type: Joi.string().optional(),
+  authorId: Joi.string().uuid().optional(),
+  teamId: Joi.string().uuid().optional(),
+  projectId: Joi.string().uuid().optional(),
+  tags: Joi.string().optional(),
+  search: Joi.string().optional(),
+  visibility: Joi.string().optional(),
+}).unknown(true);
 
 // Search validation schemas
 export const searchSchema = Joi.object({

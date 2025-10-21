@@ -160,9 +160,21 @@ export function PostCard({
                     {post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Unknown User'}
                   </h3>
                 </Link>
-                <p className="text-sm text-gray-600">
-                  @{post.author?.username || 'unknown'} • {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                </p>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <span>@{post.author?.username || 'unknown'}</span>
+                  {post.team && (
+                    <>
+                      <span>•</span>
+                      <span>posted in</span>
+                      <Link to={`/dashboard/teams/${post.team.id}`} className="flex items-center space-x-1 hover:text-blue-600 font-medium">
+                        <Users className="w-3 h-3" />
+                        <span>{post.team.name}</span>
+                      </Link>
+                    </>
+                  )}
+                  <span>•</span>
+                  <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="flex items-center space-x-1">
@@ -184,15 +196,6 @@ export function PostCard({
                     #{tag}
                   </Badge>
                 ))}
-              </div>
-            )}
-            
-            {post.team && (
-              <div className="mb-3">
-                <Badge variant="outline" className="flex items-center space-x-1 w-fit">
-                  <Users className="w-3 h-3" />
-                  <span>{post.team.name}</span>
-                </Badge>
               </div>
             )}
             

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/Badge';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
@@ -21,9 +22,10 @@ import { PostType } from '@/types/types';
 interface PostCreatorProps {
   className?: string;
   onPostCreated?: () => void;
+  teamId?: string;
 }
 
-export function PostCreator({ className, onPostCreated }: PostCreatorProps) {
+export function PostCreator({ className, onPostCreated, teamId }: PostCreatorProps) {
   const [postContent, setPostContent] = useState('');
   const [selectedPostType, setSelectedPostType] = useState<PostType>(PostType.GENERAL);
   
@@ -57,6 +59,7 @@ export function PostCreator({ className, onPostCreated }: PostCreatorProps) {
       await createPostMutation.mutateAsync({
         content: postContent,
         type: selectedPostType,
+        teamId: teamId,
         tags: extractTags(postContent),
       });
       setPostContent('');
@@ -69,7 +72,15 @@ export function PostCreator({ className, onPostCreated }: PostCreatorProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Share an update</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Share an update</CardTitle>
+          {teamId && (
+            <Badge variant="default" className="flex items-center space-x-1">
+              <Users className="w-3 h-3" />
+              <span>Posting as Team</span>
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 mb-4">

@@ -8,6 +8,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PostCreator } from '@/components/posts/PostCreator';
+import { PostCard } from '@/components/posts/PostCard';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +28,7 @@ import {
 import { 
   ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
   Settings, UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
-  Crown, AlertCircle, Plus
+  Crown, AlertCircle, Plus, X
 } from 'lucide-react';
 import { 
   useTeam, 
@@ -38,10 +40,12 @@ import {
   useUpdateRole,
   useDeleteRole,
   useAssignRole,
+  useRemoveRoleFromMember,
   useUpdateMemberRole,
   useInviteToTeam
 } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
+import { usePosts } from '@/hooks/usePosts';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -50,6 +54,7 @@ export default function TeamDetailPage() {
   const { user } = useAuth();
   const { data: teamData, isLoading } = useTeam(teamId!);
   const { data: rolesData } = useTeamRoles(teamId!);
+  const { data: teamPostsData, isLoading: postsLoading, refetch: refetchTeamPosts } = usePosts(1, 20, { teamId: teamId! });
   const joinTeamMutation = useJoinTeam();
   const leaveTeamMutation = useLeaveTeam();
   const removeMemberMutation = useRemoveMember();
@@ -57,6 +62,7 @@ export default function TeamDetailPage() {
   const updateRoleMutation = useUpdateRole();
   const deleteRoleMutation = useDeleteRole();
   const assignRoleMutation = useAssignRole();
+  const removeRoleMutation = useRemoveRoleFromMember();
   const updateMemberRoleMutation = useUpdateMemberRole();
   const inviteToTeamMutation = useInviteToTeam();
 
@@ -243,6 +249,20 @@ export default function TeamDetailPage() {
     }
   };
 
+  const handleRemoveRole = async (memberId: string, roleId: string) => {
+    if (!teamId) return;
+    
+    try {
+      await removeRoleMutation.mutateAsync({
+        teamId,
+        memberId,
+        roleId,
+      });
+    } catch (error) {
+      console.error('Failed to remove role:', error);
+    }
+  };
+
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
       case 'PUBLIC': return <Globe className="w-4 h-4" />;
@@ -411,6 +431,7 @@ export default function TeamDetailPage() {
       <Tabs defaultValue="about" className="space-y-6">
         <TabsList>
           <TabsTrigger value="about">About</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="members">Members ({team.memberCount})</TabsTrigger>
           {isAdmin && <TabsTrigger value="roles">Roles</TabsTrigger>}
           <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -500,6 +521,38 @@ export default function TeamDetailPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="posts" className="space-y-6">
+          {isMember && (
+            <PostCreator 
+              teamId={teamId} 
+              onPostCreated={() => refetchTeamPosts()}
+            />
+          )}
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Posts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {postsLoading ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : teamPostsData?.data && teamPostsData.data.length > 0 ? (
+                <div className="space-y-4">
+                  {teamPostsData.data.map((post: any) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">No posts yet. Be the first to share something!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="members" className="space-y-6">
           <Card>
             <CardHeader>
@@ -551,16 +604,16 @@ export default function TeamDetailPage() {
                               <p className="text-sm text-gray-600">@{member.user?.username}</p>
                               {member.customRoles && member.customRoles.length > 0 && (
                                 <div className="flex gap-1">
-                                  {member.customRoles.map((role: any) => (
+                                  {member.customRoles.map((cr: any) => (
                                     <Badge 
-                                      key={role.id} 
+                                      key={cr.customRole?.id || cr.id} 
                                       variant="outline"
                                       style={{ 
-                                        borderColor: role.color || '#6B7280',
-                                        color: role.color || '#6B7280'
+                                        borderColor: cr.customRole?.color || cr.color || '#6B7280',
+                                        color: cr.customRole?.color || cr.color || '#6B7280'
                                       }}
                                     >
-                                      {role.name}
+                                      {cr.customRole?.name || cr.name}
                                     </Badge>
                                   ))}
                                 </div>
@@ -978,33 +1031,64 @@ export default function TeamDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {memberToAssignRole?.customRoles && memberToAssignRole.customRoles.length > 0 && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Current Roles</label>
+                <div className="flex flex-wrap gap-2">
+                  {memberToAssignRole.customRoles.map((cr: any) => {
+                    const role = cr.customRole || cr;
+                    return (
+                      <Badge 
+                        key={role.id} 
+                        style={{ backgroundColor: role.color || '#6B7280', color: 'white' }}
+                        className="flex items-center gap-1 pr-1"
+                      >
+                        <span>{role.name}</span>
+                        <button
+                          onClick={() => handleRemoveRole(memberToAssignRole.id, role.id)}
+                          className="hover:bg-black/20 rounded-full p-0.5 transition-colors"
+                          disabled={removeRoleMutation.isPending}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div>
-              <label className="text-sm font-medium mb-2 block">Select Role</label>
+              <label className="text-sm font-medium mb-2 block">Select Role to Assign</label>
               <select
                 value={selectedRoleId}
                 onChange={(e) => setSelectedRoleId(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
               >
                 <option value="">-- Choose a role --</option>
-                {rolesData?.data?.map((role: any) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {memberToAssignRole?.customRoles && memberToAssignRole.customRoles.length > 0 && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Current Roles</label>
-                <div className="flex flex-wrap gap-2">
-                  {memberToAssignRole.customRoles.map((role: any) => (
-                    <Badge key={role.id} style={{ backgroundColor: role.color || '#6B7280' }}>
+                {rolesData?.data
+                  ?.filter((role: any) => {
+                    const memberRoleIds = memberToAssignRole?.customRoles?.map((cr: any) => 
+                      cr.customRole?.id || cr.id
+                    ) || [];
+                    return !memberRoleIds.includes(role.id);
+                  })
+                  .map((role: any) => (
+                    <option key={role.id} value={role.id}>
                       {role.name}
-                    </Badge>
+                    </option>
                   ))}
-                </div>
-              </div>
-            )}
+              </select>
+              {rolesData?.data?.every((role: any) => {
+                const memberRoleIds = memberToAssignRole?.customRoles?.map((cr: any) => 
+                  cr.customRole?.id || cr.id
+                ) || [];
+                return memberRoleIds.includes(role.id);
+              }) && rolesData?.data?.length > 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  This member already has all available roles.
+                </p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
