@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,14 +17,20 @@ interface MobileSearchProps {
 
 export default function MobileSearch({ isOpen, onClose }: MobileSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Handle search logic here
-      console.log('Searching for:', searchQuery);
+      navigate(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
       onClose();
     }
+  };
+
+  const handleQuickSearch = (query: string) => {
+    navigate(`/dashboard/search?q=${encodeURIComponent(query)}`);
+    onClose();
   };
 
   return (
@@ -65,13 +72,13 @@ export default function MobileSearch({ isOpen, onClose }: MobileSearchProps) {
         <div className="mt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Popular searches</h4>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setSearchQuery('React')}>
+            <Button variant="outline" size="sm" onClick={() => handleQuickSearch('React')}>
               React
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setSearchQuery('TypeScript')}>
+            <Button variant="outline" size="sm" onClick={() => handleQuickSearch('TypeScript')}>
               TypeScript
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setSearchQuery('AI/ML')}>
+            <Button variant="outline" size="sm" onClick={() => handleQuickSearch('AI/ML')}>
               AI/ML
             </Button>
           </div>

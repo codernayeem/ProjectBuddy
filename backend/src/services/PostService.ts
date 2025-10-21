@@ -548,4 +548,7 @@ export class PostService {
   async getCommentReactions(commentId: string): Promise<CommentReaction[]> {
     return this.postRepository.getCommentReactions(commentId);
   }
+  async getTrendingHashtags(limit: number = 10): Promise<Array<{ hashtag: string; count: number; growth: string }>> {
+    return this.postRepository.getTrendingHashtags(limit);
+  }
 }

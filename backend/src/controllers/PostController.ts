@@ -659,4 +659,18 @@ export class PostController {
       res.status(500).json(createErrorResponse(errorMessage));
     }
   };
+
+  // Get trending hashtags
+  getTrendingHashtags = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const hashtags = await this.postService.getTrendingHashtags(limit);
+
+      res.json(createResponse(true, 'Trending hashtags retrieved successfully', hashtags));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get trending hashtags';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
 }

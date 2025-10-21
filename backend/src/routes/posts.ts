@@ -28,6 +28,8 @@ router.get('/bookmarks', validateQuery(paginationSchema), postController.getUser
 
 router.get('/trending', validateQuery(paginationSchema), postController.getTrendingPosts);
 
+router.get('/trending-hashtags', postController.getTrendingHashtags);
+
 router.get('/user/:userId', validateQuery(paginationSchema), postController.getUserPosts);
 
 router.get('/team/:teamId', validateQuery(paginationSchema), postController.getTeamPosts);

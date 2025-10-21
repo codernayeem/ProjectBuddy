@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, Search, Bell, MessageSquare, Home, Plus, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,10 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch unread message count
   const { data: unreadData } = useQuery({
@@ -40,6 +42,14 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
   const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount();
 
   const unreadCount = unreadData?.data?.count || 0;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/dashboard/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -67,13 +77,15 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
           </Link>
 
           {/* Search - Responsive width */}
-          <div className="relative hidden md:block flex-1 max-w-md lg:max-w-lg xl:max-w-xl">
+          <form onSubmit={handleSearch} className="relative hidden md:block flex-1 max-w-md lg:max-w-lg xl:max-w-xl">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search className={`h-4 w-4 ${searchFocused ? 'text-primary-600' : 'text-gray-400'}`} />
             </div>
             <Input
               type="text"
-              placeholder="Search..."
+              placeholder="Search people, teams..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full pl-10 pr-4 h-9 text-sm transition-all duration-200 ${
                 searchFocused 
                   ? 'ring-2 ring-primary-500 border-primary-300' 
@@ -82,7 +94,7 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
             />
-          </div>
+          </form>
         </div>
 
         {/* Right section */}

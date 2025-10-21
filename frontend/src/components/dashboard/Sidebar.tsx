@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,15 @@ import {
   MessageSquare, 
   Bell, 
   Search,
-  Plus,
   Hash,
   Settings,
-  User
+  User,
+  PenSquare,
+  UsersRound
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { connectionService } from '@/lib/connections';
+import { useTeams } from '@/hooks/useTeams';
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
@@ -26,13 +28,9 @@ const navigation = [
   { name: 'Search', href: '/dashboard/search', icon: Search },
 ];
 
-const quickActions = [
-  { name: 'Start a post', action: 'post' },
-  { name: 'Create team', action: 'team' },
-];
-
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   // Fetch connection stats
@@ -41,7 +39,21 @@ export default function Sidebar() {
     queryFn: () => connectionService.getConnectionStats(),
   });
 
+  // Fetch user teams
+  const { data: teamsData } = useTeams(1, 100);
+
   const connectionCount = statsData?.data?.totalConnections || 0;
+  const teamCount = teamsData?.pagination?.total || 0;
+
+  const handleQuickAction = (action: string) => {
+    if (action === 'post') {
+      // Navigate to home with a state to open post creator
+      navigate('/dashboard', { state: { openPostCreator: true } });
+    } else if (action === 'team') {
+      // Navigate to team creation page
+      navigate('/dashboard/teams/new');
+    }
+  };
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -63,6 +75,10 @@ export default function Sidebar() {
           <div className="text-center">
             <div className="font-semibold">{connectionCount}</div>
             <div className="text-xs">Connections</div>
+          </div>
+          <div className="text-center border-l border-gray-300 dark:border-gray-600 pl-3">
+            <div className="font-semibold">{teamCount}</div>
+            <div className="text-xs">Teams</div>
           </div>
         </div>
       </div>
@@ -98,17 +114,24 @@ export default function Sidebar() {
           Quick Actions
         </h4>
         <div className="space-y-1 lg:space-y-2">
-          {quickActions.map((action) => (
-            <Button
-              key={action.action}
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-left text-sm px-2 lg:px-3"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {action.name}
-            </Button>
-          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-left text-sm px-2 lg:px-3"
+            onClick={() => handleQuickAction('post')}
+          >
+            <PenSquare className="mr-2 h-4 w-4" />
+            Start a post
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-left text-sm px-2 lg:px-3"
+            onClick={() => handleQuickAction('team')}
+          >
+            <UsersRound className="mr-2 h-4 w-4" />
+            Create team
+          </Button>
         </div>
       </div>
 

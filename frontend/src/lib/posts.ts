@@ -10,7 +10,6 @@ import {
   Bookmark,
   ApiResponse,
   SearchFilters,
-  PostType,
   ReactionType,
 } from '@/types/types'
 
@@ -218,6 +217,13 @@ export const postService = {
   // Get post analytics
   getPostAnalytics: async (postId: string): Promise<ApiResponse<any>> => {
     const response = await api.get(`/posts/${postId}/analytics`)
+    return response.data
+  },
+
+
+  // Get trending hashtags
+  getTrendingHashtags: async (limit = 10): Promise<ApiResponse<Array<{ hashtag: string; count: number; growth: string }>>> => {
+    const response = await api.get(`/posts/trending-hashtags?limit=${limit}`)
     return response.data
   },
 }

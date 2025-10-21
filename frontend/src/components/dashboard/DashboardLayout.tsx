@@ -22,14 +22,14 @@ export default function DashboardLayout() {
         {/* Desktop Layout */}
         <div className="hidden lg:flex h-full">
           {/* Left Sidebar */}
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-sm border-r border-gray-200">
+          <div className="fixed inset-y-0 left-0 w-64  shadow-sm border-r border-gray-200">
             <Sidebar />
           </div>
           
           {/* Main Content */}
           <div className="flex-1 ml-64 mr-80 flex flex-col h-full">
             {/* Top Navigation */}
-            <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+            <div className="sticky top-0 z-40  shadow-sm border-b border-gray-200">
               <TopNavbar setSidebarOpen={setSidebarOpen} />
             </div>
             
@@ -56,7 +56,7 @@ export default function DashboardLayout() {
           </div>
           
           {/* Right Sidebar */}
-          <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-sm border-l border-gray-200">
+          <div className="fixed inset-y-0 right-0 w-80 shadow-sm border-l border-gray-200">
             <RightSidebar />
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function DashboardLayout() {
         {/* Mobile Layout */}
         <div className="lg:hidden flex flex-col h-full">
           {/* Mobile Top Navigation */}
-          <div className="flex-shrink-0 z-40 bg-white shadow-sm border-b border-gray-200">
+          <div className="flex-shrink-0 z-40 shadow-sm border-b border-gray-200">
             <TopNavbar setSidebarOpen={setSidebarOpen} />
           </div>
           

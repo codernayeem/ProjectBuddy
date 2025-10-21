@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Search, Filter, X, MapPin, Briefcase, Users as UsersIcon, 
   Code, ChevronDown, Loader2
@@ -23,8 +24,11 @@ import { Link } from 'react-router-dom';
 import { UserType, TeamType } from '@/types/types';
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [searchType, setSearchType] = useState<'all' | 'users' | 'teams'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
@@ -32,6 +36,15 @@ export default function SearchPage() {
   // Filters
   const [filters, setFilters] = useState<SearchFilters>({});
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
+  // Update search when URL params change
+  useEffect(() => {
+    const queryParam = searchParams.get('q') || '';
+    if (queryParam && queryParam !== searchQuery) {
+      setSearchQuery(queryParam);
+      setDebouncedQuery(queryParam);
+    }
+  }, [searchParams]);
 
   // Debounce search query
   const handleSearchChange = (value: string) => {

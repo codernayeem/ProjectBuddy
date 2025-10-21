@@ -10,7 +10,6 @@ import {
   User,
   Shield,
   Bell,
-  Palette,
   Trash2,
   Save,
   Eye,
@@ -19,9 +18,6 @@ import {
   Settings as SettingsIcon,
   Lock,
   Mail,
-  Moon,
-  Sun,
-  Monitor,
   GraduationCap,
   Plus,
   X,
@@ -521,13 +517,12 @@ export default function SettingsPage() {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="education">Education</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -1040,94 +1035,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Palette className="h-5 w-5 mr-2" />
-                Appearance & Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium">Theme</Label>
-                  <p className="text-sm text-gray-500">Choose your preferred theme</p>
-                </div>
-                <Select value={'light'} onValueChange={(_value: 'light' | 'dark' | 'system') => null}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">
-                      <div className="flex items-center">
-                        <Sun className="h-4 w-4 mr-2" />
-                        Light
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="dark">
-                      <div className="flex items-center">
-                        <Moon className="h-4 w-4 mr-2" />
-                        Dark
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="system">
-                      <div className="flex items-center">
-                        <Monitor className="h-4 w-4 mr-2" />
-                        System
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <Separator />
-
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Language</Label>
-                <Select defaultValue="en">
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Privacy Settings</Label>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm">Make profile public</Label>
-                      <p className="text-sm text-gray-500">Allow others to find your profile</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm">Show online status</Label>
-                      <p className="text-sm text-gray-500">Let others see when you're online</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm">Allow direct messages</Label>
-                      <p className="text-sm text-gray-500">Let others send you direct messages</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
       </div>
     </div>

@@ -1,11 +1,10 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
-  TrendingUp, Users, Briefcase, Award,
-  Plus, Calendar
+  Users, Calendar
 } from 'lucide-react';
 import { useFeed, useReactToPost } from '@/hooks/usePosts';
 import { useTeams } from '@/hooks/useTeams';
@@ -25,6 +24,23 @@ export default function DashboardHomePage() {
     connections: 0, // TODO: Add connections API
     teams: userTeamsData?.pagination?.total || 0,
     projects: 0, // TODO: Add projects API
+  };
+
+  // Dynamic greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Dynamic welcome message
+  const getWelcomeMessage = () => {
+    const teamCount = stats.teams;
+    if (teamCount > 0) {
+      return `You're part of ${teamCount} team${teamCount === 1 ? '' : 's'}. Keep collaborating!`;
+    }
+    return "Ready to start collaborating? Join or create a team!";
   };
 
   const handleReaction = async (postId: string, reactionType: ReactionType) => {
@@ -69,10 +85,10 @@ export default function DashboardHomePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold mb-2 text-white ">
-                Welcome back, {user?.firstName}! 👋
+                {getGreeting()}, {user?.firstName}! 👋
               </h1>
               <p className="text-primary-100">
-                You have 3 new connection requests and 5 team invitations waiting.
+                {getWelcomeMessage()}
               </p>
             </div>
             <div className="hidden md:flex space-x-2">

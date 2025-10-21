@@ -8,10 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/Badge';
 import { 
   TrendingUp, 
-  Users, 
-  Calendar, 
   ExternalLink,
-  ChevronRight,
   MessageSquare,
   Heart,
   Share2,
@@ -20,60 +17,11 @@ import {
 } from 'lucide-react';
 import { userService } from '@/lib/auth';
 import { connectionService } from '@/lib/connections';
+import { postService } from '@/lib/posts';
+import { notificationService } from '@/lib/notifications';
 import { getInitials } from '@/lib/utils';
 
-const trendingTopics = [
-  { name: 'React 19', posts: '1.2k posts', growth: '+25%' },
-  { name: 'AI/ML Jobs', posts: '856 posts', growth: '+18%' },
-  { name: 'Remote Work', posts: '2.1k posts', growth: '+12%' },
-  { name: 'Web3 Development', posts: '432 posts', growth: '+35%' },
-  { name: 'Design Systems', posts: '678 posts', growth: '+8%' },
-];
-
-// Removed hardcoded suggestedConnections - now using real API data from component
-
-const upcomingEvents = [
-  {
-    id: 1,
-    title: 'React Conference 2024',
-    date: 'Dec 15, 2024',
-    time: '9:00 AM',
-    attendees: 1250,
-    type: 'Virtual'
-  },
-  {
-    id: 2,
-    title: 'Tech Meetup: AI in Web Dev',
-    date: 'Dec 18, 2024',
-    time: '6:00 PM',
-    attendees: 85,
-    type: 'In-person'
-  },
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    user: 'Alex Rodriguez',
-    action: 'liked your post about Next.js 15',
-    time: '2h ago',
-    avatar: '/avatars/alex.jpg'
-  },
-  {
-    id: 2,
-    user: 'Team Alpha',
-    action: 'invited you to join their project',
-    time: '4h ago',
-    avatar: '/avatars/team.jpg'
-  },
-  {
-    id: 3,
-    user: 'Jessica Miller',
-    action: 'commented on your achievement',
-    time: '6h ago',
-    avatar: '/avatars/jessica.jpg'
-  },
-];
+// Removed hardcoded suggestedConnections and trendingTopics - now using real API data
 
 export default function RightSidebar() {
   const [activeTab, setActiveTab] = useState('trending');
@@ -83,6 +31,18 @@ export default function RightSidebar() {
   const { data: recommendationsData, isLoading: loadingRecommendations } = useQuery({
     queryKey: ['user-recommendations'],
     queryFn: () => userService.getUserRecommendations(1, 3),
+  });
+
+  // Fetch trending hashtags
+  const { data: trendingData, isLoading: loadingTrending } = useQuery({
+    queryKey: ['trending-hashtags'],
+    queryFn: () => postService.getTrendingHashtags(5),
+  });
+
+  // Fetch recent notifications
+  const { data: notificationsData, isLoading: loadingNotifications } = useQuery({
+    queryKey: ['recent-notifications'],
+    queryFn: () => notificationService.getNotifications(1, 5),
   });
 
   // Mutation for sending connection requests
@@ -98,6 +58,17 @@ export default function RightSidebar() {
   });
 
   const suggestedConnections = recommendationsData?.data?.users || [];
+  const trendingHashtags = trendingData?.data || [];
+  const recentNotifications = notificationsData?.data || [];
+
+  // Helper function to get time ago
+  const getTimeAgo = (date: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -129,26 +100,36 @@ export default function RightSidebar() {
       <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 md:space-y-6">
         {activeTab === 'trending' && (
           <>
-            {/* Trending Topics */}
+            {/* Trending Hashtags */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center">
                   <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-                  Trending Now
+                  Trending Hashtags
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {trendingTopics.map((topic, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{topic.name}</div>
-                      <div className="text-xs text-gray-500">{topic.posts}</div>
-                    </div>
-                    <Badge variant="secondary" className="text-green-600 bg-green-50">
-                      {topic.growth}
-                    </Badge>
+                {loadingTrending ? (
+                  <div className="flex justify-center items-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                   </div>
-                ))}
+                ) : trendingHashtags.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No trending hashtags at the moment
+                  </p>
+                ) : (
+                  trendingHashtags.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm text-blue-600 dark:text-blue-400">{item.hashtag}</div>
+                        <div className="text-xs text-gray-500">{item.count} posts</div>
+                      </div>
+                      <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-900/20">
+                        {item.growth}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 
@@ -233,36 +214,6 @@ export default function RightSidebar() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Upcoming Events */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                  Upcoming Events
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium">{event.title}</h4>
-                        <p className="text-xs text-gray-500">{event.date} • {event.time}</p>
-                        <div className="flex items-center mt-2 text-xs text-gray-400">
-                          <Users className="h-3 w-3 mr-1" />
-                          {event.attendees} attending
-                          <Badge variant="outline" className="ml-2 text-xs">
-                            {event.type}
-                          </Badge>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
           </>
         )}
 
@@ -271,26 +222,36 @@ export default function RightSidebar() {
             {/* Recent Activity */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Recent Activity</CardTitle>
+                <CardTitle className="text-lg">Recent Notifications</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={activity.avatar} alt={activity.user} />
-                      <AvatarFallback className="text-xs">
-                        {activity.user.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <span className="font-medium">{activity.user}</span>
-                        <span className="text-gray-600 dark:text-gray-400"> {activity.action}</span>
-                      </p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                    </div>
+                {loadingNotifications ? (
+                  <div className="flex justify-center items-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                   </div>
-                ))}
+                ) : recentNotifications.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No recent notifications
+                  </p>
+                ) : (
+                  recentNotifications.slice(0, 5).map((notification) => (
+                    <div key={notification.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={notification.user?.avatar || ''} alt={notification.title} />
+                        <AvatarFallback className="text-xs">
+                          {notification.title.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">
+                          <span className="font-medium">{notification.title}</span>
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{notification.message}</p>
+                        <p className="text-xs text-gray-500">{getTimeAgo(notification.createdAt)}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 

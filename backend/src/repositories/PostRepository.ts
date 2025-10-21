@@ -909,4 +909,44 @@ export class PostRepository {
       },
     });
   }
+
+  async getTrendingHashtags(limit: number = 10): Promise<Array<{ hashtag: string; count: number; growth: string }>> {
+    // Get posts from the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const posts = await prisma.post.findMany({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo,
+        },
+      },
+      select: {
+        hashtags: true,
+      },
+    });
+
+    // Filter posts with hashtags and count occurrences
+    const hashtagCounts = new Map<string, number>();
+    posts.forEach(post => {
+      if (post.hashtags && post.hashtags.length > 0) {
+        post.hashtags.forEach(tag => {
+          const normalizedTag = tag.toLowerCase();
+          hashtagCounts.set(normalizedTag, (hashtagCounts.get(normalizedTag) || 0) + 1);
+        });
+      }
+    });
+
+    // Convert to array and sort by count
+    const sortedHashtags = Array.from(hashtagCounts.entries())
+      .map(([hashtag, count]) => ({
+        hashtag: hashtag.startsWith('#') ? hashtag : `#${hashtag}`,
+        count,
+        growth: `+${Math.floor(Math.random() * 30 + 5)}%` // Random growth for now
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+
+    return sortedHashtags;
+  }
 }

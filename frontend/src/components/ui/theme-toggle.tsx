@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +11,36 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function ThemeToggle() {
-  const setTheme = (theme: 'light' | 'dark' | 'system') => {}
+  const [, setThemeState] = useState<'light' | 'dark' | 'system'>('light')
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null
+    if (savedTheme) {
+      setThemeState(savedTheme)
+      applyTheme(savedTheme)
+    } else {
+      setThemeState('system')
+      applyTheme('system')
+    }
+  }, [])
+
+  const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    const root = window.document.documentElement
+    root.classList.remove('light', 'dark')
+
+    if (newTheme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      root.classList.add(systemTheme)
+    } else {
+      root.classList.add(newTheme)
+    }
+  }
+
+  const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    setThemeState(newTheme)
+    localStorage.setItem('theme', newTheme)
+    applyTheme(newTheme)
+  }
 
   return (
     <DropdownMenu>
@@ -45,7 +75,12 @@ interface ThemeSwitchProps {
 }
 
 export function ThemeSwitch({ checked, onCheckedChange }: ThemeSwitchProps) {
-  const { resolvedTheme } = { resolvedTheme: 'light' }
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+  
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark')
+    setResolvedTheme(isDark ? 'dark' : 'light')
+  }, [checked])
   
   return (
     <Button
