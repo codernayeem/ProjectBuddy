@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X, Home, Users, MessageSquare, Bell, Hash} from 'lucide-react';
+import { X, Home, Users, MessageSquare, Bell, Hash, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Teams', href: '/dashboard/teams', icon: Hash },
   { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+  { name: 'Search', href: '/dashboard/search', icon: Search },
 ];
 
 interface MobileNavigationProps {

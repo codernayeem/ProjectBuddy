@@ -66,15 +66,15 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
             <Menu className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
 
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-2 flex-shrink-0">
+            {/* Logo */}
+            <Link to="/dashboard" className="flex items-center space-x-2 flex-shrink-0">
             <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-primary-600">
-              <Home className="h-4 w-4 md:h-5 md:w-5 text-white" />
+              <img src="/logo.svg" alt="ProjectBuddy Logo" className="h-4 w-4 md:h-5 md:w-5" />
             </div>
             <span className="hidden text-lg md:text-xl font-bold text-gray-900 dark:text-white sm:block truncate">
               ProjectBuddy
             </span>
-          </Link>
+            </Link>
 
           {/* Search - Responsive width */}
           <form onSubmit={handleSearch} className="relative hidden md:block flex-1 max-w-md lg:max-w-lg xl:max-w-xl">
