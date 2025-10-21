@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
-  Settings, UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
+  UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
   Crown, Plus, X, MessageSquare, Target, CheckCircle2,
   Clock, Rocket, Pause, XCircle, FolderGit2, ExternalLink, Edit
 } from 'lucide-react';
@@ -495,7 +495,7 @@ export default function TeamDetailPage() {
 
   if (!team) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto">
         <Card className="p-12 text-center">
           <CardContent>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Team not found</h3>
@@ -520,7 +520,7 @@ export default function TeamDetailPage() {
   const isAdmin = userMember?.isAdmin || isOwner;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto">
       {/* Header */}
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">
@@ -570,12 +570,6 @@ export default function TeamDetailPage() {
                 <Button onClick={() => setInviteDialogOpen(true)}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Invite Members
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to={`/dashboard/teams/${teamId}/settings`}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Link>
                 </Button>
               </>
             )}

@@ -4,13 +4,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { 
-  Plus, 
   Search, 
-  Filter, 
   Calendar,
   Users,
-  Globe,
-  Lock,
   FolderOpen,
   Target
 } from 'lucide-react'
@@ -31,7 +27,7 @@ export default function ProjectsPage() {
   })
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto">
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">

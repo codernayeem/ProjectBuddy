@@ -205,7 +205,7 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto">
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">

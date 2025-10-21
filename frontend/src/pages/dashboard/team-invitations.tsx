@@ -41,7 +41,7 @@ export default function TeamInvitationsPage() {
 
   if (!team) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto">
         <Card className="p-12 text-center">
           <CardContent>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Team not found</h3>
@@ -133,7 +133,7 @@ export default function TeamInvitationsPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto max-w-5xl">
       {/* Header */}
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">

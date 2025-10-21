@@ -182,7 +182,7 @@ export default function ProfilePage() {
 
   if (isLoading || !profileData) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto">
         <div className="animate-pulse space-y-6">
           <div className="h-48 bg-gray-200 rounded-lg"></div>
           <div className="flex items-center space-x-4">
@@ -198,7 +198,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto">
       {/* Banner Section */}
       <Card className="mb-6 overflow-hidden">
         <div className="relative">
