@@ -518,7 +518,7 @@ export default function TeamDetailPage() {
   const isOwner = team.ownerId === user?.id;
   const isMember = team.members?.some((member: any) => member.userId === user?.id);
   const userMember = team.members?.find((member: any) => member.userId === user?.id);
-  const isAdmin = userMember?.isAdmin || isOwner;
+  const isAdmin = userMember?.status === 'ADMIN' || isOwner;
 
   return (
     <div className="container mx-auto">
@@ -635,7 +635,6 @@ export default function TeamDetailPage() {
           <TabsTrigger value="members">Members ({team.members?.length || 0})</TabsTrigger>
           {isAdmin && <TabsTrigger value="roles">Roles</TabsTrigger>}
           <TabsTrigger value="projects">Projects</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="about" className="space-y-6">
@@ -827,7 +826,7 @@ export default function TeamDetailPage() {
                 {team.members && team.members.length > 0 ? (
                   team.members.map((member: any) => {
                     const memberIsOwner = member.userId === team.ownerId;
-                    const memberIsAdmin = member.isAdmin || memberIsOwner;
+                    const memberIsAdmin = member.status === 'ADMIN' || memberIsOwner;
                     
                     return (
                       <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -1234,30 +1233,6 @@ export default function TeamDetailPage() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="activity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3 p-3 border-l-2 border-blue-500">
-                  <Calendar className="w-5 h-5 text-blue-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Team created</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <p className="text-sm">More activity will appear here as the team grows</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
