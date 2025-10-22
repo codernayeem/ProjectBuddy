@@ -407,6 +407,26 @@ export class PostRepository {
 
   // Reactions
   async addReaction(postId: string, userId: string, type: any): Promise<Reaction> {
+    // Verify user exists first to provide better error message
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!userExists) {
+      throw new Error('User not found. Please log out and log in again.');
+    }
+
+    // Verify post exists
+    const postExists = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+
+    if (!postExists) {
+      throw new Error('Post not found');
+    }
+
     return prisma.reaction.upsert({
       where: {
         userId_postId: {
@@ -424,7 +444,10 @@ export class PostRepository {
   }
 
   async removeReaction(postId: string, userId: string): Promise<Reaction> {
-    return prisma.reaction.delete({
+    console.log(`[PostRepository.removeReaction] postId: ${postId}, userId: ${userId}`);
+    
+    // First check if the reaction exists
+    const reaction = await prisma.reaction.findUnique({
       where: {
         userId_postId: {
           userId,
@@ -432,6 +455,25 @@ export class PostRepository {
         },
       },
     });
+
+    console.log(`[PostRepository.removeReaction] Found reaction:`, reaction);
+
+    if (!reaction) {
+      throw new Error('Reaction not found');
+    }
+
+    const deleted = await prisma.reaction.delete({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    console.log(`[PostRepository.removeReaction] Successfully deleted reaction`);
+    
+    return deleted;
   }
 
   async getPostReactions(postId: string): Promise<Reaction[]> {

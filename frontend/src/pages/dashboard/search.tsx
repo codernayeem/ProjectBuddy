@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
 import { 
   Search, Filter, X, MapPin, Briefcase, Users as UsersIcon, 
-  Code, ChevronDown, Loader2
+  Code, ChevronDown, Loader2, GraduationCap, Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,59 +21,97 @@ import {
 import { searchService, SearchFilters } from '@/lib/search';
 import { Link } from 'react-router-dom';
 import { UserType, TeamType } from '@/types/types';
+import { Label } from '@/components/ui/label';
 
 export default function SearchPage() {
-  const [searchParams] = useSearchParams();
-  const initialQuery = searchParams.get('q') || '';
-  
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [searchType, setSearchType] = useState<'all' | 'users' | 'teams'>('all');
+  const [searchType, setSearchType] = useState<'users' | 'teams'>('users');
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
+
+  // Separate search fields
+  const [nameQuery, setNameQuery] = useState('');
+  const [universityQuery, setUniversityQuery] = useState('');
+  const [teamNameQuery, setTeamNameQuery] = useState('');
+  
+  // Debounced queries
+  const [debouncedNameQuery, setDebouncedNameQuery] = useState('');
+  const [debouncedUniversityQuery, setDebouncedUniversityQuery] = useState('');
+  const [debouncedTeamNameQuery, setDebouncedTeamNameQuery] = useState('');
 
   // Filters
   const [filters, setFilters] = useState<SearchFilters>({});
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // Update search when URL params change
+  // Debounce name query
   useEffect(() => {
-    const queryParam = searchParams.get('q') || '';
-    if (queryParam && queryParam !== searchQuery) {
-      setSearchQuery(queryParam);
-      setDebouncedQuery(queryParam);
-    }
-  }, [searchParams]);
-
-  // Debounce search query
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
     const timer = setTimeout(() => {
-      setDebouncedQuery(value);
+      setDebouncedNameQuery(nameQuery);
       setPage(1);
     }, 500);
     return () => clearTimeout(timer);
-  };
+  }, [nameQuery]);
 
-  // Fetch search results
-  const { data: searchResults, isLoading } = useQuery({
-    queryKey: ['search', debouncedQuery, searchType, page, filters],
-    queryFn: () => searchService.unifiedSearch(debouncedQuery, searchType, page, 20, filters),
-    enabled: debouncedQuery.length >= 2,
+  // Debounce university query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUniversityQuery(universityQuery);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [universityQuery]);
+
+  // Debounce team name query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTeamNameQuery(teamNameQuery);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [teamNameQuery]);
+
+  // Fetch user search results
+  const { data: userSearchResults, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['searchUsers', debouncedNameQuery, debouncedUniversityQuery, page, filters, selectedSkills],
+    queryFn: () => searchService.searchUsers(
+      debouncedNameQuery, 
+      page, 
+      20, 
+      { 
+        ...filters, 
+        skills: selectedSkills.length > 0 ? selectedSkills : undefined,
+        university: debouncedUniversityQuery || undefined
+      }
+    ),
+    enabled: searchType === 'users' && (debouncedNameQuery.length >= 2 || debouncedUniversityQuery.length >= 2 || selectedSkills.length > 0),
+  });
+
+  // Fetch team search results
+  const { data: teamSearchResults, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['searchTeams', debouncedTeamNameQuery, page, filters, selectedSkills],
+    queryFn: () => searchService.searchTeams(
+      debouncedTeamNameQuery,
+      page,
+      20,
+      {
+        ...filters,
+        skills: selectedSkills.length > 0 ? selectedSkills : undefined
+      }
+    ),
+    enabled: searchType === 'teams' && (debouncedTeamNameQuery.length >= 2 || selectedSkills.length > 0),
   });
 
   // Fetch recommended users (when no search query)
   const { data: recommendedUsersData } = useQuery({
     queryKey: ['recommendedUsers'],
     queryFn: () => searchService.getRecommendedUsers(1, 6),
-    enabled: !debouncedQuery,
+    enabled: !debouncedNameQuery,
   });
 
   // Fetch suggested teams (when no search query)
   const { data: suggestedTeamsData } = useQuery({
     queryKey: ['suggestedTeams'],
     queryFn: () => searchService.getSuggestedTeams(1, 6),
-    enabled: !debouncedQuery,
+    enabled: !debouncedNameQuery,
   });
 
   // Fetch popular skills for autocomplete
@@ -111,57 +148,136 @@ export default function SearchPage() {
 
   const handleSkillSearch = (skill: string) => {
     handleAddSkill(skill);
-    setSearchQuery(skill);
-    setDebouncedQuery(skill);
+    setDebouncedNameQuery(skill);
   };
 
   const hasActiveFilters = Object.keys(filters).length > 0 || selectedSkills.length > 0;
 
-  const users = searchResults?.data?.users || [];
-  const teams = searchResults?.data?.teams || [];
-  const totalUsers = searchResults?.data?.totalUsers || 0;
-  const totalTeams = searchResults?.data?.totalTeams || 0;
+  const users = userSearchResults?.data || [];
+  const teams = teamSearchResults?.data || [];
+  const totalUsers = userSearchResults?.pagination?.total || 0;
+  const totalTeams = teamSearchResults?.pagination?.total || 0;
+  
+  const isLoading = searchType === 'users' ? isLoadingUsers : isLoadingTeams;
+  const hasSearchQuery = searchType === 'users' 
+    ? (debouncedNameQuery.length >= 2 || debouncedUniversityQuery.length >= 2 || selectedSkills.length > 0)
+    : (debouncedTeamNameQuery.length >= 2 || selectedSkills.length > 0);
 
   return (
     <div className="container mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {debouncedQuery ? `Search results for "${debouncedQuery}"` : 'Discover & Connect'}
+          Discover & Connect
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          {debouncedQuery 
-            ? `Found ${totalUsers + totalTeams} results` 
-            : 'Find people to connect with, teams to join, and opportunities to explore'}
+          Find people to connect with, teams to join, and opportunities to explore
         </p>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Search for people, teams, skills, universities..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-12 pr-12 h-14 text-lg border-2 focus:border-primary-500"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              onClick={() => {
-                setSearchQuery('');
-                setDebouncedQuery('');
-              }}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+      {/* Search Type Tabs */}
+      <Tabs value={searchType} onValueChange={(value) => setSearchType(value as 'users' | 'teams')} className="mb-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="users" className="gap-2">
+            <UsersIcon className="w-4 h-4" />
+            Search People
+          </TabsTrigger>
+          <TabsTrigger value="teams" className="gap-2">
+            <Building2 className="w-4 h-4" />
+            Search Teams
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Advanced Search Fields */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          {searchType === 'users' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name-search" className="flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  Search by Name / Username
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="name-search"
+                    type="text"
+                    placeholder="Enter person's name or username..."
+                    value={nameQuery}
+                    onChange={(e) => setNameQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                  {nameQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                      onClick={() => setNameQuery('')}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="university-search" className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" />
+                  Search by University
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="university-search"
+                    type="text"
+                    placeholder="Enter university name..."
+                    value={universityQuery}
+                    onChange={(e) => setUniversityQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                  {universityQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                      onClick={() => setUniversityQuery('')}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="team-search" className="flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                Search by Team Name
+              </Label>
+              <div className="relative">
+                <Input
+                  id="team-search"
+                  type="text"
+                  placeholder="Enter team name or description..."
+                  value={teamNameQuery}
+                  onChange={(e) => setTeamNameQuery(e.target.value)}
+                  className="pr-10"
+                />
+                {teamNameQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                    onClick={() => setTeamNameQuery('')}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Filters Bar */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -303,34 +419,16 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Results Tabs */}
-      <Tabs value={searchType} onValueChange={(value) => setSearchType(value as any)} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="all">
-            All
-            {searchResults && (
-              <Badge variant="outline" className="ml-2">
-                {totalUsers + totalTeams}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="users">
-            People
-            {searchResults && (
-              <Badge variant="outline" className="ml-2">
-                {totalUsers}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="teams">
-            Teams
-            {searchResults && (
-              <Badge variant="outline" className="ml-2">
-                {totalTeams}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+      {/* Results Section */}
+      <div className="space-y-6">
+        {/* Results Count */}
+        {hasSearchQuery && !isLoading && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Found {searchType === 'users' ? totalUsers : totalTeams} {searchType === 'users' ? 'people' : 'teams'}
+            </p>
+          </div>
+        )}
 
         {/* Loading State */}
         {isLoading && (
@@ -340,7 +438,7 @@ export default function SearchPage() {
         )}
 
         {/* Suggestions when no search query */}
-        {!isLoading && debouncedQuery.length < 2 && (
+        {!isLoading && !hasSearchQuery && (
           <div className="space-y-8">
             {/* Recommended People */}
             {recommendedUsers.length > 0 && (
@@ -499,14 +597,16 @@ export default function SearchPage() {
         )}
 
         {/* No Results */}
-        {!isLoading && debouncedQuery.length >= 2 && users.length === 0 && teams.length === 0 && (
+        {!isLoading && hasSearchQuery && (
+          searchType === 'users' ? users.length === 0 : teams.length === 0
+        ) && (
           <Card className="p-12 text-center">
             <CardContent>
               <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 No Results Found
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Try adjusting your search query or filters
               </p>
               {hasActiveFilters && (
@@ -518,49 +618,27 @@ export default function SearchPage() {
           </Card>
         )}
 
-        {/* All Results */}
-        <TabsContent value="all" className="space-y-6">
-          {users.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">People ({totalUsers})</h2>
+        {/* Search Results */}
+        {!isLoading && hasSearchQuery && (
+          <div>
+            {searchType === 'users' && users.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((user: any) => (
                   <UserCard key={user.id} user={user} />
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {teams.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Teams ({totalTeams})</h2>
+            {searchType === 'teams' && teams.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {teams.map((team: any) => (
                   <TeamCard key={team.id} team={team} />
                 ))}
               </div>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Users Only */}
-        <TabsContent value="users" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map((user: any) => (
-              <UserCard key={user.id} user={user} />
-            ))}
+            )}
           </div>
-        </TabsContent>
-
-        {/* Teams Only */}
-        <TabsContent value="teams" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {teams.map((team: any) => (
-              <TeamCard key={team.id} team={team} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 }

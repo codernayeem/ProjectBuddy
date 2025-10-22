@@ -6,6 +6,7 @@ export interface SearchFilters {
   userType?: string;
   country?: string;
   city?: string;
+  university?: string;
   skills?: string[];
   interests?: string[];
   
@@ -62,15 +63,16 @@ export const searchService = {
     limit = 20,
     filters?: SearchFilters
   ) => {
-    const params = new URLSearchParams({
-      q: query,
-      page: page.toString(),
-      limit: limit.toString(),
-    });
+    const params = new URLSearchParams();
+    
+    if (query) params.append('q', query);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     if (filters?.userType) params.append('userType', filters.userType);
     if (filters?.country) params.append('country', filters.country);
     if (filters?.city) params.append('city', filters.city);
+    if (filters?.university) params.append('university', filters.university);
     if (filters?.skills) params.append('skills', filters.skills.join(','));
     if (filters?.interests) params.append('interests', filters.interests.join(','));
 
@@ -85,11 +87,11 @@ export const searchService = {
     limit = 20,
     filters?: SearchFilters
   ) => {
-    const params = new URLSearchParams({
-      q: query,
-      page: page.toString(),
-      limit: limit.toString(),
-    });
+    const params = new URLSearchParams();
+    
+    if (query) params.append('q', query);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     if (filters?.type) params.append('type', filters.type);
     if (filters?.visibility) params.append('visibility', filters.visibility);

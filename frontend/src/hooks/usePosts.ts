@@ -157,7 +157,7 @@ export function useRemoveReaction() {
   return useMutation({
     mutationFn: (id: string) => postService.removeReaction(id),
     onSuccess: (_, id) => {
-      // Invalidate the specific post and lists
+      // Immediately invalidate to refetch and sync with server
       queryClient.invalidateQueries({ queryKey: postKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });

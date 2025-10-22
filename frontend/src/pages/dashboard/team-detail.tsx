@@ -639,8 +639,8 @@ export default function TeamDetailPage() {
         <TabsList>
           <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="members">Members ({team.memberCount})</TabsTrigger>
-          <TabsTrigger value="roles">Roles</TabsTrigger>
+          <TabsTrigger value="members">Members ({team.members?.length || 0})</TabsTrigger>
+          {isAdmin && <TabsTrigger value="roles">Roles</TabsTrigger>}
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
@@ -838,7 +838,10 @@ export default function TeamDetailPage() {
                     
                     return (
                       <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <div className="flex items-center space-x-3">
+                        <Link 
+                          to={`/dashboard/profile/${member.user?.username}`}
+                          className="flex items-center space-x-3 flex-1 cursor-pointer"
+                        >
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={member.user?.avatar || undefined} />
                             <AvatarFallback>
@@ -886,7 +889,7 @@ export default function TeamDetailPage() {
                               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{member.user.bio}</p>
                             )}
                           </div>
-                        </div>
+                        </Link>
 
                         {isAdmin && !memberIsOwner && member.userId !== user?.id && (
                           <DropdownMenu>

@@ -141,7 +141,7 @@ export function useDeleteTeam() {
   });
 }
 
-// Join team
+// Join team (direct join - for public teams without approval requirement)
 export function useJoinTeam() {
   const queryClient = useQueryClient();
 
@@ -159,6 +159,69 @@ export function useJoinTeam() {
       const message = error.response?.data?.message || 'Failed to join team';
       toast.error(message);
     },
+  });
+}
+
+// Request to join team (requires admin approval)
+export function useRequestToJoinTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, message }: { teamId: string; message?: string }) => 
+      teamService.requestToJoinTeam(teamId, message),
+    onSuccess: (_, { teamId }) => {
+      // Invalidate the specific team
+      queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      
+      toast.success('Join request sent! Waiting for admin approval.');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to send join request';
+      toast.error(message);
+    },
+  });
+}
+
+// Get team join requests (for admins)
+export function useTeamJoinRequests(teamId: string, status?: string) {
+  return useQuery({
+    queryKey: [...teamKeys.detail(teamId), 'join-requests', status],
+    queryFn: () => teamService.getTeamJoinRequests(teamId, status),
+    enabled: !!teamId,
+  });
+}
+
+// Respond to join request (for admins)
+export function useRespondToJoinRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teamId, requestId, action }: { 
+      teamId: string; 
+      requestId: string; 
+      action: 'accept' | 'decline' 
+    }) => teamService.respondToJoinRequest(teamId, requestId, action),
+    onSuccess: (_, { teamId, action }) => {
+      // Invalidate team and join requests
+      queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      queryClient.invalidateQueries({ queryKey: [...teamKeys.detail(teamId), 'join-requests'] });
+      
+      const message = action === 'accept' ? 'Join request accepted!' : 'Join request declined!';
+      toast.success(message);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to respond to join request';
+      toast.error(message);
+    },
+  });
+}
+
+// Get user's join requests
+export function useUserJoinRequests(status?: string) {
+  return useQuery({
+    queryKey: ['user-join-requests', status],
+    queryFn: () => teamService.getUserJoinRequests(status),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 

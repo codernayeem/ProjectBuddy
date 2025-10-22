@@ -59,9 +59,35 @@ export const teamService = {
     return response.data
   },
 
-  // Join team
+  // Join team (direct join for public teams without approval)
   joinTeam: async (id: string): Promise<ApiResponse<TeamMember>> => {
     const response = await api.post(`/teams/${id}/join`)
+    return response.data
+  },
+
+  // Request to join team (requires admin approval)
+  requestToJoinTeam: async (id: string, message?: string): Promise<ApiResponse<any>> => {
+    const response = await api.post(`/teams/${id}/join-request`, { message })
+    return response.data
+  },
+
+  // Get team join requests (for admins)
+  getTeamJoinRequests: async (teamId: string, status?: string): Promise<ApiResponse<any[]>> => {
+    const params = status ? `?status=${status}` : '';
+    const response = await api.get(`/teams/${teamId}/join-requests${params}`)
+    return response.data
+  },
+
+  // Respond to join request (for admins)
+  respondToJoinRequest: async (teamId: string, requestId: string, action: 'accept' | 'decline'): Promise<ApiResponse<void>> => {
+    const response = await api.post(`/teams/${teamId}/join-requests/${requestId}/${action}`)
+    return response.data
+  },
+
+  // Get user's join requests
+  getUserJoinRequests: async (status?: string): Promise<ApiResponse<any[]>> => {
+    const params = status ? `?status=${status}` : '';
+    const response = await api.get(`/teams/my-join-requests${params}`)
     return response.data
   },
 

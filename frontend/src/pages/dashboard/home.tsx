@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Users } from 'lucide-react';
-import { useFeed, useReactToPost, useDeletePost } from '@/hooks/usePosts';
+import { useFeed, useDeletePost } from '@/hooks/usePosts';
 import { useTeams } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
-import { ReactionType } from '@/types/types';
 import { PostCard } from '@/components/posts/PostCard';
 import { PostCreator } from '@/components/posts/PostCreator';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +16,6 @@ export default function DashboardHomePage() {
   const navigate = useNavigate();
   const { data: feedData, isLoading: feedLoading, error: feedError } = useFeed(1, 10);
   const { data: userTeamsData } = useTeams(1, 10);
-  const reactToPostMutation = useReactToPost();
   const deletePostMutation = useDeletePost();
 
   // Calculate stats from real data
@@ -42,14 +40,6 @@ export default function DashboardHomePage() {
       return `You're part of ${teamCount} team${teamCount === 1 ? '' : 's'}. Keep collaborating!`;
     }
     return "Ready to start collaborating? Join or create a team!";
-  };
-
-  const handleReaction = async (postId: string, reactionType: ReactionType) => {
-    try {
-      await reactToPostMutation.mutateAsync({ id: postId, type: reactionType });
-    } catch (error) {
-      console.error('Failed to react to post:', error);
-    }
   };
 
   if (feedLoading) {
@@ -124,8 +114,7 @@ export default function DashboardHomePage() {
               Array.isArray(feedData.data) && feedData.data.map((post) => (
                 <PostCard 
                   key={post.id} 
-                  post={post} 
-                  onReact={handleReaction}
+                  post={post}
                   onDelete={(postId) => deletePostMutation.mutate(postId)}
                 />
               ))
