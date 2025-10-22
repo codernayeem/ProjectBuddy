@@ -560,16 +560,16 @@ export default function SearchPage() {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Search Tips</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Find People</h3>
-                    <ul className="space-y-1 text-gray-600">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Find People</h3>
+                    <ul className="space-y-1 text-gray-600 dark:text-gray-400">
                       <li>• Search by name, username, or skills</li>
                       <li>• Filter by user type and location</li>
                       <li>• Add skills to find experts</li>
                     </ul>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Find Teams</h3>
-                    <ul className="space-y-1 text-gray-600">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Find Teams</h3>
+                    <ul className="space-y-1 text-gray-600 dark:text-gray-400">
                       <li>• Search by team name or description</li>
                       <li>• Filter by team type and skills</li>
                       <li>• Toggle "Recruiting Now" for opportunities</li>
@@ -646,7 +646,7 @@ export default function SearchPage() {
 // User Card Component
 function UserCard({ user }: { user: any }) {
   return (
-    <Link to={`/dashboard/profile/${user.username}`}>
+    <Link to={`/dashboard/profile/${user.id}`}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer">
         <CardContent className="p-4">
           <div className="flex items-start space-x-3">
@@ -657,19 +657,19 @@ function UserCard({ user }: { user: any }) {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">
+              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                 {user.firstName} {user.lastName}
               </h3>
-              <p className="text-sm text-gray-600 truncate">@{user.username}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">@{user.username}</p>
               {user.bio && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{user.bio}</p>
               )}
               {user.userType && (
                 <Badge variant="outline" className="mt-2 text-xs">
                   {user.userType.replace(/_/g, ' ')}
                 </Badge>
               )}
-              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                 {user.country && (
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
@@ -715,15 +715,15 @@ function TeamCard({ team }: { team: any }) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 truncate">{team.name}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white truncate">{team.name}</h3>
                 {team.isRecruiting && (
                   <Badge variant="default" className="text-xs">Recruiting</Badge>
                 )}
               </div>
               {team.description && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{team.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{team.description}</p>
               )}
-              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                 {team._count && (
                   <>
                     <span>{team._count.members || 0} members</span>

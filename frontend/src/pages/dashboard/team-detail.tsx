@@ -60,6 +60,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePosts, useDeletePost } from '@/hooks/usePosts';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { teamService } from '@/lib/teams';
+import { useQuery } from '@tanstack/react-query';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -67,6 +69,14 @@ export default function TeamDetailPage() {
   const { data: teamData, isLoading } = useTeam(teamId!);
   const { data: rolesData } = useTeamRoles(teamId!);
   const { data: teamPostsData, isLoading: postsLoading, refetch: refetchTeamPosts } = usePosts(1, 20, { teamId: teamId! });
+  
+  // Check if user has a pending join request
+  const { data: joinRequestData } = useQuery({
+    queryKey: ['join-request-status', teamId, user?.id],
+    queryFn: () => teamService.getUserJoinRequestStatus(teamId!),
+    enabled: !!teamId && !!user?.id,
+  });
+  
   const requestToJoinMutation = useRequestToJoinTeam();
   const leaveTeamMutation = useLeaveTeam();
   const removeMemberMutation = useRemoveMember();
@@ -584,15 +594,25 @@ export default function TeamDetailPage() {
                 Leave Team
               </Button>
             )}
-            {!isMember && (
-              <Button 
-                onClick={handleJoinTeam}
-                disabled={requestToJoinMutation.isPending}
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                {requestToJoinMutation.isPending ? 'Sending Request...' : 'Request to Join'}
-              </Button>
-            )}
+            {!isMember && (() => {
+              const hasPendingRequest = joinRequestData?.data?.status === 'PENDING';
+              
+              return (
+                <Button 
+                  onClick={handleJoinTeam}
+                  disabled={requestToJoinMutation.isPending || hasPendingRequest}
+                  variant={hasPendingRequest ? 'outline' : 'default'}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  {hasPendingRequest 
+                    ? 'Request Pending' 
+                    : requestToJoinMutation.isPending 
+                      ? 'Sending Request...' 
+                      : 'Request to Join'
+                  }
+                </Button>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -831,7 +851,7 @@ export default function TeamDetailPage() {
                     return (
                       <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                         <Link 
-                          to={`/dashboard/profile/${member.user?.username}`}
+                          to={`/dashboard/profile/${member.userId}`}
                           className="flex items-center space-x-3 flex-1 cursor-pointer"
                         >
                           <Avatar className="h-12 w-12">

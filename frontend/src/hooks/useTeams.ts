@@ -170,8 +170,9 @@ export function useRequestToJoinTeam() {
     mutationFn: ({ teamId, message }: { teamId: string; message?: string }) => 
       teamService.requestToJoinTeam(teamId, message),
     onSuccess: (_, { teamId }) => {
-      // Invalidate the specific team
+      // Invalidate the specific team and join request status
       queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
+      queryClient.invalidateQueries({ queryKey: ['join-request-status', teamId] });
       
       toast.success('Join request sent! Waiting for admin approval.');
     },

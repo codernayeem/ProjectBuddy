@@ -406,7 +406,9 @@ export class MessageRepository {
     const where: any = {
       conversationId,
       senderId: { not: userId },
-      readBy: { has: userId },
+      NOT: {
+        readBy: { has: userId },
+      },
     };
 
     if (messageId) {

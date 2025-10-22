@@ -121,15 +121,6 @@ export default function LoginPage() {
                   Remember me
                 </label>
               </div>
-
-              <div className="text-sm">
-                <Link
-                  to="/auth/forgot-password"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Forgot password?
-                </Link>
-              </div>
             </div>
 
             <button

@@ -56,8 +56,9 @@ export const connectionService = {
   },
 
   // Get connection statistics
-  getConnectionStats: async (): Promise<ApiResponse<ConnectionStats>> => {
-    const response = await api.get('/connections/stats')
+  getConnectionStats: async (userId?: string): Promise<ApiResponse<ConnectionStats>> => {
+    const url = userId ? `/connections/stats?userId=${userId}` : '/connections/stats'
+    const response = await api.get(url)
     return response.data
   },
 

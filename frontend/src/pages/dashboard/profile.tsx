@@ -59,8 +59,8 @@ export default function ProfilePage() {
   // Fetch connection stats
   const { data: connectionStats } = useQuery({
     queryKey: ['connection-stats', profileUserId],
-    queryFn: () => connectionService.getConnectionStats(),
-    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
+    queryFn: () => connectionService.getConnectionStats(profileUserId),
+    enabled: !!profileUserId,
   })
 
   // Fetch user teams count (TODO: Add to team service)
@@ -443,7 +443,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-900 dark:text-white">
-              {isOwnProfile ? (connectionStats?.data?.totalConnections || 0) : '—'}
+              {connectionStats?.data?.totalConnections || 0}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />

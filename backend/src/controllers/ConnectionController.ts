@@ -148,7 +148,9 @@ export class ConnectionController {
         return;
       }
 
-      const stats = await this.connectionService.getConnectionStats(req.user.id);
+      // Allow getting stats for other users via query parameter
+      const userId = req.query.userId as string || req.user.id;
+      const stats = await this.connectionService.getConnectionStats(userId);
 
       res.json(createResponse(true, 'Connection stats retrieved successfully', stats));
     } catch (error) {

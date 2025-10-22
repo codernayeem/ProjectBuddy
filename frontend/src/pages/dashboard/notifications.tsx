@@ -108,7 +108,7 @@ export default function NotificationsPage() {
   };
 
   const NotificationCard = ({ notification }: { notification: any }) => (
-    <Card className={`hover:shadow-md transition-shadow ${!notification.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow ${!notification.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-900/20' : ''}`}>
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           {/* Notification Icon */}
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h4 className="text-sm font-semibold text-gray-900">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                     {notification.title}
                   </h4>
                   {!notification.isRead && (
@@ -129,9 +129,9 @@ export default function NotificationsPage() {
                   )}
                 </div>
                 
-                <p className="text-sm text-gray-700 mb-2">{notification.message}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{notification.message}</p>
                 
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
                   <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                   
                   {(notification.data as any)?.senderUsername && (
@@ -178,19 +178,19 @@ export default function NotificationsPage() {
 
             {/* Team/Project info */}
             {(notification.data as any)?.team && (
-              <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={(notification.data as any).team.logo} alt={(notification.data as any).team.name} />
                   <AvatarFallback className="text-xs">{(notification.data as any).team.name[0]}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-gray-900">{(notification.data as any).team.name}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{(notification.data as any).team.name}</span>
               </div>
             )}
 
             {(notification.data as any)?.project && (
-              <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 rounded-lg">
-                <Briefcase className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">{(notification.data as any).project.name}</span>
+              <div className="flex items-center space-x-2 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <Briefcase className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{(notification.data as any).project.name}</span>
                 {(notification.data as any).percentage && (
                   <Badge variant="outline" className="text-xs">
                     {(notification.data as any).percentage}% Complete
@@ -208,9 +208,9 @@ export default function NotificationsPage() {
     <div className="container mx-auto">
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-center">
+            <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading notifications...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
           </div>
         </div>
       ) : (
@@ -218,7 +218,7 @@ export default function NotificationsPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Notifications</h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
                 Stay updated with your connections, teams, and projects.
               </p>
               {unreadCount > 0 && (
@@ -276,9 +276,9 @@ export default function NotificationsPage() {
           ) : (
             <Card className="p-12 text-center">
               <CardContent>
-                <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">All caught up!</h3>
-                <p className="text-gray-600">
+                <Bell className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">All caught up!</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any notifications at the moment.
                 </p>
               </CardContent>
@@ -294,9 +294,9 @@ export default function NotificationsPage() {
           ) : (
             <Card className="p-12 text-center">
               <CardContent>
-                <CheckCircle className="w-16 h-16 text-green-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">All caught up!</h3>
-                <p className="text-gray-600">
+                <CheckCircle className="w-16 h-16 text-green-300 dark:text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">All caught up!</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any unread notifications.
                 </p>
               </CardContent>
@@ -312,9 +312,9 @@ export default function NotificationsPage() {
           ) : (
             <Card className="p-12 text-center">
               <CardContent>
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No connection notifications</h3>
-                <p className="text-gray-600">
+                <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No connection notifications</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any connection or team-related notifications.
                 </p>
               </CardContent>
@@ -330,9 +330,9 @@ export default function NotificationsPage() {
           ) : (
             <Card className="p-12 text-center">
               <CardContent>
-                <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No post notifications</h3>
-                <p className="text-gray-600">
+                <MessageCircle className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No post notifications</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any post-related notifications.
                 </p>
               </CardContent>
@@ -348,9 +348,9 @@ export default function NotificationsPage() {
           ) : (
             <Card className="p-12 text-center">
               <CardContent>
-                <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No project notifications</h3>
-                <p className="text-gray-600">
+                <Briefcase className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No project notifications</h3>
+                <p className="text-gray-600 dark:text-gray-400">
                   You don't have any project-related notifications.
                 </p>
               </CardContent>

@@ -314,6 +314,13 @@ export class TeamService {
       throw new Error('You are already a member of this team');
     }
 
+    // Check if there's already a pending request
+    const existingRequest = await this.teamRepository.getJoinRequestByTeamAndUser(teamId, userId);
+    if (existingRequest && existingRequest.status === 'PENDING') {
+      // Return the existing request instead of creating a new one
+      return existingRequest;
+    }
+
     const joinRequest = await this.teamRepository.createJoinRequest({
       team: { connect: { id: teamId } },
       user: { connect: { id: userId } },
@@ -331,6 +338,10 @@ export class TeamService {
     );
 
     return joinRequest;
+  }
+
+  async getUserJoinRequestStatus(teamId: string, userId: string): Promise<TeamJoinRequest | null> {
+    return this.teamRepository.getJoinRequestByTeamAndUser(teamId, userId);
   }
 
   async respondToJoinRequest(requestId: string, userId: string, accept: boolean): Promise<void> {

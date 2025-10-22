@@ -47,6 +47,7 @@ export default function MessagesPage() {
   const { data: conversationsData, isLoading: conversationsLoading } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => messageService.getConversations(1, 50),
+    refetchInterval: 3000, // Refetch every 3 seconds for real-time updates
   })
 
   // Fetch connections to show as potential message recipients
@@ -60,6 +61,7 @@ export default function MessagesPage() {
     queryKey: ['messages', selectedConversationId],
     queryFn: () => messageService.getMessages(selectedConversationId!, 1, 100),
     enabled: !!selectedConversationId,
+    refetchInterval: selectedConversationId ? 2000 : false, // Refetch every 2 seconds when conversation is selected
   })
 
   // Start conversation mutation (for new direct messages)
@@ -166,20 +168,35 @@ export default function MessagesPage() {
     sendMessageMutation.mutate({ content: messageText })
   }
 
-  const filteredConversations = conversations.filter((conv: any) => {
-    if (!searchQuery.trim()) return true
-    
-    // For team chats, search in title
-    if (conv.type === 'TEAM_CHAT') {
-      const title = (conv.title || '').toLowerCase()
-      return title.includes(searchQuery.toLowerCase())
-    }
-    
-    // For direct messages, search in other user's name
-    const otherUser = getOtherParticipant(conv)
-    const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`.toLowerCase()
-    return fullName.includes(searchQuery.toLowerCase())
-  })
+  const filteredConversations = conversations
+    .filter((conv: any) => {
+      if (!searchQuery.trim()) return true
+      
+      // For team chats, search in title
+      if (conv.type === 'TEAM_CHAT') {
+        const title = (conv.title || '').toLowerCase()
+        return title.includes(searchQuery.toLowerCase())
+      }
+      
+      // For direct messages, search in other user's name
+      const otherUser = getOtherParticipant(conv)
+      const fullName = `${otherUser?.firstName} ${otherUser?.lastName}`.toLowerCase()
+      return fullName.includes(searchQuery.toLowerCase())
+    })
+    .sort((a: any, b: any) => {
+      // Conversations with messages come first
+      const aHasMessages = a.messages && a.messages.length > 0
+      const bHasMessages = b.messages && b.messages.length > 0
+      
+      if (aHasMessages && !bHasMessages) return -1
+      if (!aHasMessages && bHasMessages) return 1
+      
+      // If both have messages or both don't, sort by lastMessageAt
+      const aTime = a.messages?.[0]?.createdAt || a.createdAt
+      const bTime = b.messages?.[0]?.createdAt || b.createdAt
+      
+      return new Date(bTime).getTime() - new Date(aTime).getTime()
+    })
 
   // Get unread count for a conversation
   const getUnreadCount = (conversation: any) => {

@@ -175,6 +175,29 @@ export class TeamController {
     }
   };
 
+  public getUserJoinRequestStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const request = await this.teamService.getUserJoinRequestStatus(id, userId);
+      res.json({
+        success: true,
+        data: request
+      });
+    } catch (error: any) {
+      res.status(400).json({ 
+        success: false,
+        message: error.message 
+      });
+    }
+  };
+
   public respondToJoinRequest = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { requestId } = req.params;

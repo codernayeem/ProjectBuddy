@@ -538,6 +538,35 @@ export class TeamRepository {
     });
   }
 
+  async getJoinRequestByTeamAndUser(teamId: string, userId: string): Promise<TeamJoinRequest | null> {
+    return prisma.teamJoinRequest.findUnique({
+      where: {
+        teamId_userId: {
+          teamId,
+          userId,
+        },
+      },
+      include: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
   // Team Following
   async followTeam(userId: string, teamId: string): Promise<TeamFollow> {
     return prisma.teamFollow.create({

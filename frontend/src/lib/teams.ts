@@ -71,6 +71,12 @@ export const teamService = {
     return response.data
   },
 
+  // Check if user has a pending join request
+  getUserJoinRequestStatus: async (teamId: string): Promise<ApiResponse<any>> => {
+    const response = await api.get(`/teams/${teamId}/join-request/status`)
+    return response.data
+  },
+
   // Get team join requests (for admins)
   getTeamJoinRequests: async (teamId: string, status?: string): Promise<ApiResponse<any[]>> => {
     const params = status ? `?status=${status}` : '';

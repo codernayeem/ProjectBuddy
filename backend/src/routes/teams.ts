@@ -28,6 +28,8 @@ router.post('/:id/join', teamController.joinTeam);
 
 router.post('/:id/join-request', teamController.createJoinRequest);
 
+router.get('/:id/join-request/status', teamController.getUserJoinRequestStatus);
+
 router.put('/join-requests/:requestId/respond', teamController.respondToJoinRequest);
 
 router.post('/:id/leave', teamController.leaveTeam);
