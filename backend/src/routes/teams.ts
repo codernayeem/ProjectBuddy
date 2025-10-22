@@ -44,6 +44,8 @@ router.post('/:id/follow', teamController.followTeam);
 router.delete('/:id/follow', teamController.unfollowTeam);
 
 // Custom roles
+router.get('/:id/roles', teamController.getCustomRoles);
+
 router.post('/:id/roles', teamController.createCustomRole);
 
 router.put('/roles/:roleId', teamController.updateCustomRole);

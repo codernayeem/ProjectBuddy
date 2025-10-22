@@ -187,6 +187,10 @@ export class TeamService {
   }
 
   // Custom Roles Management
+  async getCustomRoles(teamId: string): Promise<TeamCustomRole[]> {
+    return this.teamRepository.getCustomRoles(teamId);
+  }
+
   async createCustomRole(teamId: string, userId: string, data: CreateCustomRoleData): Promise<TeamCustomRole> {
     const canManage = await this.teamRepository.canManageTeam(teamId, userId);
     

@@ -231,6 +231,20 @@ export class TeamController {
   };
 
   // Custom roles
+  public getCustomRoles = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      const roles = await this.teamService.getCustomRoles(id);
+      res.status(200).json({
+        message: 'Custom roles retrieved successfully',
+        data: roles
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
   public createCustomRole = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params;

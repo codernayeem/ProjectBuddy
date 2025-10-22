@@ -640,7 +640,7 @@ export default function TeamDetailPage() {
           <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="members">Members ({team.memberCount})</TabsTrigger>
-          {isAdmin && <TabsTrigger value="roles">Roles</TabsTrigger>}
+          <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>

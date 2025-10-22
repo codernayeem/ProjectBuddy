@@ -329,6 +329,13 @@ export class TeamRepository {
   }
 
   // Custom Roles Management
+  async getCustomRoles(teamId: string): Promise<TeamCustomRole[]> {
+    return prisma.teamCustomRole.findMany({
+      where: { teamId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async createCustomRole(teamId: string, data: Prisma.TeamCustomRoleCreateInput): Promise<TeamCustomRole> {
     return prisma.teamCustomRole.create({
       data: {
