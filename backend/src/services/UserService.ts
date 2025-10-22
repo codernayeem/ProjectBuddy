@@ -124,7 +124,7 @@ export class UserService {
   }
 
   async getUserById(id: string): Promise<Omit<User, 'passwordHash' | 'refreshToken'> | null> {
-    const user = await this.userRepository.findById(id);
+    const user = await this.userRepository.findById(id, true); // Include details (universities, teams, etc.)
     if (!user) return null;
 
     const { passwordHash: _, refreshToken: __, ...userWithoutSensitiveData } = user;

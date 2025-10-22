@@ -14,7 +14,6 @@ import {
   Building,
   Award,
   Clock,
-  BookOpen,
   FileText,
   Plus,
   UserPlus,
@@ -27,6 +26,7 @@ import {
 import { userService } from '@/lib/auth'
 import { connectionService } from '@/lib/connections'
 import { postService } from '@/lib/posts'
+import { teamService } from '@/lib/teams'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Badge as UIBadge } from '@/components/ui/Badge'
@@ -66,11 +66,8 @@ export default function ProfilePage() {
   // Fetch user teams count (TODO: Add to team service)
   const { data: userTeams } = useQuery({
     queryKey: ['user-teams', profileUserId],
-    queryFn: () => {
-      // TODO: Implement getUserTeams in team service
-      return Promise.resolve({ data: [], pagination: { total: 0 } })
-    },
-    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
+    queryFn: () => teamService.getUserTeams(1, 100), // Fetch up to 100 teams
+    enabled: !!profileUserId,
   })
 
   // Upload avatar mutation (only for own profile)
@@ -260,7 +257,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Name and Basic Info */}
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 mt-4">
                 <div className="flex items-center space-x-2">
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     {profileData.firstName} {profileData.lastName}
@@ -276,13 +273,6 @@ export default function ProfilePage() {
                     <span className="flex items-center">
                       <MapPin className="h-4 w-4 mr-1" />
                       {[profileData.city, profileData.country].filter(Boolean).join(', ')}
-                    </span>
-                  )}
-                  {/* Show current university */}
-                  {(profileData as any)?.universities?.find((u: any) => u.status === 'CURRENT') && (
-                    <span className="flex items-center">
-                      <GraduationCap className="h-4 w-4 mr-1" />
-                      {(profileData as any).universities.find((u: any) => u.status === 'CURRENT')?.universityName}
                     </span>
                   )}
                 </div>
@@ -412,13 +402,44 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+              
+              {/* Universities Section */}
+              {(profileData as any).universities && (profileData as any).universities.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    Education
+                  </h3>
+                  <div className="space-y-2">
+                    {(profileData as any).universities.map((university: any) => (
+                      <div key={university.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-gray-900 dark:text-white">{university.universityName}</h4>
+                            <UIBadge variant={university.status === 'CURRENT' ? 'default' : 'secondary'} className="text-xs">
+                              {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
+                            </UIBadge>
+                          </div>
+                          {(university.startYear || university.endYear) && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {university.startYear && `${university.startYear}`}
+                              {university.startYear && university.endYear && ' - '}
+                              {university.endYear && `${university.endYear}`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-900 dark:text-white">
@@ -433,7 +454,7 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-900 dark:text-white">
-              {isOwnProfile ? (userTeams?.pagination?.total || 0) : '—'}
+              {userTeams?.pagination?.total || 0}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
               <Users className="h-4 w-4 mr-1" />
@@ -441,117 +462,15 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-900 dark:text-white">
-              {(profileData as any)?.universities?.length || 0}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
-              <GraduationCap className="h-4 w-4 mr-1" />
-              Universities
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-4' : 'grid-cols-3'}`}>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+      <Tabs defaultValue="posts" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="about">About</TabsTrigger>
-          {isOwnProfile && <TabsTrigger value="contact">Contact</TabsTrigger>}
+          <TabsTrigger value="teams">Teams</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Professional Info */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Building className="h-5 w-5 mr-2" />
-                  Professional Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">User Type</label>
-                    <p className="text-gray-900 dark:text-white mt-1">{formatEnumValue(profileData.userType)}</p>
-                  </div>
-                  {profileData.company && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
-                      <p className="text-gray-900 dark:text-white mt-1">{profileData.company}</p>
-                    </div>
-                  )}
-                  {profileData.position && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
-                      <p className="text-gray-900 dark:text-white mt-1">{profileData.position}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Links */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Globe className="h-5 w-5 mr-2" />
-                  Quick Links
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {profileData.website && (
-                  <a
-                    href={profileData.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
-                    <span className="text-sm text-gray-900 dark:text-white">Website</span>
-                  </a>
-                )}
-                {profileData.github && (
-                  <a
-                    href={profileData.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Github className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
-                    <span className="text-sm text-gray-900 dark:text-white">GitHub</span>
-                  </a>
-                )}
-                {profileData.linkedin && (
-                  <a
-                    href={profileData.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Linkedin className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
-                    <span className="text-sm text-gray-900 dark:text-white">LinkedIn</span>
-                  </a>
-                )}
-                {profileData.portfolio && (
-                  <a
-                    href={profileData.portfolio}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Award className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
-                    <span className="text-sm text-gray-900 dark:text-white">Portfolio</span>
-                  </a>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="posts">
           <Card>
@@ -610,27 +529,43 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="about">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BookOpen className="h-5 w-5 mr-2" />
-                About Me
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Bio</h3>
-                {profileData.bio ? (
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{profileData.bio}</p>
-                ) : (
-                  <p className="text-gray-500 dark:text-gray-400 italic">No bio added yet.</p>
-                )}
-              </div>
+        <TabsContent value="about" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Professional Info */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Building className="h-5 w-5 mr-2" />
+                  Professional Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</h3>
+                  {profileData.bio ? (
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{profileData.bio}</p>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic text-sm">No bio added yet.</p>
+                  )}
+                </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Account Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">User Type</label>
+                    <p className="text-gray-900 dark:text-white mt-1">{formatEnumValue(profileData.userType)}</p>
+                  </div>
+                  {profileData.company && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
+                      <p className="text-gray-900 dark:text-white mt-1">{profileData.company}</p>
+                    </div>
+                  )}
+                  {profileData.position && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                      <p className="text-gray-900 dark:text-white mt-1">{profileData.position}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Status</label>
                     <p className="text-gray-900 dark:text-white mt-1">
@@ -642,129 +577,217 @@ export default function ProfilePage() {
                     <p className="text-gray-900 dark:text-white mt-1">{formatDateShort(profileData.createdAt)}</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Education Section */}
-              {(profileData as any).universities && (profileData as any).universities.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Education
-                  </h3>
-                  <div className="space-y-3">
-                    {(profileData as any).universities.map((university: any) => (
-                      <div key={university.id} className="flex items-start justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">{university.universityName}</h4>
-                            <UIBadge variant={university.status === 'CURRENT' ? 'default' : 'secondary'}>
-                              {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
-                            </UIBadge>
+                {/* Education Section */}
+                {(profileData as any).universities && (profileData as any).universities.length > 0 && (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Education
+                    </h3>
+                    <div className="space-y-3">
+                      {(profileData as any).universities.map((university: any) => (
+                        <div key={university.id} className="flex items-start justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 dark:text-white">{university.universityName}</h4>
+                              <UIBadge variant={university.status === 'CURRENT' ? 'default' : 'secondary'}>
+                                {university.status === 'CURRENT' ? 'Current' : 'Graduated'}
+                              </UIBadge>
+                            </div>
+                            {(university.startYear || university.endYear) && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {university.startYear && `${university.startYear}`}
+                                {university.startYear && university.endYear && ' - '}
+                                {university.endYear && `${university.endYear}`}
+                              </p>
+                            )}
                           </div>
-                          {(university.startYear || university.endYear) && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {university.startYear && `${university.startYear}`}
-                              {university.startYear && university.endYear && ' - '}
-                              {university.endYear && `${university.endYear}`}
-                            </p>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                )}
+              </CardContent>
+            </Card>
 
-        {isOwnProfile && (
-          <TabsContent value="contact">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Mail className="h-5 w-5 mr-2" />
-                  Contact Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <Mail className="h-5 w-5 text-gray-400" />
+            {/* Contact & Links */}
+            <div className="space-y-6">
+              {/* Quick Links */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Globe className="h-5 w-5 mr-2" />
+                    Links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {profileData.website && (
+                    <a
+                      href={profileData.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                      <span className="text-sm text-gray-900 dark:text-white">Website</span>
+                    </a>
+                  )}
+                  {profileData.github && (
+                    <a
+                      href={profileData.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Github className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                      <span className="text-sm text-gray-900 dark:text-white">GitHub</span>
+                    </a>
+                  )}
+                  {profileData.linkedin && (
+                    <a
+                      href={profileData.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Linkedin className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                      <span className="text-sm text-gray-900 dark:text-white">LinkedIn</span>
+                    </a>
+                  )}
+                  {profileData.portfolio && (
+                    <a
+                      href={profileData.portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Award className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                      <span className="text-sm text-gray-900 dark:text-white">Portfolio</span>
+                    </a>
+                  )}
+                  {!profileData.website && !profileData.github && !profileData.linkedin && !profileData.portfolio && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic text-center py-4">No links added</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Contact Info - Only for own profile */}
+              {isOwnProfile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Mail className="h-5 w-5 mr-2" />
+                      Contact
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Email</label>
-                        <p className="text-gray-900">{profileData.email}</p>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Email</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{profileData.email}</p>
                       </div>
                     </div>
 
                     {profileData.city && (
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="h-5 w-5 text-gray-400" />
+                      <div className="flex items-start space-x-3">
+                        <MapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                         <div>
-                          <label className="text-sm font-medium text-gray-700">City</label>
-                          <p className="text-gray-900">{profileData.city}</p>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">City</label>
+                          <p className="text-sm text-gray-900 dark:text-white">{profileData.city}</p>
                         </div>
                       </div>
                     )}
 
                     {profileData.country && (
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="h-5 w-5 text-gray-400" />
+                      <div className="flex items-start space-x-3">
+                        <MapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Country</label>
-                          <p className="text-gray-900">{profileData.country}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {profileData.address && (
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Address</label>
-                          <p className="text-gray-900">{profileData.address}</p>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Country</label>
+                          <p className="text-sm text-gray-900 dark:text-white">{profileData.country}</p>
                         </div>
                       </div>
                     )}
 
                     {profileData.timezone && (
-                      <div className="flex items-center space-x-3">
-                        <Clock className="h-5 w-5 text-gray-400" />
+                      <div className="flex items-start space-x-3">
+                        <Clock className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Timezone</label>
-                          <p className="text-gray-900">{profileData.timezone}</p>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Timezone</label>
+                          <p className="text-sm text-gray-900 dark:text-white">{profileData.timezone}</p>
                         </div>
                       </div>
                     )}
-                  </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
 
-                  <div className="space-y-4">
-                    {profileData.company && (
-                      <div className="flex items-center space-x-3">
-                        <Building className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
-                          <p className="text-gray-900 dark:text-white">{profileData.company}</p>
+        <TabsContent value="teams">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Users className="h-5 w-5 mr-2" />
+                {isOwnProfile ? 'My Teams' : `${profileData?.firstName}'s Teams`} ({userTeams?.pagination?.total || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userTeams?.data && userTeams.data.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userTeams.data.map((team: any) => (
+                    <Link
+                      key={team.id}
+                      to={`/dashboard/teams/${team.id}`}
+                      className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
+                    >
+                      <div className="flex items-center space-x-3 mb-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={team.avatar || undefined} alt={team.name} />
+                          <AvatarFallback>{team.name[0]?.toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{team.name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            {team.memberCount || 0} members
+                          </p>
                         </div>
                       </div>
-                    )}
-
-                    {profileData.position && (
-                      <div className="flex items-center space-x-3">
-                        <Award className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
-                          <p className="text-gray-900 dark:text-white">{profileData.position}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      {team.shortDescription && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {team.shortDescription}
+                        </p>
+                      )}
+                    </Link>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+              ) : (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    {isOwnProfile ? 'No teams yet' : 'No teams to show'}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    {isOwnProfile 
+                      ? 'Join or create a team to get started.' 
+                      : `${profileData?.firstName} hasn't joined any teams yet.`
+                    }
+                  </p>
+                  {isOwnProfile && (
+                    <Button asChild>
+                      <Link to="/dashboard/teams">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Browse Teams
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )
