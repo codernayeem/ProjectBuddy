@@ -332,6 +332,11 @@ export class TeamRepository {
   async getCustomRoles(teamId: string): Promise<TeamCustomRole[]> {
     return prisma.teamCustomRole.findMany({
       where: { teamId },
+      include: {
+        _count: {
+          select: { members: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -700,5 +705,141 @@ export class TeamRepository {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // Get recommended teams based on user's profile (skills, interests, university)
+  async getRecommendedTeams(
+    userId: string, 
+    params: PaginationParams
+  ): Promise<{ teams: Team[]; total: number }> {
+    const { page = 1, limit = 10 } = params;
+    const skip = (page - 1) * limit;
+
+    // Get user's profile data
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        skills: true,
+        interests: true,
+        universities: {
+          select: { universityName: true },
+        },
+        teamMemberships: {
+          select: { teamId: true },
+        },
+      },
+    });
+
+    if (!user) {
+      return { teams: [], total: 0 };
+    }
+
+    const userTeamIds = user.teamMemberships.map(m => m.teamId);
+    const userSkills = user.skills || [];
+    const userInterests = user.interests || [];
+    const userUniversities = user.universities.map(u => u.universityName);
+
+    // Build the OR conditions dynamically
+    const matchConditions: any[] = [];
+
+    // Match skills
+    if (userSkills.length > 0) {
+      matchConditions.push({
+        skills: {
+          hasSome: userSkills,
+        }
+      });
+    }
+
+    // Match interests (tags)
+    if (userInterests.length > 0) {
+      matchConditions.push({
+        tags: {
+          hasSome: userInterests,
+        }
+      });
+    }
+
+    // Match university (members from same university)
+    if (userUniversities.length > 0) {
+      matchConditions.push({
+        members: {
+          some: {
+            user: {
+              universities: {
+                some: {
+                  universityName: { in: userUniversities },
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // If no matching conditions, return empty result
+    if (matchConditions.length === 0) {
+      return { teams: [], total: 0 };
+    }
+
+    // Find teams with matching criteria
+    const teams = await prisma.team.findMany({
+      where: {
+        AND: [
+          // Exclude teams user is already a member of
+          { id: { notIn: userTeamIds.length > 0 ? userTeamIds : [''] } },
+          // Only public teams
+          { visibility: 'PUBLIC' },
+          // Match skills, interests, or university
+          {
+            OR: matchConditions,
+          },
+        ],
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        members: {
+          select: {
+            userId: true,
+            status: true,
+          },
+        },
+        _count: {
+          select: {
+            projects: true,
+            members: true,
+          },
+        },
+      },
+      take: limit,
+      skip,
+      orderBy: [
+        { memberCount: 'desc' }, // Popular teams first
+        { createdAt: 'desc' },
+      ],
+    });
+
+    // Get total count for pagination
+    const total = await prisma.team.count({
+      where: {
+        AND: [
+          { id: { notIn: userTeamIds.length > 0 ? userTeamIds : [''] } },
+          { visibility: 'PUBLIC' },
+          {
+            OR: matchConditions,
+          },
+        ],
+      },
+    });
+
+    return { teams, total };
   }
 }

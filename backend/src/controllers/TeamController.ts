@@ -230,6 +230,30 @@ export class TeamController {
     }
   };
 
+  public updateMemberRole = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id, memberId } = req.params;
+      const { isAdmin } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      await this.teamService.updateMemberRole(id, memberId, isAdmin, userId);
+      res.json({ 
+        success: true,
+        message: isAdmin ? 'Member promoted to admin' : 'Admin status removed from member'
+      });
+    } catch (error: any) {
+      res.status(400).json({ 
+        success: false,
+        message: error.message 
+      });
+    }
+  };
+
   // Custom roles
   public getCustomRoles = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -625,14 +649,23 @@ export class TeamController {
         return;
       }
 
-      // TODO: Implement AI-based recommendations
-      // For now, return empty array with consistent structure
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+
+      const result = await this.teamService.getRecommendedTeams(userId, { page, limit, skip });
+
       res.json({
+        success: true,
         message: 'Recommended teams fetched successfully',
-        data: []
+        data: result.teams,
+        pagination: result.pagination,
       });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({ 
+        success: false,
+        message: error.message 
+      });
     }
   };
 }

@@ -27,13 +27,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   ArrowLeft, Globe, Lock, Eye, MapPin, Link2, Users, Calendar,
-  UserPlus, LogOut, Mail, MoreVertical, Shield, Trash2,
+  UserPlus, LogOut, MoreVertical, Shield, Trash2,
   Crown, Plus, X, MessageSquare, Target, CheckCircle2,
   Clock, Rocket, Pause, XCircle, FolderGit2, ExternalLink, Edit
 } from 'lucide-react';
 import { 
-  useTeam, 
-  useJoinTeam, 
+  useTeam,
+  useRequestToJoinTeam,
   useLeaveTeam, 
   useRemoveMember,
   useTeamRoles,
@@ -67,7 +67,7 @@ export default function TeamDetailPage() {
   const { data: teamData, isLoading } = useTeam(teamId!);
   const { data: rolesData } = useTeamRoles(teamId!);
   const { data: teamPostsData, isLoading: postsLoading, refetch: refetchTeamPosts } = usePosts(1, 20, { teamId: teamId! });
-  const joinTeamMutation = useJoinTeam();
+  const requestToJoinMutation = useRequestToJoinTeam();
   const leaveTeamMutation = useLeaveTeam();
   const removeMemberMutation = useRemoveMember();
   const createRoleMutation = useCreateRole();
@@ -138,9 +138,9 @@ export default function TeamDetailPage() {
   const handleJoinTeam = async () => {
     if (!teamId) return;
     try {
-      await joinTeamMutation.mutateAsync(teamId);
+      await requestToJoinMutation.mutateAsync({ teamId, message: undefined });
     } catch (error) {
-      console.error('Failed to join team:', error);
+      console.error('Failed to request to join team:', error);
     }
   };
 
@@ -585,20 +585,13 @@ export default function TeamDetailPage() {
               </Button>
             )}
             {!isMember && (
-              team.visibility === 'PUBLIC' ? (
-                <Button 
-                  onClick={handleJoinTeam}
-                  disabled={joinTeamMutation.isPending}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Join Team
-                </Button>
-              ) : (
-                <Button>
-                  <Mail className="w-4 h-4 mr-2" />
-                  Request to Join
-                </Button>
-              )
+              <Button 
+                onClick={handleJoinTeam}
+                disabled={requestToJoinMutation.isPending}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {requestToJoinMutation.isPending ? 'Sending Request...' : 'Request to Join'}
+              </Button>
             )}
           </div>
         </div>
@@ -1001,7 +994,7 @@ export default function TeamDetailPage() {
                               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{role.description}</p>
                             )}
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {role.members?.length || 0} member{role.members?.length !== 1 ? 's' : ''}
+                              {role._count?.members || 0} member{role._count?.members !== 1 ? 's' : ''}
                             </p>
                           </div>
                           <div className="flex space-x-2">

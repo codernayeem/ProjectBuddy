@@ -34,6 +34,8 @@ router.post('/:id/leave', teamController.leaveTeam);
 
 router.delete('/:id/members/:memberId', teamController.removeMember);
 
+router.put('/:id/members/:memberId/role', teamController.updateMemberRole);
+
 router.post('/:id/invite', teamController.sendInvitation);
 
 router.put('/invitations/:invitationId/respond', teamController.respondToInvitation);

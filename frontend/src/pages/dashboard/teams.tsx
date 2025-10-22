@@ -11,7 +11,7 @@ import {
   Star, Calendar, ExternalLink,
   UserPlus, LogOut
 } from 'lucide-react';
-import { useTeams, useUserTeams, useTeamRecommendations, useJoinTeam, useLeaveTeam } from '@/hooks/useTeams';
+import { useTeams, useUserTeams, useTeamRecommendations, useRequestToJoinTeam, useLeaveTeam } from '@/hooks/useTeams';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router';
@@ -29,7 +29,7 @@ export default function TeamsPage() {
   const { data: userTeamsData, isLoading: userTeamsLoading } = useUserTeams(1, 12);
   const { data: recommendationsData, isLoading: recommendationsLoading } = useTeamRecommendations(1, 8);
   
-  const joinTeamMutation = useJoinTeam();
+  const requestToJoinMutation = useRequestToJoinTeam();
   const leaveTeamMutation = useLeaveTeam();
 
   const popularTags = [
@@ -39,9 +39,9 @@ export default function TeamsPage() {
 
   const handleJoinTeam = async (teamId: string) => {
     try {
-      await joinTeamMutation.mutateAsync(teamId);
+      await requestToJoinMutation.mutateAsync({ teamId, message: undefined });
     } catch (error) {
-      console.error('Failed to join team:', error);
+      console.error('Failed to request to join team:', error);
     }
   };
 
@@ -196,16 +196,14 @@ export default function TeamsPage() {
                         View
                       </Link>
                     </Button>
-                    {team.visibility === 'PUBLIC' && (
-                      <Button 
-                        size="sm"
-                        onClick={() => handleJoinTeam(team.id)}
-                        disabled={joinTeamMutation.isPending}
-                      >
-                        <UserPlus className="w-4 h-4 mr-1" />
-                        Join
-                      </Button>
-                    )}
+                    <Button 
+                      size="sm"
+                      onClick={() => handleJoinTeam(team.id)}
+                      disabled={requestToJoinMutation.isPending}
+                    >
+                      <UserPlus className="w-4 h-4 mr-1" />
+                      {requestToJoinMutation.isPending ? 'Requesting...' : 'Request to Join'}
+                    </Button>
                   </>
                 )}
               </div>

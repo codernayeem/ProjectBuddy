@@ -186,6 +186,21 @@ export class TeamService {
     await this.teamRepository.removeMember(teamId, memberId);
   }
 
+  async updateMemberRole(teamId: string, memberId: string, isAdmin: boolean, requesterId: string): Promise<void> {
+    const canManage = await this.teamRepository.canManageTeam(teamId, requesterId);
+    
+    if (!canManage) {
+      throw new Error('You do not have permission to update member roles');
+    }
+
+    const isOwner = await this.teamRepository.isOwner(teamId, memberId);
+    if (isOwner) {
+      throw new Error('Cannot change owner admin status');
+    }
+
+    await this.teamRepository.updateMemberStatus(teamId, memberId, isAdmin ? 'ADMIN' : 'MEMBER');
+  }
+
   // Custom Roles Management
   async getCustomRoles(teamId: string): Promise<TeamCustomRole[]> {
     return this.teamRepository.getCustomRoles(teamId);
@@ -519,5 +534,23 @@ export class TeamService {
 
   async getTeamJoinRequests(teamId: string, status?: any): Promise<TeamJoinRequest[]> {
     return this.teamRepository.getTeamJoinRequests(teamId, status);
+  }
+
+  async getRecommendedTeams(
+    userId: string,
+    params: PaginationParams
+  ): Promise<{ teams: Team[]; total: number; pagination: any }> {
+    const result = await this.teamRepository.getRecommendedTeams(userId, params);
+    
+    return {
+      teams: result.teams,
+      total: result.total,
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / (params.limit || 10)),
+      },
+    };
   }
 }
