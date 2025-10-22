@@ -1,804 +1,977 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import { PrismaClient, UserType, ConnectionStatus, TeamType, PostType, ReactionType, NotificationType } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+import { v2 as cloudinary } from 'cloudinary';
+import * as path from 'path';
+import * as fs from 'fs';
+import config from '../src/config';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Seeding database with Bangladesh-specific data...');
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: config.cloudinary.cloudName,
+  api_key: config.cloudinary.apiKey,
+  api_secret: config.cloudinary.apiSecret,
+});
 
-  // Clear existing data in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🧹 Clearing existing data...');
-    await prisma.aIRecommendation.deleteMany();
-    await prisma.notification.deleteMany();
-    await prisma.messageReaction.deleteMany();
-    await prisma.message.deleteMany();
-    await prisma.conversationParticipant.deleteMany();
-    await prisma.conversation.deleteMany();
-    await prisma.mention.deleteMany();
-    await prisma.bookmark.deleteMany();
-    await prisma.share.deleteMany();
-    await prisma.commentReaction.deleteMany();
-    await prisma.reaction.deleteMany();
-    await prisma.comment.deleteMany();
-    await prisma.post.deleteMany();
-    await prisma.teamAchievement.deleteMany();
-    await prisma.teamMilestone.deleteMany();
-    await prisma.teamProject.deleteMany();
-    await prisma.teamJoinRequest.deleteMany();
-    await prisma.teamInvitation.deleteMany();
-    await prisma.teamMemberCustomRole.deleteMany();
-    await prisma.teamCustomRole.deleteMany();
-    await prisma.teamMember.deleteMany();
-    await prisma.teamFollow.deleteMany();
-    await prisma.team.deleteMany();
-    await prisma.follow.deleteMany();
-    await prisma.connection.deleteMany();
-    await prisma.user.deleteMany();
+// Helper function to upload image to Cloudinary
+const uploadToCloudinary = async (localPath: string, folder: string): Promise<string> => {
+  try {
+    const absolutePath = path.resolve(localPath);
+    
+    if (!fs.existsSync(absolutePath)) {
+      console.warn(`⚠️  File not found: ${absolutePath}, using placeholder`);
+      return `https://ui-avatars.com/api/?name=${folder}&background=random`;
+    }
+
+    const result = await cloudinary.uploader.upload(absolutePath, {
+      folder: `project-buddy/${folder}`,
+      transformation: [
+        { width: 800, height: 800, crop: 'limit' },
+        { quality: 'auto', fetch_format: 'auto' }
+      ]
+    });
+
+    console.log(`✅ Uploaded ${path.basename(localPath)} to Cloudinary`);
+    return result.secure_url;
+  } catch (error) {
+    console.error(`❌ Error uploading ${localPath}:`, error);
+    return `https://ui-avatars.com/api/?name=${folder}&background=random`;
   }
+};
 
-  // Hash default password
+// Helper functions
+const getRandomItems = <T>(array: T[], count: number): T[] => {
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
+
+const getRandomItem = <T>(array: T[]): T => {
+  return array[Math.floor(Math.random() * array.length)];
+};
+
+// Extract hashtags from content
+const extractHashtags = (content: string): string[] => {
+  const hashtagRegex = /#[\w]+/g;
+  const matches = content.match(hashtagRegex);
+  if (!matches) return [];
+  // Remove # symbol and return unique hashtags
+  return [...new Set(matches.map(tag => tag.substring(1)))];
+};
+
+// Generate random hashtags based on content type
+const generateHashtags = (content: string): string[] => {
+  const techTags = ['JavaScript', 'TypeScript', 'React', 'Node', 'Python', 'AI', 'ML', 'WebDev', 'DevOps', 'Cloud'];
+  const generalTags = ['Tech', 'Coding', 'Programming', 'Software', 'Development', 'Innovation', 'TeamWork', 'Collaboration'];
+  
+  const extracted = extractHashtags(content);
+  if (extracted.length > 0) return extracted;
+  
+  // Generate 2-3 random tags if no hashtags in content
+  const numTags = Math.floor(Math.random() * 2) + 2;
+  const allTags = [...techTags, ...generalTags];
+  return getRandomItems(allTags, numTags);
+};
+
+
+// Data arrays
+const bangladeshiUniversities = [
+  'Bangladesh University of Engineering and Technology (BUET)',
+  'University of Dhaka (DU)',
+  'North South University (NSU)',
+  'BRAC University',
+  'Independent University, Bangladesh (IUB)',
+  'East West University (EWU)',
+  'Ahsanullah University of Science and Technology (AUST)',
+  'Daffodil International University (DIU)',
+  'American International University-Bangladesh (AIUB)',
+  'United International University (UIU)',
+  'University of Chittagong (CU)',
+  'Chittagong University of Engineering & Technology (CUET)',
+  'Khulna University of Engineering & Technology (KUET)',
+  'Rajshahi University of Engineering & Technology (RUET)',
+  'Islamic University of Technology (IUT)'
+];
+
+const bangladeshiCities = [
+  'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'
+];
+
+const skills = [
+  'JavaScript', 'TypeScript', 'Python', 'React', 'Node.js', 'Next.js', 'Vue.js', 'Angular',
+  'Django', 'Flask', 'FastAPI', 'Express', 'NestJS', 'GraphQL', 'REST API',
+  'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP',
+  'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Data Science',
+  'Flutter', 'React Native', 'Kotlin', 'Swift', 'Android', 'iOS',
+  'Blockchain', 'Solidity', 'Ethereum', 'Web3', 'Smart Contracts',
+  'Cybersecurity', 'Penetration Testing', 'Ethical Hacking', 'Network Security',
+  'Unity', 'Unreal Engine', 'Game Development', '3D Modeling',
+  'UI/UX Design', 'Figma', 'Adobe XD', 'Sketch', 'Photoshop', 'Illustrator',
+  'Git', 'CI/CD', 'DevOps', 'Linux', 'Bash', 'Testing', 'Agile', 'Scrum'
+];
+
+const profileImages = [
+  '../demo_img/profile/1fd2f552fd263b8ba40a80f5c9097ee1.webp',
+  '../demo_img/profile/cut-up-33.webp',
+  '../demo_img/profile/image-2019-02-17_212949.webp',
+  '../demo_img/profile/person-indian-origin-having-fun_23-2150285283.webp',
+  '../demo_img/profile/photo-1522556189639-b150ed9c4330.webp',
+  '../demo_img/profile/premium_photo-1669703777437-27602d656c27.webp',
+  '../demo_img/profile/premium_photo-1688891564708-9b2247085923.webp',
+  '../demo_img/profile/summer-selfie.webp'
+];
+
+const bannerImages = [
+  '../demo_img/banner/360_F_65947842_Q429oMgnuUoySIdWATs4XUXkGzfprRj7.webp',
+  '../demo_img/banner/big-tech-media.webp',
+  '../demo_img/banner/business-colleagues-discussing-project-in-office.webp',
+  '../demo_img/banner/business-people-at-a-conference-event.webp',
+  '../demo_img/banner/close-up-of-co-workers-standing-at-desk-with-laptop-and-talking.webp',
+  '../demo_img/banner/diverse-colleagues-working-together-on-digital-tablet.webp',
+  '../demo_img/banner/dsc05880-enhanced-nr-copy.webp',
+  '../demo_img/banner/education-study-books-high-school-university-16383080.webp',
+  '../demo_img/banner/EM-BLOG-2019-tech-conferences-957689842.webp',
+  '../demo_img/banner/good-health-best-wealth-card-stethoscope-red-heart-wood-table-medical-concept-72050180.webp',
+  '../demo_img/banner/health-care-billing-statement.webp',
+  '../demo_img/banner/health-png-diverse-hands-wellness-remix-transparent-background_53876-992471.webp',
+  '../demo_img/banner/heart-doctor-concept.webp',
+  '../demo_img/banner/hospital-colleagues-checking-medical-records-database.webp',
+  '../demo_img/banner/illustration-healthy-lifestyle_53876-28533.webp',
+  '../demo_img/banner/image.webp',
+  '../demo_img/banner/pexels-photo-301920.webp',
+  '../demo_img/banner/prescription-good-health-diet-exercise-flat-lay-overhead-prescription-good-health-overhead-stethoscope-healthy-145613048.webp',
+  '../demo_img/banner/prescription-good-health-overhead-stethoscope-healthy-fresh-food-exercise-equipment-prescription-good-health-diet-145612862.webp',
+  '../demo_img/banner/seminar-coding-talking.webp',
+  '../demo_img/banner/showing-smartphone-during-conference.webp',
+  '../demo_img/banner/special-education-phrase-chalkboard-next-to-three-books-apple-63191907.webp',
+  '../demo_img/banner/stethoscope-word-health_1134-455.webp'
+];
+
+// User profiles data
+const usersData = [
+  {
+    username: 'rafiul_ahmed',
+    firstName: 'Rafiul',
+    lastName: 'Ahmed',
+    email: 'rafiul@example.com',
+    bio: 'Full-stack developer from Dhaka, passionate about building scalable web applications. Love to explore new technologies.',
+    userType: UserType.UNDERGRADUATE,
+    university: bangladeshiUniversities[0],
+    city: bangladeshiCities[0],
+    skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'MongoDB', 'Docker'],
+    interests: ['Web Development', 'Cloud Computing', 'Open Source']
+  },
+  {
+    username: 'tasnim_khan',
+    firstName: 'Tasnim',
+    lastName: 'Khan',
+    email: 'tasnim@example.com',
+    bio: 'আমি একজন AI researcher। Machine Learning এবং Deep Learning নিয়ে কাজ করি। BUET থেকে পড়াশোনা করছি।',
+    userType: UserType.GRADUATE,
+    university: bangladeshiUniversities[0],
+    city: bangladeshiCities[0],
+    skills: ['Python', 'TensorFlow', 'PyTorch', 'Machine Learning', 'Deep Learning', 'Data Science'],
+    interests: ['Artificial Intelligence', 'Research', 'Data Science']
+  },
+  {
+    username: 'sabbir_hossain',
+    firstName: 'Sabbir',
+    lastName: 'Hossain',
+    email: 'sabbir@example.com',
+    bio: 'Mobile app developer specializing in Flutter and React Native. Building cross-platform apps for startups.',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[2],
+    city: bangladeshiCities[0],
+    skills: ['Flutter', 'React Native', 'Dart', 'JavaScript', 'Firebase', 'Android', 'iOS'],
+    interests: ['Mobile Development', 'UI/UX', 'Startups']
+  },
+  {
+    username: 'nusrat_jahan',
+    firstName: 'Nusrat',
+    lastName: 'Jahan',
+    email: 'nusrat@example.com',
+    bio: 'UI/UX ডিজাইনার এবং ফ্রন্টএন্ড ডেভেলপার। সুন্দর এবং user-friendly ইন্টারফেস তৈরি করতে ভালোবাসি।',
+    userType: UserType.FREELANCER,
+    university: bangladeshiUniversities[3],
+    city: bangladeshiCities[0],
+    skills: ['Figma', 'Adobe XD', 'React', 'Vue.js', 'CSS', 'Tailwind CSS', 'UI/UX Design'],
+    interests: ['Design', 'Frontend', 'User Experience']
+  },
+  {
+    username: 'mehedi_hasan',
+    firstName: 'Mehedi',
+    lastName: 'Hasan',
+    email: 'mehedi@example.com',
+    bio: 'Backend engineer with expertise in Node.js and Python. Building microservices and APIs.',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[1],
+    city: bangladeshiCities[1],
+    skills: ['Node.js', 'Python', 'Express', 'Django', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker'],
+    interests: ['Backend Development', 'Microservices', 'Databases']
+  },
+  {
+    username: 'farhana_islam',
+    firstName: 'Farhana',
+    lastName: 'Islam',
+    email: 'farhana@example.com',
+    bio: 'Cybersecurity enthusiast। Ethical hacking এবং penetration testing নিয়ে কাজ করি। শিক্ষার্থীদের সাইবার সিকিউরিটি শেখাই।',
+    userType: UserType.GRADUATE,
+    university: bangladeshiUniversities[11],
+    city: bangladeshiCities[1],
+    skills: ['Cybersecurity', 'Penetration Testing', 'Ethical Hacking', 'Network Security', 'Linux', 'Python'],
+    interests: ['Security', 'Networking', 'Teaching']
+  },
+  {
+    username: 'tanvir_rahman',
+    firstName: 'Tanvir',
+    lastName: 'Rahman',
+    email: 'tanvir@example.com',
+    bio: 'Blockchain developer working on decentralized applications. Smart contract development with Solidity.',
+    userType: UserType.STARTUP_FOUNDER,
+    university: bangladeshiUniversities[4],
+    city: bangladeshiCities[0],
+    skills: ['Blockchain', 'Solidity', 'Ethereum', 'Web3', 'Smart Contracts', 'JavaScript', 'React'],
+    interests: ['Blockchain', 'DeFi', 'Cryptocurrency']
+  },
+  {
+    username: 'lamia_akter',
+    firstName: 'Lamia',
+    lastName: 'Akter',
+    email: 'lamia@example.com',
+    bio: 'Data scientist এবং ML engineer। বড় ডেটাসেট নিয়ে কাজ করি এবং predictive models তৈরি করি।',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[2],
+    city: bangladeshiCities[2],
+    skills: ['Python', 'Data Science', 'Machine Learning', 'Pandas', 'NumPy', 'Scikit-learn', 'SQL'],
+    interests: ['Data Analysis', 'Statistics', 'Visualization']
+  },
+  {
+    username: 'ashraful_alam',
+    firstName: 'Ashraful',
+    lastName: 'Alam',
+    email: 'ashraful@example.com',
+    bio: 'DevOps engineer automating deployments and managing cloud infrastructure. AWS and Kubernetes expert.',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[6],
+    city: bangladeshiCities[0],
+    skills: ['DevOps', 'Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Linux', 'Terraform', 'Git'],
+    interests: ['Cloud Computing', 'Automation', 'Infrastructure']
+  },
+  {
+    username: 'shahriar_kabir',
+    firstName: 'Shahriar',
+    lastName: 'Kabir',
+    email: 'shahriar@example.com',
+    bio: 'Game developer making indie games। Unity এবং Unreal Engine দিয়ে 2D এবং 3D গেম বানাই।',
+    userType: UserType.UNDERGRADUATE,
+    university: bangladeshiUniversities[7],
+    city: bangladeshiCities[0],
+    skills: ['Unity', 'C#', 'Unreal Engine', 'Game Development', '3D Modeling', 'Blender'],
+    interests: ['Gaming', '3D Graphics', 'Animation']
+  },
+  {
+    username: 'nabila_tahsin',
+    firstName: 'Nabila',
+    lastName: 'Tahsin',
+    email: 'nabila@example.com',
+    bio: 'Full-stack developer and tech blogger. Love sharing knowledge through writing and teaching.',
+    userType: UserType.FREELANCER,
+    university: bangladeshiUniversities[5],
+    city: bangladeshiCities[0],
+    skills: ['JavaScript', 'React', 'Next.js', 'Node.js', 'MongoDB', 'GraphQL', 'TypeScript'],
+    interests: ['Web Development', 'Blogging', 'Teaching']
+  },
+  {
+    username: 'imran_hossain',
+    firstName: 'Imran',
+    lastName: 'Hossain',
+    email: 'imran@example.com',
+    bio: 'Android developer building native apps। Kotlin এবং Java দিয়ে performance-optimized অ্যাপ তৈরি করি।',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[8],
+    city: bangladeshiCities[3],
+    skills: ['Kotlin', 'Java', 'Android', 'Android Studio', 'Firebase', 'REST API'],
+    interests: ['Mobile Apps', 'Android', 'Performance']
+  },
+  {
+    username: 'sumaiya_rahman',
+    firstName: 'Sumaiya',
+    lastName: 'Rahman',
+    email: 'sumaiya@example.com',
+    bio: 'Cloud architect designing scalable solutions on AWS and Azure. Certified solutions architect.',
+    userType: UserType.PROFESSIONAL,
+    university: bangladeshiUniversities[9],
+    city: bangladeshiCities[0],
+    skills: ['AWS', 'Azure', 'Cloud Architecture', 'Serverless', 'Lambda', 'Microservices', 'Docker'],
+    interests: ['Cloud', 'Architecture', 'Scalability']
+  },
+  {
+    username: 'rakib_uddin',
+    firstName: 'Rakib',
+    lastName: 'Uddin',
+    email: 'rakib@example.com',
+    bio: 'FinTech developer। Payment systems এবং financial applications নিয়ে কাজ করি। Security এবং compliance খুবই গুরুত্বপূর্ণ।',
+    userType: UserType.STARTUP_FOUNDER,
+    university: bangladeshiUniversities[10],
+    city: bangladeshiCities[1],
+    skills: ['Node.js', 'TypeScript', 'PostgreSQL', 'Redis', 'Security', 'Payment Gateways', 'REST API'],
+    interests: ['FinTech', 'Security', 'Startups']
+  },
+  {
+    username: 'bristy_ahmed',
+    firstName: 'Bristy',
+    lastName: 'Ahmed',
+    email: 'bristy@example.com',
+    bio: 'IoT developer working on smart devices. Building connected systems with Arduino and Raspberry Pi.',
+    userType: UserType.UNDERGRADUATE,
+    university: bangladeshiUniversities[12],
+    city: bangladeshiCities[4],
+    skills: ['IoT', 'Arduino', 'Raspberry Pi', 'Python', 'C++', 'MQTT', 'Sensors'],
+    interests: ['IoT', 'Embedded Systems', 'Automation']
+  }
+];
+
+// Post content templates
+const postContents = [
+  'Just deployed my new portfolio website built with Next.js and Tailwind CSS! 🚀 Check it out and let me know what you think!',
+  'নতুন একটা প্রজেক্ট শুরু করলাম - একটা e-commerce platform যেখানে local businesses তাদের পণ্য বিক্রি করতে পারবে। কেউ collaborate করতে চাও?',
+  'Excited to share that I completed the AWS Solutions Architect certification! 🎉 It was challenging but worth every minute.',
+  'Machine Learning model training করছি lung cancer detection এর জন্য। Accuracy 94% পর্যন্ত পৌঁছেছে! 📊',
+  'Looking for beta testers for my new mobile app - a task manager specifically designed for students. DM if interested!',
+  'আমার প্রথম open source contribution merge হয়েছে React codebase এ! 🎊 Small step but feels amazing!',
+  'Just finished a 48-hour hackathon. Our team built a chatbot for mental health support using GPT-4. Won 2nd place! 💪',
+  'Blockchain technology নিয়ে workshop conduct করব next week NSU তে। Anyone interested can register from the link in comments.',
+  'Debugging a performance issue in my Node.js API. Any tips on optimizing database queries? PostgreSQL is taking too long.',
+  'UI/UX designers! What is your favorite prototyping tool? I have been using Figma but curious about alternatives.',
+  'Successfully migrated our entire infrastructure to Kubernetes. Deployment time reduced from 30 mins to 2 mins! ⚡',
+  'Cybersecurity awareness is so important! Just created a series of tutorials on basic web security. Link in bio.',
+  'Game development progress update: Character animations are done, working on enemy AI now. Unity is so powerful! 🎮',
+  'Data visualization নিয়ে কাজ করছি Python দিয়ে। D3.js এর alternative হিসেবে Plotly অসাধারণ!',
+  'First day at my new job as a Software Engineer! Excited and nervous at the same time. Any advice for freshers?',
+  'Docker container optimization করে image size 80% কমিয়ে ফেললাম! Multi-stage builds really work.',
+  'Teaching a free programming workshop for underprivileged students this weekend. Education should be accessible to all! 💙'
+];
+
+// Comment templates
+const commentTexts = [
+  'Awesome work! 🔥',
+  'খুব ভালো হয়েছে! Keep it up!',
+  'Can you share the GitHub repo?',
+  'This is exactly what I needed!',
+  'Great job! When will this be available?',
+  'আমিও এই নিয়ে কাজ করছি। Collaborate করতে পারি?',
+  'Impressive! How long did it take?',
+  'Love the design! Very clean.',
+  'Thanks for sharing this!',
+  'Congratulations! 🎉',
+  'এটা আমার জন্য খুবই helpful।',
+  'Would love to know more about this.',
+  'Amazing work as always!',
+  'Count me in!',
+  'This is brilliant!',
+  'দারুণ initiative!',
+  'Very informative, thanks!',
+  'Looking forward to this!',
+  'Great explanation!',
+  'This helped me a lot!'
+];
+
+async function main() {
+  console.log('🌱 Starting seed...');
+
+  // Clear existing data
+  console.log('🗑️  Clearing existing data...');
+  await prisma.$transaction([
+    prisma.notification.deleteMany(),
+    prisma.message.deleteMany(),
+    prisma.conversationParticipant.deleteMany(),
+    prisma.conversation.deleteMany(),
+    prisma.commentReaction.deleteMany(),
+    prisma.comment.deleteMany(),
+    prisma.reaction.deleteMany(),
+    prisma.bookmark.deleteMany(),
+    prisma.share.deleteMany(),
+    prisma.mention.deleteMany(),
+    prisma.post.deleteMany(),
+    prisma.teamMilestone.deleteMany(),
+    prisma.teamProject.deleteMany(),
+    prisma.teamFollow.deleteMany(),
+    prisma.teamMember.deleteMany(),
+    prisma.teamAchievement.deleteMany(),
+    prisma.team.deleteMany(),
+    prisma.follow.deleteMany(),
+    prisma.connection.deleteMany(),
+    prisma.userUniversity.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+
+  // Hash password
   const hashedPassword = await bcrypt.hash('password123', 12);
 
-  // Create diverse users with Bangladesh-specific profiles
-  const users = await Promise.all([
-    // Professional from Dhaka - Tech Lead
-    prisma.user.create({
-      data: {
-        email: 'rafiul.islam@brainstation23.com',
-        username: 'rafiul_dev',
-        firstName: 'Rafiul',
-        lastName: 'Islam',
-        bio: 'Senior Software Engineer at Brain Station 23. Passionate about building scalable web applications using React and Node.js. Love mentoring junior developers.',
-        country: 'Bangladesh',
-        city: 'Dhaka',
-        address: 'Gulshan, Dhaka-1212',
-        website: 'https://rafiul.dev',
-        linkedin: 'https://linkedin.com/in/rafiulislam',
-        github: 'https://github.com/rafiulislam',
-        company: 'Brain Station 23',
-        position: 'Senior Software Engineer',
-        userType: 'PROFESSIONAL',
-        skills: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'AWS', 'Docker'],
-        interests: ['Web Development', 'Mentoring', 'Open Source'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
-    
-    // Student from Chittagong - AI enthusiast
-    prisma.user.create({
-      data: {
-        email: 'fatema.ahmed@cu.ac.bd',
-        username: 'fatema_ai',
-        firstName: 'Fatema',
-        lastName: 'Ahmed',
-        bio: 'Computer Science student at University of Chittagong. Passionate about Machine Learning and AI. Active in programming contests and hackathons.',
-        country: 'Bangladesh',
-        city: 'Chittagong',
-        address: 'Hathazari, Chittagong',
-        github: 'https://github.com/fatemaahmed',
-        linkedin: 'https://linkedin.com/in/fatemaahmed',
-        userType: 'UNDERGRADUATE',
-        skills: ['Python', 'Machine Learning', 'TensorFlow', 'Pandas', 'Java', 'C++'],
-        interests: ['AI Research', 'Data Science', 'Competitive Programming'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
+  // Upload images to Cloudinary
+  console.log('📤 Uploading images to Cloudinary...');
+  const uploadedProfileImages: string[] = [];
+  const uploadedBannerImages: string[] = [];
 
-    // Freelancer from Sylhet - Mobile Developer
-    prisma.user.create({
-      data: {
-        email: 'nazmul.hassan@gmail.com',
-        username: 'nazmul_mobile',
-        firstName: 'Nazmul',
-        lastName: 'Hassan',
-        bio: 'Full-stack mobile developer specializing in React Native and Flutter. Building innovative apps for local and international clients from Sylhet.',
-        country: 'Bangladesh',
-        city: 'Sylhet',
-        website: 'https://nazmulhassan.dev',
-        github: 'https://github.com/nazmulhassan',
-        linkedin: 'https://linkedin.com/in/nazmulhassan',
-        portfolio: 'https://portfolio.nazmulhassan.dev',
-        userType: 'FREELANCER',
-        skills: ['React Native', 'Flutter', 'Node.js', 'Firebase', 'Swift', 'Kotlin'],
-        interests: ['Mobile Development', 'Startup Ideas', 'Tech Innovation'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
+  for (const img of profileImages) {
+    const url = await uploadToCloudinary(img, 'profiles');
+    uploadedProfileImages.push(url);
+  }
 
-    // Startup Founder from Dhaka - Fintech
-    prisma.user.create({
-      data: {
-        email: 'sadia.Rahman@nexuspay.bd',
-        username: 'sadia_founder',
-        firstName: 'Sadia',
-        lastName: 'Rahman',
-        bio: 'Founder & CEO of NexusPay - a digital payment solution for Bangladesh. Former software engineer turned entrepreneur, building the future of fintech.',
-        country: 'Bangladesh',
-        city: 'Dhaka',
-        address: 'Banani, Dhaka-1213',
-        website: 'https://nexuspay.bd',
-        linkedin: 'https://linkedin.com/in/sadiarahman',
-        company: 'NexusPay',
-        position: 'Founder & CEO',
-        userType: 'STARTUP_FOUNDER',
-        skills: ['Product Management', 'Fintech', 'Business Development', 'React', 'Payment Systems'],
-        interests: ['Entrepreneurship', 'Fintech Innovation', 'Digital Bangladesh'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
+  for (const img of bannerImages) {
+    const url = await uploadToCloudinary(img, 'banners');
+    uploadedBannerImages.push(url);
+  }
 
-    // UI/UX Designer from Rajshahi
-    prisma.user.create({
-      data: {
-        email: 'asif.mahmud@designstudio.bd',
-        username: 'asif_designer',
-        firstName: 'Asif',
-        lastName: 'Mahmud',
-        bio: 'Senior UI/UX Designer with 5+ years experience. Specialized in mobile app design and user research. Love creating intuitive experiences for Bangladeshi users.',
-        country: 'Bangladesh',
-        city: 'Rajshahi',
-        website: 'https://asifmahmud.design',
-        linkedin: 'https://linkedin.com/in/asifmahmud',
-        portfolio: 'https://behance.net/asifmahmud',
-        company: 'Design Studio BD',
-        position: 'Senior UI/UX Designer',
-        userType: 'PROFESSIONAL',
-        skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping', 'Design Systems'],
-        interests: ['User Experience', 'Design Thinking', 'Mobile Design'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
+  console.log(`✅ Uploaded ${uploadedProfileImages.length} profile images and ${uploadedBannerImages.length} banner images`);
 
-    // Data Scientist from Khulna
-    prisma.user.create({
+  // Create users
+  console.log('👤 Creating users...');
+  const users = [];
+  for (const userData of usersData) {
+    const user = await prisma.user.create({
       data: {
-        email: 'tasnia.sultana@dataworks.bd',
-        username: 'tasnia_data',
-        firstName: 'Tasnia',
-        lastName: 'Sultana',
-        bio: 'Data Scientist passionate about using data to solve real-world problems in Bangladesh. Working on ML models for agriculture and healthcare sectors.',
-        country: 'Bangladesh',
-        city: 'Khulna',
-        github: 'https://github.com/tasniasultana',
-        linkedin: 'https://linkedin.com/in/tasniasultana',
-        company: 'DataWorks BD',
-        position: 'Data Scientist',
-        userType: 'PROFESSIONAL',
-        skills: ['Python', 'R', 'Machine Learning', 'Deep Learning', 'SQL', 'Tableau'],
-        interests: ['Data Science', 'AI for Good', 'Healthcare Analytics'],
-        timezone: 'Asia/Dhaka',
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
         passwordHash: hashedPassword,
+        bio: userData.bio,
+        avatar: getRandomItem(uploadedProfileImages),
+        banner: getRandomItem(uploadedBannerImages),
+        city: userData.city,
+        country: 'Bangladesh',
+        userType: userData.userType,
+        skills: userData.skills,
+        interests: userData.interests,
+        isActive: true,
       },
-    }),
+    });
 
-    // Graduate Student from Dhaka University
-    prisma.user.create({
+    // Add university
+    await prisma.userUniversity.create({
       data: {
-        email: 'mehedi.hasan@du.ac.bd',
-        username: 'mehedi_blockchain',
-        firstName: 'Mehedi',
-        lastName: 'Hasan',
-        bio: 'Masters student in Computer Science at Dhaka University. Researching blockchain technology and its applications in supply chain management.',
-        country: 'Bangladesh',
-        city: 'Dhaka',
-        address: 'Dhanmondi, Dhaka-1205',
-        github: 'https://github.com/mehedihasan',
-        userType: 'GRADUATE',
-        skills: ['Blockchain', 'Solidity', 'Ethereum', 'Smart Contracts', 'Python', 'JavaScript'],
-        interests: ['Blockchain Research', 'Cryptocurrency', 'Decentralized Systems'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
+        userId: user.id,
+        universityName: userData.university,
+        status: 'CURRENT',
+        startYear: 2019,
       },
-    }),
+    });
 
-    // Entrepreneur from Comilla
-    prisma.user.create({
-      data: {
-        email: 'ruhul.amin@agritech.bd',
-        username: 'ruhul_agritech',
-        firstName: 'Ruhul',
-        lastName: 'Amin',
-        bio: 'Agricultural Technology entrepreneur building IoT solutions for farmers in Bangladesh. Combining technology with traditional farming practices.',
-        country: 'Bangladesh',
-        city: 'Comilla',
-        website: 'https://agritech.bd',
-        linkedin: 'https://linkedin.com/in/ruhulamin',
-        company: 'AgriTech BD',
-        position: 'Founder',
-        userType: 'ENTREPRENEUR',
-        skills: ['IoT', 'Arduino', 'Raspberry Pi', 'Agriculture Tech', 'Business Development'],
-        interests: ['Smart Farming', 'IoT Innovation', 'Rural Development'],
-        timezone: 'Asia/Dhaka',
-        passwordHash: hashedPassword,
-      },
-    }),
-  ]);
-
+    users.push(user);
+  }
   console.log(`✅ Created ${users.length} users`);
 
-  // Create follow relationships
-  await Promise.all([
-    prisma.follow.create({
-      data: { followerId: users[0].id, followingId: users[1].id },
-    }),
-    prisma.follow.create({
-      data: { followerId: users[1].id, followingId: users[3].id },
-    }),
-    prisma.follow.create({
-      data: { followerId: users[2].id, followingId: users[0].id },
-    }),
-    prisma.follow.create({
-      data: { followerId: users[3].id, followingId: users[4].id },
-    }),
-    prisma.follow.create({
-      data: { followerId: users[4].id, followingId: users[5].id },
-    }),
-    prisma.follow.create({
-      data: { followerId: users[6].id, followingId: users[7].id },
-    }),
-  ]);
-
-  console.log('✅ Created follow relationships');
-
   // Create connections
-  await Promise.all([
-    prisma.connection.create({
-      data: {
-        senderId: users[0].id,
-        receiverId: users[1].id,
-        status: 'ACCEPTED',
-        message: 'Hi Fatema! I saw your AI projects on GitHub. Would love to connect and discuss ML opportunities in Bangladesh.',
-      },
-    }),
-    prisma.connection.create({
-      data: {
-        senderId: users[2].id,
-        receiverId: users[3].id,
-        status: 'PENDING',
-        message: 'Hello Sadia! Mobile developer here. Interested in collaborating on fintech mobile solutions.',
-      },
-    }),
-    prisma.connection.create({
-      data: {
-        senderId: users[4].id,
-        receiverId: users[0].id,
-        status: 'ACCEPTED',
-        message: 'Assalamu Alaikum Rafiul bhai! Fellow designer looking to connect with developers for collaboration.',
-      },
-    }),
-    prisma.connection.create({
-      data: {
-        senderId: users[5].id,
-        receiverId: users[6].id,
-        status: 'ACCEPTED',
-        message: 'Hi Mehedi! Data scientist interested in blockchain applications for data security. Let\'s connect!',
-      },
-    }),
-  ]);
+  console.log('🤝 Creating connections...');
+  let connectionCount = 0;
+  for (let i = 0; i < users.length; i++) {
+    const numConnections = Math.floor(Math.random() * 5) + 3; // 3-7 connections
+    const potentialConnections = users.filter((_, index) => index !== i);
+    const selectedConnections = getRandomItems(potentialConnections, Math.min(numConnections, potentialConnections.length));
 
-  console.log('✅ Created connections');
+    for (const connection of selectedConnections) {
+      // Check if connection already exists
+      const existing = await prisma.connection.findFirst({
+        where: {
+          OR: [
+            { senderId: users[i].id, receiverId: connection.id },
+            { senderId: connection.id, receiverId: users[i].id },
+          ],
+        },
+      });
 
-  // Create teams with Bangladesh context
-  const teams = await Promise.all([
-    prisma.team.create({
+      if (!existing) {
+          await prisma.connection.create({
+          data: {
+            senderId: users[i].id,
+            receiverId: connection.id,
+            status: Math.random() > 0.3 ? ConnectionStatus.ACCEPTED : ConnectionStatus.PENDING,
+            message: 'I would like to connect with you!',
+          },
+        });
+        connectionCount++;
+      }
+    }
+  }
+  console.log(`✅ Created ${connectionCount} connections`);
+
+  // Create teams
+  console.log('👥 Creating teams...');
+  const teamsData = [
+    {
+      name: 'AI Research Lab Bangladesh',
+      description: 'আমরা একটি research team যারা Machine Learning এবং Artificial Intelligence নিয়ে কাজ করি। আমাদের focus: computer vision, NLP, এবং deep learning applications।',
+      shortDescription: 'AI এবং ML research এবং development',
+      type: TeamType.SKILL_BASED,
+      skills: ['Python', 'TensorFlow', 'PyTorch', 'Machine Learning', 'Deep Learning'],
+      tags: ['AI', 'Research', 'ML', 'Deep Learning'],
+      ownerIndex: 1, // Tasnim
+      memberIndices: [0, 7, 14]
+    },
+    {
+      name: 'Bangladesh Web Developers',
+      description: 'Modern web technologies নিয়ে কাজ করা developers এর community। React, Next.js, Node.js - সব নিয়ে discuss করি এবং projects build করি together।',
+      shortDescription: 'Full-stack web development community',
+      type: TeamType.OPEN_SOURCE,
+      skills: ['React', 'Next.js', 'Node.js', 'TypeScript', 'MongoDB'],
+      tags: ['Web', 'React', 'Fullstack', 'JavaScript'],
+      ownerIndex: 0, // Rafiul
+      memberIndices: [3, 10, 4]
+    },
+    {
+      name: 'FinTech Bangladesh',
+      description: 'Building the future of financial technology in Bangladesh. Digital payments, mobile banking, blockchain-based solutions.',
+      shortDescription: 'Financial technology innovation',
+      type: TeamType.STARTUP,
+      skills: ['Node.js', 'TypeScript', 'PostgreSQL', 'Blockchain', 'Security'],
+      tags: ['FinTech', 'Payments', 'Blockchain', 'Startup'],
+      ownerIndex: 13, // Rakib
+      memberIndices: [6, 12, 8]
+    },
+    {
+      name: 'Mobile App Masters',
+      description: 'Cross-platform এবং native mobile app development। Flutter, React Native, Android, iOS - সব platform এর developers এখানে।',
+      shortDescription: 'Mobile development hub',
+      type: TeamType.SKILL_BASED,
+      skills: ['Flutter', 'React Native', 'Android', 'iOS', 'Firebase'],
+      tags: ['Mobile', 'Flutter', 'Android', 'iOS'],
+      ownerIndex: 2, // Sabbir
+      memberIndices: [11, 9, 3]
+    },
+    {
+      name: 'Cybersecurity BD',
+      description: 'Ethical hacking, penetration testing, and security awareness. Protecting systems and teaching security best practices.',
+      shortDescription: 'Cybersecurity and ethical hacking',
+      type: TeamType.STUDY_GROUP,
+      skills: ['Cybersecurity', 'Penetration Testing', 'Network Security', 'Python'],
+      tags: ['Security', 'Hacking', 'Network', 'Training'],
+      ownerIndex: 5, // Farhana
+      memberIndices: [8, 12, 13]
+    },
+    {
+      name: 'Game Dev Bangladesh',
+      description: 'Indie game developers এর team। Unity এবং Unreal Engine দিয়ে games বানাচ্ছি। 2D থেকে 3D, সব ধরনের games।',
+      shortDescription: 'Game development collective',
+      type: TeamType.HACKATHON,
+      skills: ['Unity', 'Unreal Engine', 'C#', 'Game Development', '3D Modeling'],
+      tags: ['Gaming', 'Unity', 'GameDev', 'Indie'],
+      ownerIndex: 9, // Shahriar
+      memberIndices: [14, 7, 2]
+    },
+    {
+      name: 'Data Science Dhaka',
+      description: 'Data analysis, visualization, and machine learning applications. Working on real-world datasets and building predictive models.',
+      shortDescription: 'Data science and analytics',
+      type: TeamType.SKILL_BASED,
+      skills: ['Python', 'Data Science', 'Pandas', 'Scikit-learn', 'SQL'],
+      tags: ['Data', 'Analytics', 'ML', 'Visualization'],
+      ownerIndex: 7, // Lamia
+      memberIndices: [1, 12, 4]
+    },
+    {
+      name: 'Blockchain Bangladesh',
+      description: 'Decentralized applications, smart contracts, DeFi projects। Web3 revolution এ Bangladesh কে নিয়ে যাচ্ছি।',
+      shortDescription: 'Blockchain and Web3 development',
+      type: TeamType.STARTUP,
+      skills: ['Blockchain', 'Solidity', 'Web3', 'Smart Contracts', 'React'],
+      tags: ['Blockchain', 'Web3', 'DeFi', 'Crypto'],
+      ownerIndex: 6, // Tanvir
+      memberIndices: [13, 0, 10]
+    }
+  ];
+
+  const teams = [];
+  for (const teamData of teamsData) {
+    const team = await prisma.team.create({
       data: {
-        name: 'TechBD Innovators',
-        description: 'A passionate team of Bangladeshi developers working on innovative solutions for local challenges. We focus on fintech, edtech, and healthtech applications.',
-        shortDescription: 'Bangladesh tech innovation team',
-        type: 'STARTUP',
+        name: teamData.name,
+        description: teamData.description,
+        shortDescription: teamData.shortDescription,
         visibility: 'PUBLIC',
-        skills: ['React', 'Node.js', 'Mobile Development', 'AI/ML', 'Blockchain'],
-        tags: ['fintech', 'edtech', 'bangladesh', 'innovation'],
+        type: teamData.type,
+        avatar: getRandomItem(uploadedProfileImages),
+        banner: getRandomItem(uploadedBannerImages),
+        skills: teamData.skills,
+        tags: teamData.tags,
         country: 'Bangladesh',
         city: 'Dhaka',
         isRecruiting: true,
-        maxMembers: 12,
-        ownerId: users[3].id, // Sadia (Startup Founder)
-        social: {
-          facebook: 'https://facebook.com/techbdinnovators',
-          linkedin: 'https://linkedin.com/company/techbdinnovators'
-        }
+        allowJoinRequests: true,
+        ownerId: users[teamData.ownerIndex].id,
       },
-    }),
+    });
 
-    prisma.team.create({
+    // Create custom roles based on team type
+    const roleNames = 
+      teamData.type === TeamType.SKILL_BASED || teamData.type === TeamType.OPEN_SOURCE
+        ? ['Frontend Developer', 'Backend Developer', 'UI/UX Designer', 'Tester']
+        : teamData.type === TeamType.STARTUP
+        ? ['CTO', 'Lead Developer', 'Product Manager', 'Developer']
+        : teamData.type === TeamType.HACKATHON
+        ? ['Team Lead', 'Developer', 'Designer', 'Presenter']
+        : ['Coordinator', 'Member', 'Contributor'];
+
+    const customRoles = [];
+    for (const roleName of roleNames) {
+      const role = await prisma.teamCustomRole.create({
+        data: {
+          teamId: team.id,
+          name: roleName,
+          description: `${roleName} role for ${team.name}`,
+          color: getRandomItem(['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444']),
+          isAdmin: roleName.includes('Lead') || roleName.includes('CTO') || roleName.includes('Manager'),
+        },
+      });
+      customRoles.push(role);
+    }
+
+    // Add owner as admin
+    const ownerMember = await prisma.teamMember.create({
       data: {
-        name: 'Digital Bangladesh Builders',
-        description: 'Contributing to Digital Bangladesh vision through open source projects and community initiatives. Building solutions for education, agriculture, and governance.',
-        shortDescription: 'Open source community for Digital Bangladesh',
-        type: 'OPEN_SOURCE',
-        visibility: 'PUBLIC',
-        skills: ['Python', 'JavaScript', 'Mobile Apps', 'IoT', 'Data Science'],
-        tags: ['open-source', 'digital-bangladesh', 'community'],
-        country: 'Bangladesh',
-        city: 'Dhaka',
-        isRecruiting: true,
-        maxMembers: 25,
-        ownerId: users[0].id, // Rafiul
+        teamId: team.id,
+        userId: users[teamData.ownerIndex].id,
+        status: 'ADMIN',
+        title: 'Founder',
       },
-    }),
+    });
 
-    prisma.team.create({
+    // Assign the first admin role to owner
+    const adminRole = customRoles.find(r => r.isAdmin) || customRoles[0];
+    await prisma.teamMemberCustomRole.create({
       data: {
-        name: 'Bangladesh AI Research',
-        description: 'Research team focused on AI/ML applications in Bangladesh context. Working on projects for agriculture, healthcare, and education sectors.',
-        shortDescription: 'AI research for Bangladesh',
-        type: 'STUDY_GROUP',
-        visibility: 'PUBLIC',
-        skills: ['Machine Learning', 'Deep Learning', 'Python', 'Research', 'Data Analysis'],
-        tags: ['ai', 'research', 'bangladesh', 'agriculture', 'healthcare'],
-        country: 'Bangladesh',
-        city: 'Chittagong',
-        isRecruiting: true,
-        maxMembers: 8,
-        ownerId: users[1].id, // Fatema
+        teamMemberId: ownerMember.id,
+        customRoleId: adminRole.id,
       },
-    }),
+    });
 
-    prisma.team.create({
-      data: {
-        name: 'Mobile First BD',
-        description: 'Mobile-first development team creating apps specifically for Bangladeshi users. Focus on local payment integration, Bengali language support, and offline capabilities.',
-        shortDescription: 'Mobile apps for Bangladesh',
-        type: 'SKILL_BASED',
-        visibility: 'PUBLIC',
-        skills: ['React Native', 'Flutter', 'Mobile UI/UX', 'Payment Integration'],
-        tags: ['mobile', 'bangladesh', 'local-payment', 'bengali'],
-        country: 'Bangladesh',
-        city: 'Sylhet',
-        isRecruiting: true,
-        maxMembers: 6,
-        ownerId: users[2].id, // Nazmul
-      },
-    }),
-  ]);
+    // Add other members with roles
+    for (let i = 0; i < teamData.memberIndices.length; i++) {
+      const memberIndex = teamData.memberIndices[i];
+      const isModerator = Math.random() > 0.7;
+      
+      const member = await prisma.teamMember.create({
+        data: {
+          teamId: team.id,
+          userId: users[memberIndex].id,
+          status: isModerator ? 'MODERATOR' : 'MEMBER',
+        },
+      });
 
-  console.log(`✅ Created ${teams.length} teams`);
+      // Assign a random custom role to this member
+      const assignedRole = customRoles[i % customRoles.length];
+      await prisma.teamMemberCustomRole.create({
+        data: {
+          teamMemberId: member.id,
+          customRoleId: assignedRole.id,
+        },
+      });
+    }
 
-  // Add team members
-  await Promise.all([
-    // TechBD Innovators team
-    prisma.teamMember.create({
-      data: { teamId: teams[0].id, userId: users[3].id, status: 'ADMIN', title: 'Team Lead & Product Manager' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[0].id, userId: users[0].id, status: 'MEMBER', title: 'Senior Developer' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[0].id, userId: users[4].id, status: 'MEMBER', title: 'UI/UX Designer' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[0].id, userId: users[5].id, status: 'MEMBER', title: 'Data Scientist' }
-    }),
+    teams.push(team);
+  }
+  console.log(`✅ Created ${teams.length} teams with custom roles`);
 
-    // Digital Bangladesh Builders
-    prisma.teamMember.create({
-      data: { teamId: teams[1].id, userId: users[0].id, status: 'ADMIN', title: 'Community Lead' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[1].id, userId: users[6].id, status: 'MEMBER', title: 'Blockchain Developer' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[1].id, userId: users[7].id, status: 'MEMBER', title: 'IoT Specialist' }
-    }),
+  // Create team projects
+  console.log('📁 Creating team projects...');
+  let projectCount = 0;
+  for (const team of teams) {
+    const numProjects = Math.floor(Math.random() * 2) + 1; // 1-2 projects per team
+    for (let i = 0; i < numProjects; i++) {
+      const project = await prisma.teamProject.create({
+        data: {
+          teamId: team.id,
+          title: `${team.name.split(' ')[0]} Project ${i + 1}`,
+          description: `An exciting project by ${team.name}`,
+          status: getRandomItem(['PLANNING', 'ACTIVE', 'COMPLETED']),
+          startDate: new Date(2024, 0, 1),
+          createdBy: team.ownerId,
+        },
+      });
 
-    // Bangladesh AI Research
-    prisma.teamMember.create({
-      data: { teamId: teams[2].id, userId: users[1].id, status: 'ADMIN', title: 'Research Lead' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[2].id, userId: users[5].id, status: 'MEMBER', title: 'ML Engineer' }
-    }),
+      // Add milestones
+      await prisma.teamMilestone.createMany({
+        data: [
+          {
+            projectId: project.id,
+            teamId: team.id,
+            title: 'Planning and Design',
+            description: 'Initial planning and design phase',
+            status: 'COMPLETED',
+            dueDate: new Date(2024, 1, 1),
+            createdBy: team.ownerId,
+          },
+          {
+            projectId: project.id,
+            teamId: team.id,
+            title: 'Development',
+            description: 'Core development phase',
+            status: 'IN_PROGRESS',
+            dueDate: new Date(2024, 6, 1),
+            createdBy: team.ownerId,
+          },
+        ],
+      });
 
-    // Mobile First BD
-    prisma.teamMember.create({
-      data: { teamId: teams[3].id, userId: users[2].id, status: 'ADMIN', title: 'Mobile Lead' }
-    }),
-    prisma.teamMember.create({
-      data: { teamId: teams[3].id, userId: users[4].id, status: 'MEMBER', title: 'Mobile Designer' }
-    }),
-  ]);
+      projectCount++;
+    }
+  }
+  console.log(`✅ Created ${projectCount} projects`);
 
+  // Create posts
+  console.log('📝 Creating posts...');
+  const posts = [];
+  
+  // User posts
+  for (const user of users) {
+    const numPosts = Math.floor(Math.random() * 3) + 1; // 1-3 posts per user
+    for (let i = 0; i < numPosts; i++) {
+      const content = getRandomItem(postContents);
+      const post = await prisma.post.create({
+        data: {
+          authorId: user.id,
+          content: content,
+          type: PostType.GENERAL,
+          visibility: 'public',
+          hashtags: generateHashtags(content),
+        },
+      });
+      posts.push(post);
+    }
+  }
 
-  console.log('✅ Added team members');
-
-  // Create team projects with Bangladesh context
-  const projects = await Promise.all([
-    prisma.teamProject.create({
-      data: {
-        title: 'বিকাশ Payment Gateway',
-        description: 'Comprehensive payment gateway solution integrating with popular Bangladeshi mobile banking services like bKash, Rocket, and Nagad. Features include merchant dashboard, transaction analytics, and fraud detection.',
-        shortDescription: 'Mobile banking payment gateway for Bangladesh',
-        category: 'WEB_DEVELOPMENT',
-        status: 'ACTIVE',
-        requiredSkills: ['Node.js', 'React', 'Payment APIs', 'Security', 'Bengali'],
-        tags: ['fintech', 'mobile-banking', 'bkash', 'payment', 'bangladesh'],
-        teamId: teams[0].id,
-        createdBy: users[3].id,
-        startDate: new Date('2024-08-01'),
-        endDate: new Date('2025-02-28'),
-        estimatedDuration: '6 months',
-        repositoryUrl: 'https://github.com/techbd/bikash-gateway',
-      },
-    }),
-
-    prisma.teamProject.create({
-      data: {
-        title: 'কৃষি AI - Smart Farming Assistant',
-        description: 'AI-powered mobile app helping Bangladeshi farmers with crop disease detection, weather prediction, and market price information. Uses computer vision and machine learning.',
-        shortDescription: 'AI farming assistant for Bangladesh',
-        category: 'AI_ML',
-        status: 'ACTIVE',
-        requiredSkills: ['Python', 'TensorFlow', 'Computer Vision', 'Mobile App', 'Bengali'],
-        tags: ['agriculture', 'ai', 'farming', 'bangladesh', 'computer-vision'],
-        teamId: teams[2].id,
-        createdBy: users[1].id,
-        startDate: new Date('2024-09-01'),
-        endDate: new Date('2025-03-31'),
-        estimatedDuration: '7 months',
-        repositoryUrl: 'https://github.com/bdai/krishi-ai',
-      },
-    }),
-
-    prisma.teamProject.create({
-      data: {
-        title: 'ShikhonBD - Online Learning Platform',
-        description: 'Comprehensive e-learning platform for Bangladeshi students with support for Bengali content, offline video downloads, and affordable pricing. Mobile-first approach.',
-        shortDescription: 'E-learning platform for Bangladesh',
-        category: 'EDUCATIONAL',
-        status: 'PLANNING',
-        requiredSkills: ['React Native', 'Node.js', 'Video Streaming', 'Bengali', 'Payment'],
-        tags: ['education', 'mobile', 'bengali', 'video', 'learning'],
-        teamId: teams[3].id,
-        createdBy: users[2].id,
-        startDate: new Date('2024-11-01'),
-        endDate: new Date('2025-08-31'),
-        estimatedDuration: '10 months',
-      },
-    }),
-
-    prisma.teamProject.create({
-      data: {
-        title: 'Government Service Portal',
-        description: 'Digital portal for accessing government services online. Features include birth certificate, passport application, tax filing, and utility bill payments.',
-        shortDescription: 'Digital government services portal',
-        category: 'WEB_DEVELOPMENT',
-        status: 'ACTIVE',
-        requiredSkills: ['React', 'Node.js', 'Government APIs', 'Security', 'Bengali'],
-        tags: ['government', 'digital-bangladesh', 'services', 'portal'],
-        teamId: teams[1].id,
-        createdBy: users[0].id,
-        startDate: new Date('2024-07-01'),
-        endDate: new Date('2025-06-30'),
-        estimatedDuration: '12 months',
-        repositoryUrl: 'https://github.com/digitalbd/gov-portal',
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${projects.length} projects`);
-
-  // Create milestones
-  const milestones = await Promise.all([
-    prisma.teamMilestone.create({
-      data: {
-        title: 'bKash API Integration',
-        description: 'Complete integration with bKash payment API and test transactions',
-        status: 'COMPLETED',
-        teamId: teams[0].id,
-        projectId: projects[0].id,
-        createdBy: users[3].id,
-        dueDate: new Date('2024-09-15'),
-        completedAt: new Date('2024-09-10'),
-      },
-    }),
-    prisma.teamMilestone.create({
-      data: {
-        title: 'Crop Disease Detection Model',
-        description: 'Train and deploy computer vision model for detecting rice and wheat diseases',
-        status: 'IN_PROGRESS',
-        teamId: teams[2].id,
-        projectId: projects[1].id,
-        createdBy: users[1].id,
-        dueDate: new Date('2024-12-30'),
-      },
-    }),
-    prisma.teamMilestone.create({
-      data: {
-        title: 'Mobile App MVP',
-        description: 'Launch minimum viable product for ShikhonBD mobile app',
-        status: 'PENDING',
-        teamId: teams[3].id,
-        projectId: projects[2].id,
-        createdBy: users[2].id,
-        dueDate: new Date('2025-01-31'),
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${milestones.length} milestones`);
-
-  // Create achievements
-  await Promise.all([
-    prisma.teamAchievement.create({
-      data: {
-        title: 'Payment Gateway Launch',
-        description: 'Successfully launched payment gateway with 1000+ merchant registrations',
-        teamId: teams[0].id,
-        milestoneId: milestones[0].id,
-        isShared: true,
-        createdBy: users[3].id,
-      },
-    }),
-    prisma.teamAchievement.create({
-      data: {
-        title: 'AI Model Accuracy',
-        description: 'Achieved 95% accuracy in crop disease detection model',
-        teamId: teams[2].id,
-        isShared: true,
-        createdBy: users[1].id,
-      },
-    }),
-  ]);
-
-  console.log('✅ Created achievements');
-
-  // Create diverse posts with Bangladesh context
-  const posts = await Promise.all([
-    prisma.post.create({
-      data: {
-        content: '🚀 আলহামদুলিল্লাহ! আমাদের বিকাশ পেমেন্ট গেটওয়ে সফলভাবে লঞ্চ হয়েছে! এক হাজারেরও বেশি মার্চেন্ট নিবন্ধন করেছেন। বাংলাদেশের ডিজিটাল পেমেন্ট ইকোসিস্টেমে আমাদের অবদান রাখতে পেরে গর্বিত। #ফিনটেক #বাংলাদেশ #পেমেন্ট',
-        type: 'ACHIEVEMENT',
-        authorId: users[3].id,
-        hashtags: ['ফিনটেক', 'বাংলাদেশ', 'পেমেন্ট'],
-        tags: ['fintech', 'launch', 'milestone'],
-      },
-    }),
-    prisma.post.create({
-      data: {
-        content: 'Machine Learning দিয়ে কৃষকদের সাহায্য করার জন্য একটি প্রজেক্টে কাজ করছি। এআই ব্যবহার করে ধানের রোগ শনাক্ত করার মডেল তৈরি করেছি। এখন পর্যন্ত ৯৫% সঠিকতা পেয়েছি! বাংলাদেশের কৃষিতে প্রযুক্তির ব্যবহার বাড়ানোর স্বপ্ন দেখছি। #কৃষি #এআই #বাংলাদেশ',
-        type: 'PROJECT_UPDATE',
-        authorId: users[1].id,
-        hashtags: ['কৃষি', 'এআই', 'বাংলাদেশ'],
-        tags: ['agriculture', 'ai', 'research'],
-      },
-    }),
-    prisma.post.create({
-      data: {
-        content: 'React Native দিয়ে বাংলাদেশি ইউজারদের জন্য অ্যাপ বানানোর সময় কিছু টিপস:\n\n1. বাংলা ফন্ট সাপোর্ট নিশ্চিত করুন\n2. অফলাইন ফিচার যোগ করুন (ইন্টারনেট সমস্যার জন্য)\n3. ছোট APK সাইজ রাখুন (ডেটা সীমাবদ্ধতার জন্য)\n4. স্থানীয় পেমেন্ট গেটওয়ে ইন্টিগ্রেট করুন\n\n#মোবাইল #রিয়েক্টনেটিভ #বাংলাদেশ #টিপস',
-        type: 'SKILL_SHARE',
-        authorId: users[2].id,
-        hashtags: ['মোবাইল', 'রিয়েক্টনেটিভ', 'বাংলাদেশ', 'টিপস'],
-        tags: ['mobile', 'react-native', 'tips'],
-      },
-    }),
-    prisma.post.create({
-      data: {
-        content: '🎉 Digital Bangladesh vision এর অংশ হিসেবে Government Service Portal এর প্রথম ভার্সন রিলিজ হয়েছে! এখন অনলাইনে জন্ম নিবন্ধন, পাসপোর্ট আবেদন, এবং ট্যাক্স ফাইলিং করা যাবে। Open source হিসেবে GitHub এ কোড শেয়ার করেছি। #ডিজিটালবাংলাদেশ #ওপেনসোর্স #সরকারিসেবা',
-        type: 'PROJECT_SHOWCASE',
-        authorId: users[0].id,
-        hashtags: ['ডিজিটালবাংলাদেশ', 'ওপেনসোর্স', 'সরকারিসেবা'],
-        tags: ['government', 'digital-bangladesh', 'open-source'],
-      },
-    }),
-    prisma.post.create({
-      data: {
-        content: 'UI/UX Design এর ক্ষেত্রে বাংলাদেশি ইউজারদের জন্য কিছু বিশেষ বিবেচনা:\n\n• সাংস্কৃতিক কালার প্যালেট ব্যবহার\n• বাংলা টাইপোগ্রাফি অপটিমাইজেশন\n• লোকাল কনটেন্ট এবং আইকন\n• মোবাইল-ফার্স্ট অ্যাপ্রোচ\n\nDesign is not just about looks, it\'s about understanding your users! #ইউআইইউএক্স #ডিজাইন #বাংলাদেশ',
-        type: 'SKILL_SHARE',
-        authorId: users[4].id,
-        hashtags: ['ইউআইইউএক্স', 'ডিজাইন', 'বাংলাদেশ'],
-        tags: ['ui-ux', 'design', 'localization'],
-      },
-    }),
-    prisma.post.create({
-      data: {
-        content: 'Blockchain technology দিয়ে বাংলাদেশের সাপ্লাই চেইন ম্যানেজমেন্ট উন্নত করার গবেষণা চালিয়ে যাচ্ছি। বিশেষ করে কৃষি পণ্যের স্বচ্ছতা এবং ট্রেসেবিলিটি নিশ্চিত করতে smart contracts ব্যবহার করার পরিকল্পনা। কেউ collaborate করতে আগ্রহী? #ব্লকচেইন #গবেষণা #সাপ্লাইচেইন',
-        type: 'QUESTION',
-        authorId: users[6].id,
-        hashtags: ['ব্লকচেইন', 'গবেষণা', 'সাপ্লাইচেইন'],
-        tags: ['blockchain', 'research', 'supply-chain'],
-      },
-    }),
-  ]);
-
+  // Team posts
+  for (const team of teams) {
+    const members = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+    });
+    
+    const numPosts = Math.floor(Math.random() * 2) + 1; // 1-2 posts per team
+    for (let i = 0; i < numPosts; i++) {
+      const randomMember = getRandomItem(members);
+      const content = `Update from ${team.name}: ` + getRandomItem(postContents);
+      const post = await prisma.post.create({
+        data: {
+          authorId: randomMember.userId,
+          teamId: team.id,
+          content: content,
+          type: PostType.GENERAL,
+          visibility: 'public',
+          hashtags: generateHashtags(content),
+        },
+      });
+      posts.push(post);
+    }
+  }
   console.log(`✅ Created ${posts.length} posts`);
 
-  // Create comments
-  await Promise.all([
-    prisma.comment.create({
-      data: {
-        content: 'মাশাআল্লাহ ভাইয়া! দারুণ কাজ হয়েছে। আমাদের দেশের ডিজিটাল পেমেন্ট সিস্টেম আরো এগিয়ে যাবে এভাবে।',
-        authorId: users[0].id,
-        postId: posts[0].id,
-      },
-    }),
-    prisma.comment.create({
-      data: {
-        content: 'Excellent work on the AI model! Would love to see this implemented in rural areas. Can we discuss collaboration?',
-        authorId: users[5].id,
-        postId: posts[1].id,
-      },
-    }),
-    prisma.comment.create({
-      data: {
-        content: 'Very helpful tips! Bengali font support is indeed crucial. Have you tried any specific libraries for this?',
-        authorId: users[4].id,
-        postId: posts[2].id,
-      },
-    }),
-  ]);
-
-  console.log('✅ Created comments');
-
   // Create reactions
-  await Promise.all([
-    prisma.reaction.create({
-      data: { type: 'CELEBRATE', userId: users[0].id, postId: posts[0].id },
-    }),
-    prisma.reaction.create({
-      data: { type: 'LOVE', userId: users[1].id, postId: posts[0].id },
-    }),
-    prisma.reaction.create({
-      data: { type: 'INSIGHTFUL', userId: users[3].id, postId: posts[1].id },
-    }),
-    prisma.reaction.create({
-      data: { type: 'SUPPORT', userId: users[2].id, postId: posts[3].id },
-    }),
-    prisma.reaction.create({
-      data: { type: 'AMAZING', userId: users[7].id, postId: posts[5].id },
-    }),
-  ]);
+  console.log('❤️ Creating reactions...');
+  let reactionCount = 0;
+  for (const post of posts) {
+    const numReactions = Math.floor(Math.random() * 8) + 2; // 2-9 reactions per post
+    const reactors = getRandomItems(users, Math.min(numReactions, users.length));
+    
+    for (const reactor of reactors) {
+      await prisma.reaction.create({
+        data: {
+          userId: reactor.id,
+          postId: post.id,
+          type: getRandomItem([ReactionType.LIKE, ReactionType.LOVE, ReactionType.CELEBRATE, ReactionType.INSIGHTFUL]),
+        },
+      });
+      reactionCount++;
+    }
+  }
+  console.log(`✅ Created ${reactionCount} reactions`);
 
-  console.log('✅ Created reactions');
+  // Create comments
+  console.log('💬 Creating comments...');
+  let commentCount = 0;
+  for (const post of posts) {
+    const numComments = Math.floor(Math.random() * 5) + 1; // 1-5 comments per post
+    const commenters = getRandomItems(users, Math.min(numComments, users.length));
+    
+    for (const commenter of commenters) {
+      const comment = await prisma.comment.create({
+        data: {
+          authorId: commenter.id,
+          postId: post.id,
+          content: getRandomItem(commentTexts),
+        },
+      });
+      
+      // Some comments have replies
+      if (Math.random() > 0.6) {
+        const replyAuthors = getRandomItems(users.filter(u => u.id !== commenter.id), Math.min(2, users.length - 1));
+        for (const replyAuthor of replyAuthors) {
+          await prisma.comment.create({
+            data: {
+              authorId: replyAuthor.id,
+              postId: post.id,
+              parentId: comment.id,
+              content: getRandomItem(commentTexts),
+            },
+          });
+          commentCount++;
+        }
+      }
+      
+      commentCount++;
+    }
+  }
+  console.log(`✅ Created ${commentCount} comments`);
 
-  // Create conversations
-  const conversations = await Promise.all([
-    prisma.conversation.create({
+  // Create comment reactions
+  console.log('👍 Creating comment reactions...');
+  const allComments = await prisma.comment.findMany();
+  let commentReactionCount = 0;
+  for (const comment of allComments) {
+    if (Math.random() > 0.5) { // 50% of comments get reactions
+      const numReactions = Math.floor(Math.random() * 3) + 1; // 1-3 reactions
+      const reactors = getRandomItems(users, Math.min(numReactions, users.length));
+      
+      for (const reactor of reactors) {
+        await prisma.commentReaction.create({
+          data: {
+            userId: reactor.id,
+            commentId: comment.id,
+            type: getRandomItem([ReactionType.LIKE, ReactionType.LOVE, ReactionType.INSIGHTFUL]),
+          },
+        });
+        commentReactionCount++;
+      }
+    }
+  }
+  console.log(`✅ Created ${commentReactionCount} comment reactions`);
+
+  // Update all post counts (likes, comments, shares)
+  console.log('🔄 Updating post counts...');
+  for (const post of posts) {
+    const [likesCount, commentsCount, sharesCount] = await Promise.all([
+      prisma.reaction.count({ where: { postId: post.id } }),
+      prisma.comment.count({ where: { postId: post.id } }),
+      prisma.share.count({ where: { postId: post.id } }),
+    ]);
+
+    await prisma.post.update({
+      where: { id: post.id },
       data: {
-        title: 'Payment Gateway Discussion',
-        isGroup: false,
+        likesCount,
+        commentsCount,
+        sharesCount,
+      },
+    });
+  }
+
+  // Update all comment counts (likes, replies)
+  console.log('🔄 Updating comment counts...');
+  for (const comment of allComments) {
+    const [likesCount, repliesCount] = await Promise.all([
+      prisma.commentReaction.count({ where: { commentId: comment.id } }),
+      prisma.comment.count({ where: { parentId: comment.id } }),
+    ]);
+
+    await prisma.comment.update({
+      where: { id: comment.id },
+      data: {
+        likesCount,
+        repliesCount,
+      },
+    });
+  }
+  console.log(`✅ Updated all counts`);
+
+  // Create conversations and messages
+  console.log('💬 Creating conversations...');
+  let conversationCount = 0;
+  let messageCount = 0;
+  
+  for (let i = 0; i < 10; i++) {
+    const [user1, user2] = getRandomItems(users, 2);
+    
+    const conversation = await prisma.conversation.create({
+      data: {
         type: 'DIRECT_MESSAGE',
-        createdBy: users[3].id,
+        createdBy: user1.id,
+        isGroup: false,
+        lastMessageAt: new Date(),
       },
-    }),
-    prisma.conversation.create({
-      data: {
-        title: 'TechBD Team Chat',
-        isGroup: true,
-        type: 'TEAM_CHAT',
-        teamId: teams[0].id,
-        createdBy: users[3].id,
-      },
-    }),
-  ]);
+    });
 
-  // Add conversation participants
-  await Promise.all([
-    prisma.conversationParticipant.create({
-      data: { conversationId: conversations[0].id, userId: users[3].id, role: 'admin' },
-    }),
-    prisma.conversationParticipant.create({
-      data: { conversationId: conversations[0].id, userId: users[0].id, role: 'member' },
-    }),
-    prisma.conversationParticipant.create({
-      data: { conversationId: conversations[1].id, userId: users[3].id, role: 'admin' },
-    }),
-    prisma.conversationParticipant.create({
-      data: { conversationId: conversations[1].id, userId: users[0].id, role: 'member' },
-    }),
-    prisma.conversationParticipant.create({
-      data: { conversationId: conversations[1].id, userId: users[4].id, role: 'member' },
-    }),
-  ]);
+    // Add participants
+    await prisma.conversationParticipant.createMany({
+      data: [
+        { conversationId: conversation.id, userId: user1.id, isActive: true },
+        { conversationId: conversation.id, userId: user2.id, isActive: true },
+      ],
+    });
 
-  console.log('✅ Created conversations');
-
-  // Create messages
-  await Promise.all([
-    prisma.message.create({
-      data: {
-        content: 'Sadia apu, payment gateway এর security features নিয়ে discuss করতে চাই। API encryption কেমন implement করেছেন?',
-        senderId: users[0].id,
-        receiverId: users[3].id,
-        conversationId: conversations[0].id,
-        type: 'TEXT',
-      },
-    }),
-    prisma.message.create({
-      data: {
-        content: 'Welcome to TechBD team chat! এখানে আমরা project updates, ideas share করবো। সবাই active থাকবেন please 😊',
-        senderId: users[3].id,
-        conversationId: conversations[1].id,
-        type: 'TEXT',
-      },
-    }),
-  ]);
-
-  console.log('✅ Created messages');
+    // Add messages
+    const numMessages = Math.floor(Math.random() * 6) + 3; // 3-8 messages
+    for (let j = 0; j < numMessages; j++) {
+      const sender = j % 2 === 0 ? user1 : user2;
+      const receiver = j % 2 === 0 ? user2 : user1;
+      
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderId: sender.id,
+          receiverId: receiver.id,
+          content: getRandomItem(commentTexts),
+          type: 'TEXT',
+          readBy: [sender.id],
+        },
+      });
+      messageCount++;
+    }
+    
+    conversationCount++;
+  }
+  console.log(`✅ Created ${conversationCount} conversations with ${messageCount} messages`);
 
   // Create notifications
-  await Promise.all([
-    prisma.notification.create({
-      data: {
-        type: 'CONNECTION_REQUEST',
-        title: 'নতুন কানেকশন অনুরোধ',
-        message: 'নাজমুল হাসান আপনাকে কানেকশন অনুরোধ পাঠিয়েছেন',
-        userId: users[3].id,
-        data: { senderId: users[2].id },
-        priority: 'normal',
-        category: 'social',
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        type: 'TEAM_MILESTONE_COMPLETED',
-        title: 'মাইলস্টোন সম্পন্ন',
-        message: 'bKash API Integration মাইলস্টোন সম্পন্ন হয়েছে!',
-        userId: users[0].id,
-        data: { milestoneId: milestones[0].id, teamId: teams[0].id },
-        priority: 'high',
-        category: 'team',
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        type: 'POST_REACTION',
-        title: 'পোস্টে রিয়েকশন',
-        message: 'রফিউল ইসলাম আপনার পোস্টে celebrate রিয়েকশন দিয়েছেন',
-        userId: users[3].id,
-        data: { postId: posts[0].id, reactorId: users[0].id },
-        priority: 'low',
-        category: 'social',
-      },
-    }),
-  ]);
+  console.log('🔔 Creating notifications...');
+  let notificationCount = 0;
+  for (const user of users.slice(0, 5)) { // First 5 users get notifications
+    await prisma.notification.createMany({
+      data: [
+        {
+          userId: user.id,
+          type: NotificationType.CONNECTION_REQUEST,
+          title: 'New connection request',
+          message: `${users[0].firstName} ${users[0].lastName} wants to connect with you`,
+          isRead: false,
+        },
+        {
+          userId: user.id,
+          type: NotificationType.POST_REACTION,
+          title: 'Someone reacted to your post',
+          message: `${users[1].firstName} ${users[1].lastName} reacted to your post`,
+          isRead: Math.random() > 0.5,
+        },
+      ],
+    });
+    notificationCount += 2;
+  }
+  console.log(`✅ Created ${notificationCount} notifications`);
 
-  console.log('✅ Created notifications');
-
-  // Create AI recommendations
-  await Promise.all([
-    prisma.aIRecommendation.create({
-      data: {
-        type: 'USER',
-        userId: users[0].id,
-        targetId: users[7].id,
-        score: 0.85,
-        reason: 'Both interested in IoT and agricultural technology',
-        metadata: { commonInterests: ['IoT', 'Agriculture'], location: 'Bangladesh' },
-      },
-    }),
-    prisma.aIRecommendation.create({
-      data: {
-        type: 'TEAM',
-        userId: users[6].id,
-        targetId: teams[1].id,
-        score: 0.92,
-        reason: 'Strong match for blockchain expertise in open source team',
-        metadata: { skillMatch: ['Blockchain', 'Open Source'] },
-      },
-    }),
-  ]);
-
-  console.log('✅ Created AI recommendations');
-
-  console.log('🎉 Seeding completed successfully!');
+  console.log('\n✨ Seeding completed successfully!\n');
   console.log('📊 Summary:');
-  console.log(`   • ${users.length} users created`);
-  console.log(`   • ${teams.length} teams created`);
-  console.log(`   • ${projects.length} projects created`);
-  console.log(`   • ${posts.length} posts created`);
-  console.log('   • Multiple connections, follows, and interactions created');
-  console.log('   • All data is Bangladesh-specific with Bengali content');
+  console.log(`  Users: ${users.length}`);
+  console.log(`  Connections: ${connectionCount}`);
+  console.log(`  Teams: ${teams.length}`);
+  console.log(`  Projects: ${projectCount}`);
+  console.log(`  Posts: ${posts.length}`);
+  console.log(`  Reactions: ${reactionCount}`);
+  console.log(`  Comments: ${commentCount}`);
+  console.log(`  Comment Reactions: ${commentReactionCount}`);
+  console.log(`  Conversations: ${conversationCount}`);
+  console.log(`  Messages: ${messageCount}`);
+  console.log(`  Notifications: ${notificationCount}`);
+  console.log('\n🔑 Login credentials:');
+  console.log('  Email: rafiul@example.com (or any user email)');
+  console.log('  Password: password123\n');
 }
 
 main()
