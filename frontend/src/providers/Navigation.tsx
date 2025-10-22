@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 import { 
   Home, 
   Users, 
-  FolderOpen, 
   Bell, 
   Search, 
   Settings, 
@@ -17,7 +16,6 @@ import { toast } from 'react-hot-toast'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Projects', href: '/dashboard/projects', icon: FolderOpen },
   { name: 'Connections', href: '/dashboard/connections', icon: Users },
   { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
 ]

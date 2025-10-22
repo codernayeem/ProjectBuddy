@@ -7,7 +7,6 @@ import {
   Calendar,
   MapPin,
   Users,
-  FolderOpen,
   Settings,
   Globe,
   Github,
@@ -16,7 +15,6 @@ import {
   Award,
   Clock,
   BookOpen,
-  Target,
   FileText,
   Plus,
   UserPlus,
@@ -27,7 +25,6 @@ import {
   GraduationCap
 } from 'lucide-react'
 import { userService } from '@/lib/auth'
-import { projectService } from '@/lib/projects'
 import { connectionService } from '@/lib/connections'
 import { postService } from '@/lib/posts'
 import { useAuth } from '@/hooks/useAuth'
@@ -57,13 +54,6 @@ export default function ProfilePage() {
     queryKey: ['profile', profileUserId],
     queryFn: () => userService.getUserById(profileUserId!),
     enabled: !!profileUserId,
-  })
-
-  // Fetch user's projects
-  const { data: userProjects } = useQuery({
-    queryKey: ['user-projects', profileUserId],
-    queryFn: () => projectService.getUserProjects(),
-    enabled: !!profileUserId && isOwnProfile, // Only fetch for own profile for now
   })
 
   // Fetch connection stats
@@ -454,17 +444,6 @@ export default function ProfilePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-xl font-bold text-gray-900 dark:text-white">
-              {isOwnProfile ? (userProjects?.pagination?.total || 0) : '—'}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
-              <FolderOpen className="h-4 w-4 mr-1" />
-              Projects
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-xl font-bold text-gray-900 dark:text-white">
               {(profileData as any)?.universities?.length || 0}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center mt-1">
@@ -477,10 +456,9 @@ export default function ProfilePage() {
 
       {/* Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-5' : 'grid-cols-3'}`}>
+        <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="posts">Posts</TabsTrigger>
-          {isOwnProfile && <TabsTrigger value="projects">Projects</TabsTrigger>}
           <TabsTrigger value="about">About</TabsTrigger>
           {isOwnProfile && <TabsTrigger value="contact">Contact</TabsTrigger>}
         </TabsList>
@@ -631,95 +609,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {isOwnProfile && (
-          <TabsContent value="projects">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center">
-                    <FolderOpen className="h-5 w-5 mr-2" />
-                    My Projects ({userProjects?.pagination?.total || 0})
-                  </span>
-                  <Button asChild>
-                    <Link to="/dashboard/projects/new">
-                      <Target className="h-4 w-4 mr-2" />
-                      New Project
-                    </Link>
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {userProjects?.data?.length ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {userProjects.data.map((project: any) => (
-                      <Link key={project.id} to={`/dashboard/projects/${project.id}`}>
-                        <Card className="hover:shadow-md transition-shadow">
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                {project.title}
-                              </h3>
-                              <UIBadge variant={
-                                project.status === 'ACTIVE' ? 'default' :
-                                project.status === 'COMPLETED' ? 'secondary' :
-                                project.status === 'PLANNING' ? 'outline' : 'destructive'
-                              }>
-                                {formatEnumValue(project.status)}
-                              </UIBadge>
-                            </div>
-                            
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                              {project.description}
-                            </p>
-
-                            <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                              <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                {project.startDate ? formatDateShort(project.startDate) : 'No date'}
-                              </div>
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 mr-1" />
-                                {project.currentMembers}
-                              </div>
-                            </div>
-
-                            {project.tags && project.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {project.tags.slice(0, 3).map((tag: string) => (
-                                  <UIBadge key={tag} variant="outline" className="text-xs">
-                                    {tag}
-                                  </UIBadge>
-                                ))}
-                                {project.tags.length > 3 && (
-                                  <span className="text-xs text-gray-500">
-                                    +{project.tags.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <FolderOpen className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No projects yet</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first project to get started.</p>
-                    <Button asChild>
-                      <Link to="/dashboard/projects/new">
-                        <Target className="h-4 w-4 mr-2" />
-                        Create Project
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
 
         <TabsContent value="about">
           <Card>

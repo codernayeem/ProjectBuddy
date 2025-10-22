@@ -1,7 +1,6 @@
 // Export all API services
 export { authService, userService } from './auth'
 export { connectionService } from './connections'
-export { projectService } from './projects'
 export { teamService } from './teams'
 export { postService } from './posts'
 export { notificationService } from './notifications'
