@@ -5,32 +5,44 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ArrowLeft, Check, X, Clock, User } from 'lucide-react';
-import { useTeam } from '@/hooks/useTeams';
+import { useTeam, useTeamJoinRequests, useRespondToJoinRequest } from '@/hooks/useTeams';
 import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
 
 export default function TeamJoinRequestsPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const { data: teamData, isLoading } = useTeam(teamId!);
+  const { data: joinRequestsData, isLoading: joinRequestsLoading } = useTeamJoinRequests(teamId!, 'PENDING');
+  const respondMutation = useRespondToJoinRequest();
 
   const team = teamData?.data;
+  // Backend returns { requests: [], total, page, limit, pages }
+  const joinRequests = (joinRequestsData?.data as any)?.requests || [];
 
-  // Mock join requests data (replace with actual API call)
-  const joinRequests: any[] = [
-    // Will be populated from API
-  ];
-
-  const handleApprove = async (_requestId: string) => {
-    // TODO: Call API to approve join request
-    toast.success('Join request approved');
+  const handleApprove = async (requestId: string) => {
+    try {
+      await respondMutation.mutateAsync({
+        teamId: teamId!,
+        requestId,
+        action: 'accept'
+      });
+    } catch (error) {
+      console.error('Failed to approve join request:', error);
+    }
   };
 
-  const handleReject = async (_requestId: string) => {
-    // TODO: Call API to reject join request
-    toast.success('Join request rejected');
+  const handleReject = async (requestId: string) => {
+    try {
+      await respondMutation.mutateAsync({
+        teamId: teamId!,
+        requestId,
+        action: 'reject'
+      });
+    } catch (error) {
+      console.error('Failed to reject join request:', error);
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || joinRequestsLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -136,6 +148,7 @@ export default function TeamJoinRequestsPage() {
                       size="sm"
                       variant="default"
                       onClick={() => handleApprove(request.id)}
+                      disabled={respondMutation.isPending}
                     >
                       <Check className="w-4 h-4 mr-1" />
                       Approve
@@ -144,6 +157,7 @@ export default function TeamJoinRequestsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleReject(request.id)}
+                      disabled={respondMutation.isPending}
                     >
                       <X className="w-4 h-4 mr-1" />
                       Reject
@@ -154,9 +168,9 @@ export default function TeamJoinRequestsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No pending requests</h3>
-              <p className="text-gray-600">
+              <User className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No pending requests</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 When users request to join your team, they'll appear here.
               </p>
             </div>

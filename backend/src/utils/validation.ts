@@ -150,7 +150,7 @@ export const createAchievementSchema = Joi.object({
 // Post validation schemas
 export const createPostSchema = Joi.object({
   content: Joi.string().min(1).max(5000).optional().allow(''),
-  type: Joi.string().valid('GENERAL', 'PROJECT_UPDATE', 'PROJECT_ANNOUNCEMENT', 'ACHIEVEMENT', 'MILESTONE_COMPLETED', 'GOAL_COMPLETED', 'TEAM_FORMATION', 'FIND_TEAMMATES', 'FIND_TEAM', 'FIND_PROJECT', 'PROJECT_SHOWCASE', 'SKILL_SHARE', 'RESOURCE_SHARE', 'QUESTION', 'POLL', 'EVENT', 'CELEBRATION').optional(),
+  type: Joi.string().valid('GENERAL', 'ANNOUNCEMENT', 'ACHIEVEMENT', 'MILESTONE_COMPLETED', 'NEW_MEMBER', 'RECRUITMENT', 'PROJECT_SHOWCASE', 'PROJECT_UPDATE', 'SKILL_SHARE', 'RESOURCE_SHARE', 'QUESTION', 'POLL', 'EVENT', 'CELEBRATION').optional(),
   projectId: Joi.string().uuid().optional(),
   teamId: Joi.string().uuid().optional(),
   media: Joi.array().items(Joi.string().uri()).max(5).optional(),

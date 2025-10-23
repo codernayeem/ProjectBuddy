@@ -85,8 +85,8 @@ export const teamService = {
   },
 
   // Respond to join request (for admins)
-  respondToJoinRequest: async (teamId: string, requestId: string, action: 'accept' | 'decline'): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/teams/${teamId}/join-requests/${requestId}/${action}`)
+  respondToJoinRequest: async (_teamId: string, requestId: string, action: 'accept' | 'reject'): Promise<ApiResponse<void>> => {
+    const response = await api.post(`/join-requests/${requestId}/${action}`)
     return response.data
   },
 

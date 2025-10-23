@@ -39,6 +39,7 @@ export function PostCreator({ className, onPostCreated, teamId }: PostCreatorPro
 
   const postTypes = [
     { id: PostType.GENERAL, label: 'General Update', icon: FileText },
+    { id: PostType.ANNOUNCEMENT, label: 'Announcement', icon: MessageCircle },
     { id: PostType.ACHIEVEMENT, label: 'Achievement', icon: Award },
     { id: PostType.MILESTONE_COMPLETED, label: 'Milestone Completed', icon: TrendingUp },
     { id: PostType.NEW_MEMBER, label: 'New Member', icon: Users },

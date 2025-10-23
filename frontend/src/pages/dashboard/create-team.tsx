@@ -30,7 +30,6 @@ export default function CreateTeamPage() {
     country: '',
     city: '',
     avatar: null as File | null,
-    banner: null as File | null,
   });
 
   const [skills, setSkills] = useState<string[]>([]);
@@ -38,7 +37,6 @@ export default function CreateTeamPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -68,18 +66,6 @@ export default function CreateTeamPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData({ ...formData, banner: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -343,11 +329,11 @@ export default function CreateTeamPage() {
           {/* Images */}
           <Card>
             <CardHeader>
-              <CardTitle>Team Images</CardTitle>
+              <CardTitle>Team Avatar</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="avatar">Team Avatar</Label>
+                <Label htmlFor="avatar">Team Avatar (Optional)</Label>
                 <div className="flex items-center space-x-4 mt-2">
                   {avatarPreview && (
                     <img 
@@ -374,34 +360,7 @@ export default function CreateTeamPage() {
                     </label>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="banner">Team Banner</Label>
-                <div className="mt-2">
-                  {bannerPreview && (
-                    <img 
-                      src={bannerPreview} 
-                      alt="Banner preview" 
-                      className="w-full h-48 rounded-lg object-cover mb-4"
-                    />
-                  )}
-                  <label htmlFor="banner" className="cursor-pointer">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors">
-                      <div className="flex items-center justify-center space-x-2 text-gray-600">
-                        <Upload className="w-5 h-5" />
-                        <span>Click to upload banner</span>
-                      </div>
-                    </div>
-                    <input
-                      id="banner"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
+                <p className="text-sm text-gray-500 mt-2">Note: Avatar upload will be available after team creation</p>
               </div>
             </CardContent>
           </Card>

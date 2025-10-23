@@ -200,14 +200,14 @@ export function useRespondToJoinRequest() {
     mutationFn: ({ teamId, requestId, action }: { 
       teamId: string; 
       requestId: string; 
-      action: 'accept' | 'decline' 
+      action: 'accept' | 'reject' 
     }) => teamService.respondToJoinRequest(teamId, requestId, action),
     onSuccess: (_, { teamId, action }) => {
       // Invalidate team and join requests
       queryClient.invalidateQueries({ queryKey: teamKeys.detail(teamId) });
       queryClient.invalidateQueries({ queryKey: [...teamKeys.detail(teamId), 'join-requests'] });
       
-      const message = action === 'accept' ? 'Join request accepted!' : 'Join request declined!';
+      const message = action === 'accept' ? 'Join request accepted!' : 'Join request rejected!';
       toast.success(message);
     },
     onError: (error: any) => {

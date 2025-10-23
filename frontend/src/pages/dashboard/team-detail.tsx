@@ -8,6 +8,13 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from '@/components/ui/select';
 import { PostCreator } from '@/components/posts/PostCreator';
 import { PostCard } from '@/components/posts/PostCard';
 import {
@@ -1595,13 +1602,32 @@ export default function TeamDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="project-category">Category</Label>
-                <Input
-                  id="project-category"
-                  value={projectFormData.category || ''}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, category: e.target.value })}
-                  placeholder="e.g., Web App, Mobile, API"
-                />
+                <Label htmlFor="project-category">Category *</Label>
+                <Select 
+                  value={projectFormData.category || ''} 
+                  onValueChange={(value) => setProjectFormData({ ...projectFormData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WEB_DEVELOPMENT">Web Development</SelectItem>
+                    <SelectItem value="MOBILE_DEVELOPMENT">Mobile Development</SelectItem>
+                    <SelectItem value="GAME_DEVELOPMENT">Game Development</SelectItem>
+                    <SelectItem value="AI_ML">AI/ML</SelectItem>
+                    <SelectItem value="DATA_SCIENCE">Data Science</SelectItem>
+                    <SelectItem value="BLOCKCHAIN">Blockchain</SelectItem>
+                    <SelectItem value="IOT">IoT</SelectItem>
+                    <SelectItem value="CYBERSECURITY">Cybersecurity</SelectItem>
+                    <SelectItem value="UI_UX_DESIGN">UI/UX Design</SelectItem>
+                    <SelectItem value="MARKETING">Marketing</SelectItem>
+                    <SelectItem value="BUSINESS">Business</SelectItem>
+                    <SelectItem value="RESEARCH">Research</SelectItem>
+                    <SelectItem value="OPEN_SOURCE">Open Source</SelectItem>
+                    <SelectItem value="EDUCATIONAL">Educational</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="project-duration">Estimated Duration</Label>
@@ -1739,13 +1765,32 @@ export default function TeamDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-project-category">Category</Label>
-                <Input
-                  id="edit-project-category"
-                  value={projectFormData.category || ''}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, category: e.target.value })}
-                  placeholder="e.g., Web App, Mobile, API"
-                />
+                <Label htmlFor="edit-project-category">Category *</Label>
+                <Select 
+                  value={projectFormData.category || ''} 
+                  onValueChange={(value) => setProjectFormData({ ...projectFormData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WEB_DEVELOPMENT">Web Development</SelectItem>
+                    <SelectItem value="MOBILE_DEVELOPMENT">Mobile Development</SelectItem>
+                    <SelectItem value="GAME_DEVELOPMENT">Game Development</SelectItem>
+                    <SelectItem value="AI_ML">AI/ML</SelectItem>
+                    <SelectItem value="DATA_SCIENCE">Data Science</SelectItem>
+                    <SelectItem value="BLOCKCHAIN">Blockchain</SelectItem>
+                    <SelectItem value="IOT">IoT</SelectItem>
+                    <SelectItem value="CYBERSECURITY">Cybersecurity</SelectItem>
+                    <SelectItem value="UI_UX_DESIGN">UI/UX Design</SelectItem>
+                    <SelectItem value="MARKETING">Marketing</SelectItem>
+                    <SelectItem value="BUSINESS">Business</SelectItem>
+                    <SelectItem value="RESEARCH">Research</SelectItem>
+                    <SelectItem value="OPEN_SOURCE">Open Source</SelectItem>
+                    <SelectItem value="EDUCATIONAL">Educational</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="edit-project-duration">Estimated Duration</Label>
