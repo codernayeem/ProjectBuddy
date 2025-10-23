@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { authenticate } from '../middlewares/auth';
 import { validate, validateQuery } from '../middlewares/validation';
-import { uploadAvatar } from '../middlewares/upload';
+import { uploadAvatar, uploadBanner } from '../middlewares/upload';
 import { updateUserSchema, searchUsersSchema } from '../utils/validation';
 
 const router = Router();
@@ -16,6 +16,8 @@ router.get('/recommendations', userController.getUserRecommendations);
 router.put('/profile', validate(updateUserSchema), userController.updateProfile);
 
 router.post('/avatar', uploadAvatar.single('avatar'), userController.uploadAvatar);
+
+router.post('/banner', uploadBanner.single('banner'), userController.uploadBanner);
 
 router.get('/search', validateQuery(searchUsersSchema), userController.searchUsers);
 

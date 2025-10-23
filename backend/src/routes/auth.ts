@@ -15,6 +15,8 @@ router.post('/refresh', validate(refreshTokenSchema), authController.refreshToke
 
 router.post('/logout', authenticate, authController.logout);
 
+router.post('/change-password', authenticate, authController.changePassword);
+
 router.get('/me', authenticate, authController.getProfile);
 
 router.get('/check-email', authController.checkEmailAvailability);

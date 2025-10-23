@@ -25,7 +25,7 @@ export default function CreateTeamPage() {
     shortDescription: '',
     description: '',
     visibility: 'PUBLIC',
-    type: 'PROJECT',
+    type: 'OTHER',
     website: '',
     country: '',
     city: '',
@@ -51,6 +51,13 @@ export default function CreateTeamPage() {
     setFormData({
       ...formData,
       visibility: value,
+    });
+  };
+
+  const handleTypeChange = (value: string) => {
+    setFormData({
+      ...formData,
+      type: value,
     });
   };
 
@@ -205,7 +212,27 @@ export default function CreateTeamPage() {
                   <SelectContent>
                     <SelectItem value="PUBLIC">Public - Anyone can see and join</SelectItem>
                     <SelectItem value="PRIVATE">Private - Only members can see</SelectItem>
-                    <SelectItem value="INVITE_ONLY">Invite Only - Members must be invited</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="type">Team Type *</Label>
+                <Select value={formData.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SKILL_BASED">Skill-Based - Focused on developing specific skills</SelectItem>
+                    <SelectItem value="STARTUP">Startup - Building a new venture</SelectItem>
+                    <SelectItem value="FREELANCE">Freelance - Collaboration on freelance projects</SelectItem>
+                    <SelectItem value="OPEN_SOURCE">Open Source - Contributing to open source</SelectItem>
+                    <SelectItem value="HACKATHON">Hackathon - Competing in hackathons</SelectItem>
+                    <SelectItem value="STUDY_GROUP">Study Group - Learning together</SelectItem>
+                    <SelectItem value="NETWORKING">Networking - Building connections</SelectItem>
+                    <SelectItem value="MENTORSHIP">Mentorship - Mentoring and learning</SelectItem>
+                    <SelectItem value="BUSINESS">Business - Business collaboration</SelectItem>
+                    <SelectItem value="OTHER">Other - General purpose team</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

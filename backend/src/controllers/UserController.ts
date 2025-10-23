@@ -69,6 +69,28 @@ export class UserController {
     }
   };
 
+  uploadBanner = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json(createErrorResponse('User not authenticated'));
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json(createErrorResponse('No file uploaded'));
+        return;
+      }
+
+      const bannerUrl = (req.file as any).path;
+      const updatedUser = await this.userService.updateBanner(req.user.id, bannerUrl);
+
+      res.json(createResponse(true, 'Banner uploaded successfully', updatedUser));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload banner';
+      res.status(500).json(createErrorResponse(errorMessage));
+    }
+  };
+
   // User Retrieval
   getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {

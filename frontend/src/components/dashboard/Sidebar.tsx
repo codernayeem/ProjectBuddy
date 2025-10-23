@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { connectionService } from '@/lib/connections';
-import { useTeams } from '@/hooks/useTeams';
+import { useUserTeams } from '@/hooks/useTeams';
 
 const navigation = [
   { name: 'Home', href: '/dashboard', icon: Home },
@@ -40,7 +40,7 @@ export default function Sidebar() {
   });
 
   // Fetch user teams
-  const { data: teamsData } = useTeams(1, 100);
+  const { data: teamsData } = useUserTeams(1, 100);
 
   const connectionCount = statsData?.data?.totalConnections || 0;
   const teamCount = teamsData?.pagination?.total || 0;
@@ -60,7 +60,7 @@ export default function Sidebar() {
       {/* User Profile Section */}
       <div className="flex flex-col items-center p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <Avatar className="h-12 w-12 lg:h-16 lg:w-16 mb-2 lg:mb-3">
-          <AvatarImage src={user?.avatar} alt={user?.firstName} />
+          <AvatarImage src={user?.avatar || undefined} alt={user?.firstName} />
           <AvatarFallback className="text-sm lg:text-lg">
             {user?.firstName?.[0]}{user?.lastName?.[0]}
           </AvatarFallback>

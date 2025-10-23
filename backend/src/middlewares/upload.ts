@@ -28,6 +28,30 @@ export const uploadAvatar = multer({
   },
 });
 
+export const uploadBanner = multer({
+  storage: new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'project-buddy/banners',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      transformation: [
+        { width: 1500, height: 500, crop: 'limit' },
+        { quality: 'auto', fetch_format: 'auto' }
+      ],
+    } as any,
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+});
+
 export const uploadProjectFiles = multer({
   storage,
   limits: {

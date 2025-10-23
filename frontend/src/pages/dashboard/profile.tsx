@@ -40,7 +40,7 @@ import { useParams, Link, useNavigate } from 'react-router'
 
 export default function ProfilePage() {
   const { userId } = useParams()
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [uploading, setUploading] = useState(false)
@@ -73,8 +73,12 @@ export default function ProfilePage() {
   // Upload avatar mutation (only for own profile)
   const uploadAvatarMutation = useMutation({
     mutationFn: (file: File) => userService.uploadAvatar(file),
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast.success('Avatar updated successfully!')
+      // Update auth store with new avatar
+      if (response.data?.avatar) {
+        updateUser({ avatar: response.data.avatar })
+      }
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       queryClient.invalidateQueries({ queryKey: ['auth-profile'] })
     },
@@ -89,8 +93,12 @@ export default function ProfilePage() {
   // Upload banner mutation (only for own profile)
   const uploadBannerMutation = useMutation({
     mutationFn: (file: File) => userService.uploadBanner(file),
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast.success('Banner updated successfully!')
+      // Update auth store with new banner
+      if (response.data?.banner) {
+        updateUser({ banner: response.data.banner })
+      }
       queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
     onError: () => {

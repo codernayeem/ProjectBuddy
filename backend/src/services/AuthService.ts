@@ -1,5 +1,5 @@
 import { UserRepository } from '../repositories/UserRepository';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/auth';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashPassword, comparePassword } from '../utils/auth';
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -48,5 +48,28 @@ export class AuthService {
   async revokeAllRefreshTokens(userId: string): Promise<void> {
     // In this simple implementation, we only store one refresh token per user
     await this.userRepository.updateRefreshToken(userId, null);
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    // Find user
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isValidPassword = await comparePassword(currentPassword, user.passwordHash);
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password in database
+    await this.userRepository.update(userId, { passwordHash: hashedPassword });
+
+    // Revoke all refresh tokens for security
+    await this.revokeRefreshToken(userId);
   }
 }

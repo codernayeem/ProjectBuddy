@@ -147,7 +147,7 @@ export default function TopNavbar({ setSidebarOpen }: TopNavbarProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 pl-1 sm:pl-2 pr-2 sm:pr-3 h-9 md:h-10">
                 <Avatar className="h-7 w-7 md:h-8 md:w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.firstName} />
+                  <AvatarImage src={user?.avatar || undefined} alt={user?.firstName} />
                   <AvatarFallback className="text-xs md:text-sm">
                     {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>

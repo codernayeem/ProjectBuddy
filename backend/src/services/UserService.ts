@@ -161,6 +161,13 @@ export class UserService {
     return userWithoutSensitiveData;
   }
 
+  async updateBanner(id: string, bannerUrl: string): Promise<Omit<User, 'passwordHash' | 'refreshToken'>> {
+    const updatedUser = await this.userRepository.update(id, { banner: bannerUrl });
+    const { passwordHash: _, refreshToken: __, ...userWithoutSensitiveData } = updatedUser;
+    
+    return userWithoutSensitiveData;
+  }
+
   async searchUsers(
     params: SearchParams & PaginationParams
   ): Promise<{ users: any[]; total: number }> {
