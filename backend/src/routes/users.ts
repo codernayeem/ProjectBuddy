@@ -27,6 +27,9 @@ router.get('/check-username', userController.checkUsernameAvailability);
 
 router.get('/:id', userController.getUserById);
 
+// Get teams for a specific user
+router.get('/:userId/teams', userController.getUserTeams);
+
 router.delete('/account', authenticate, userController.deleteAccount);
 
 // University routes

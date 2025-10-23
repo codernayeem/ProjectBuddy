@@ -67,6 +67,9 @@ export function useCreatePost() {
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
       
+      // Invalidate trending hashtags to update the right sidebar
+      queryClient.invalidateQueries({ queryKey: ['trending-hashtags'] });
+      
       // Add the new post to the cache
       if (response.data) {
         queryClient.setQueryData(postKeys.detail(response.data.id), response.data);

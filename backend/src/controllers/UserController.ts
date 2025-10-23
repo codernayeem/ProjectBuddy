@@ -1,13 +1,16 @@
 import { Response } from 'express';
 import { UserService } from '../services/UserService';
+import { TeamService } from '../services/TeamService';
 import { createResponse, createErrorResponse, getPaginationParams } from '../utils/helpers';
 import { AuthRequest } from '../types';
 
 export class UserController {
   private userService: UserService;
+  private teamService: TeamService;
 
   constructor() {
     this.userService = new UserService();
+    this.teamService = new TeamService();
   }
 
   // Profile Management
@@ -268,6 +271,36 @@ export class UserController {
       res.json(createResponse(true, 'University deleted successfully'));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete university';
+      res.status(400).json(createErrorResponse(errorMessage));
+    }
+  };
+
+  // Get teams for a specific user
+  getUserTeams = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const { page = '1', limit = '20' } = req.query;
+
+      const params = {
+        page: Number(page),
+        limit: Number(limit),
+        skip: (Number(page) - 1) * Number(limit)
+      };
+
+      const result = await this.teamService.getUserTeams(userId, params);
+      res.json({
+        success: true,
+        message: 'User teams fetched successfully',
+        data: result.teams,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / params.limit)
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user teams';
       res.status(400).json(createErrorResponse(errorMessage));
     }
   };

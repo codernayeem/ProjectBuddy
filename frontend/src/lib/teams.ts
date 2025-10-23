@@ -29,9 +29,15 @@ export const teamService = {
     return response.data
   },
 
-  // Get user's teams
+  // Get user's teams (current logged-in user)
   getUserTeams: async (page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
     const response = await api.get(`/teams/my-teams?page=${page}&limit=${limit}`)
+    return response.data
+  },
+
+  // Get teams for a specific user by userId
+  getUserTeamsByUserId: async (userId: string, page = 1, limit = 10): Promise<ApiResponse<Team[]>> => {
+    const response = await api.get(`/users/${userId}/teams?page=${page}&limit=${limit}`)
     return response.data
   },
 

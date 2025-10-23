@@ -54,7 +54,7 @@ export function PostCreator({ className, onPostCreated, teamId }: PostCreatorPro
     { id: PostType.CELEBRATION, label: 'Celebration', icon: Heart },
   ];
 
-  const extractTags = (content: string): string[] => {
+  const extractHashtags = (content: string): string[] => {
     const hashtags = content.match(/#[a-zA-Z0-9_-]+/g);
     return hashtags ? hashtags.map(tag => tag.slice(1)) : [];
   };
@@ -105,7 +105,7 @@ export function PostCreator({ className, onPostCreated, teamId }: PostCreatorPro
         content: postContent,
         type: selectedPostType,
         teamId: teamId,
-        tags: extractTags(postContent),
+        hashtags: extractHashtags(postContent),
         media: mediaUrls,
       });
       setPostContent('');

@@ -63,10 +63,16 @@ export default function ProfilePage() {
     enabled: !!profileUserId,
   })
 
-  // Fetch user teams count (TODO: Add to team service)
+  // Fetch user teams - use different endpoint based on whether it's own profile or not
   const { data: userTeams } = useQuery({
     queryKey: ['user-teams', profileUserId],
-    queryFn: () => teamService.getUserTeams(1, 100), // Fetch up to 100 teams
+    queryFn: () => {
+      if (isOwnProfile) {
+        return teamService.getUserTeams(1, 100) // Fetch current user's teams
+      } else {
+        return teamService.getUserTeamsByUserId(profileUserId!, 1, 100) // Fetch specific user's teams
+      }
+    },
     enabled: !!profileUserId,
   })
 
